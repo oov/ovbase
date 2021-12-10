@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 3.0)
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+project(base C)
+enable_testing()
+
+add_executable(test_base base_test.c)
+list(APPEND tests test_base)
+
+foreach(target ${tests})
+  add_test(NAME ${target} COMMAND ${target})
+  target_compile_definitions(${target} PRIVATE
+    $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
+    $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0502>
+    $<$<BOOL:${WIN32}>:_CONSOLE>
+    USE_STR
+    USE_WSTR
+    LEAK_DETECTOR
+    ALLOCATE_LOGGER
+  )
+  target_compile_options(${target} PRIVATE
+    $<$<BOOL:${WIN32}>:--rtlib=compiler-rt>
+    -mstackrealign
+    -Wall
+    -Wextra
+    -Werror=return-type
+    -pedantic-errors
+    -O0
+  )
+  target_link_options(${target} PRIVATE
+    $<$<BOOL:${WIN32}>:--rtlib=compiler-rt>
+    $<$<BOOL:${WIN32}>:-Wl,--kill-at>
+    $<$<BOOL:${WIN32}>:-no-pthread>
+    -static
+  )
+  target_link_libraries(${target} PRIVATE
+    $<$<NOT:$<BOOL:${WIN32}>>:pthread>
+  )
+endforeach(target)
