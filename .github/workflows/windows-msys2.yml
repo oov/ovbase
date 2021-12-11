@@ -1,4 +1,4 @@
-name: test
+name: windows-msys2
 
 on:
   pull_request:
@@ -18,22 +18,17 @@ jobs:
             arch: i686
     steps:
       - uses: actions/checkout@v2
-        with:
-          submodules: true
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          install: git mingw-w64-${{ matrix.arch }}-tools mingw-w64-${{ matrix.arch }}-ninja mingw-w64-${{ matrix.arch }}-clang mingw-w64-${{ matrix.arch }}-compiler-rt mingw-w64-${{ matrix.arch }}-cmake
+          install: >-
+            mingw-w64-${{ matrix.arch }}-cmake
+            mingw-w64-${{ matrix.arch }}-ninja
+            mingw-w64-${{ matrix.arch }}-clang
+            mingw-w64-${{ matrix.arch }}-compiler-rt
       - name: Run ninja
         shell: msys2 {0}
         run: |
           mkdir build
           cd build
           cmake -GNinja .. && ninja && ctest --output-junit testlog.xml
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: Tests
-          path: build/testlog.xml
-          reporter: java-junit
