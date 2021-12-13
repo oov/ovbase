@@ -3,13 +3,14 @@
 #ifdef _WIN32
 
 #define NEWLINE NSTR("\r\n")
-#include <combaseapi.h> // CoTaskMemRealloc
+#include <stdlib.h> // realloc, free
 #ifdef _CONSOLE
-#include <stdio.h> // fwprintf
+#include <stdio.h>  // fwprintf
+#include <stdlib.h> // realloc, free
 #endif
 
-#define REALLOC(ptr, size) (CoTaskMemRealloc(ptr, size))
-#define FREE(ptr) (CoTaskMemRealloc(ptr, 0))
+#define REALLOC(ptr, size) (realloc(ptr, size))
+#define FREE(ptr) (free(ptr))
 
 #else
 
@@ -86,11 +87,11 @@ static void report(NATIVE_CHAR const *const str) {
   } else {
     size_t const plen = WideCharToMultiByte(CP_UTF8, 0, str, len, NULL, 0, NULL, NULL);
     if (plen) {
-      void *const p = CoTaskMemRealloc(NULL, plen);
+      void *const p = malloc(plen);
       if (WideCharToMultiByte(CP_UTF8, 0, str, len, p, plen, NULL, NULL)) {
         WriteFile(h, p, plen, NULL, NULL);
       }
-      CoTaskMemRealloc(p, 0);
+      free(p);
     }
   }
 #else
