@@ -31,7 +31,6 @@ static _Atomic uint64_t g_global_hint = 0;
 #include "3rd/threads/threads.h"
 #endif
 
-#include "3rd/hashmap/hashmap.h"
 #include "3rd/hashmap/hashmap.c"
 
 #ifndef __FILE_NAME__
