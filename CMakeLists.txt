@@ -8,6 +8,12 @@ set(CMAKE_C_EXTENSIONS OFF)
 project(base C)
 enable_testing()
 
+file(GLOB sources "*.c" "*.h")
+find_program(CLANG_FORMAT_EXE clang-format)
+add_custom_target(${PROJECT_NAME}-format ALL
+  COMMAND ${CLANG_FORMAT_EXE} --style="{BasedOnStyle: llvm, ColumnLimit: 120, BinPackArguments: false, BinPackParameters: false}" -i ${sources}
+)
+
 add_executable(test_base base_test.c)
 list(APPEND tests test_base)
 
