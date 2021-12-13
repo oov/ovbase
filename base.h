@@ -119,7 +119,8 @@ enum err_generic {
 
 typedef error (*error_message_mapper)(uint_least32_t const code, struct NATIVE_STR *const message);
 NODISCARD error error_register_message_mapper(int const type, error_message_mapper fn);
-
+NODISCARD error generic_error_message_mapper_en(uint_least32_t const code, struct NATIVE_STR *const message);
+NODISCARD error generic_error_message_mapper_jp(uint_least32_t const code, struct NATIVE_STR *const message);
 typedef void (*error_message_reporter)(error err,
                                        struct NATIVE_STR const *const msg,
                                        struct base_filepos const *const filepos);
@@ -168,6 +169,21 @@ static inline bool eignore(error err) {
   }
   return true;
 }
+
+#ifdef _WIN32
+
+#ifndef _HRESULT_DEFINED
+#define _HRESULT_DEFINED
+typedef long HRESULT;
+#endif
+
+enum {
+  err_type_hresult = 1,
+};
+
+#define errhr(hr) (error_add_(NULL, err_type_hresult, (uint_least32_t)(hr), NULL ERR_FILEPOS_VALUES))
+static inline bool eis_hr(error err, HRESULT hr) { return error_is_(err, err_type_hresult, (uint_least32_t)hr); }
+#endif
 
 // mem
 
