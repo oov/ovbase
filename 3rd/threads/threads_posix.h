@@ -315,7 +315,7 @@ thrd_equal(thrd_t thr0, thrd_t thr1)
 }
 
 // 7.25.5.5
-static inline void
+NORETURN static inline void
 thrd_exit(int res)
 {
     pthread_exit((void*)(intptr_t)res);

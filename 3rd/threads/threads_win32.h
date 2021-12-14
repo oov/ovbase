@@ -65,7 +65,6 @@ Configuration macro:
 
 
 #include <windows.h>
-#include <combaseapi.h>
 
 // check configuration
 #if defined(EMULATED_THREADS_USE_NATIVE_CALL_ONCE) && (_WIN32_WINNT < 0x0600)
@@ -145,7 +144,7 @@ static unsigned __stdcall impl_thrd_routine(void *p)
     struct impl_thrd_param pack;
     int code;
     memcpy(&pack, p, sizeof(struct impl_thrd_param));
-    CoTaskMemRealloc(p, 0);
+    free(p);
     code = pack.func(pack.arg);
     impl_tss_dtor_invoke();
     return (unsigned)code;
@@ -153,7 +152,7 @@ static unsigned __stdcall impl_thrd_routine(void *p)
 
 static DWORD impl_timespec2msec(const struct timespec *ts)
 {
-    return (DWORD)((ts->tv_sec * 1000U) + (ts->tv_nsec / 1000000L));
+    return (DWORD)((ts->tv_sec * 1000L) + (ts->tv_nsec / 1000000L));
 }
 
 #ifdef EMULATED_THREADS_USE_NATIVE_CALL_ONCE
@@ -486,7 +485,7 @@ thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
     struct impl_thrd_param *pack;
     uintptr_t handle;
     if (!thr) return thrd_error;
-    pack = (struct impl_thrd_param *)CoTaskMemRealloc(NULL, sizeof(struct impl_thrd_param));
+    pack = (struct impl_thrd_param *)malloc(sizeof(struct impl_thrd_param));
     if (!pack) return thrd_nomem;
     pack->func = func;
     pack->arg = arg;
@@ -557,7 +556,7 @@ thrd_equal(thrd_t thr0, thrd_t thr1)
 }
 
 // 7.25.5.5
-static inline void
+NORETURN static inline void
 thrd_exit(int res)
 {
     impl_tss_dtor_invoke();

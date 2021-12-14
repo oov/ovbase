@@ -2,22 +2,20 @@
 
 #ifdef _WIN32
 
-#define NEWLINE NSTR("\r\n")
 #include <stdlib.h> // realloc, free
-#ifdef _CONSOLE
-#include <stdio.h>  // fwprintf
-#include <stdlib.h> // realloc, free
-#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
+#define NEWLINE NSTR("\r\n")
 #define REALLOC(ptr, size) (realloc(ptr, size))
 #define FREE(ptr) (free(ptr))
 
 #else
 
-#define NEWLINE NSTR("\n")
 #include <stdio.h>  // fprintf
 #include <stdlib.h> // realloc, free
 
+#define NEWLINE NSTR("\n")
 #define REALLOC(ptr, size) (realloc(ptr, size))
 #define FREE(ptr) (free(ptr))
 
@@ -29,10 +27,56 @@ static _Atomic uint64_t g_global_hint = 0;
 #if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
 #include <threads.h>
 #else
-#include "3rd/threads/threads.h"
+
+#ifdef __GNUC__
+
+#pragma GCC diagnostic push
+#if __has_warning("-Wreserved-macro-identifier")
+#pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
 #endif
+#if __has_warning("-Wpadded")
+#pragma GCC diagnostic ignored "-Wpadded"
+#endif
+#include "3rd/threads/threads.h"
+#pragma GCC diagnostic pop
+
+#else
+
+#include "3rd/threads/threads.h"
+
+#endif // __GNUC__
+
+#endif // __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+
+#ifdef __GNUC__
+
+#pragma GCC diagnostic push
+#if __has_warning("-Wreserved-macro-identifier")
+#pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
+#endif
+#if __has_warning("-Wpadded")
+#pragma GCC diagnostic ignored "-Wpadded"
+#endif
+#if __has_warning("-Wcast-align")
+#pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+#if __has_warning("-Wsign-conversion")
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+#if __has_warning("-Wextra-semi-stmt")
+#pragma GCC diagnostic ignored "-Wextra-semi-stmt"
+#endif
+#if __has_warning("-Wimplicit-fallthrough")
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+#include "3rd/hashmap/hashmap.c"
+#pragma GCC diagnostic pop
+
+#else
 
 #include "3rd/hashmap/hashmap.c"
+
+#endif // __GNUC__
 
 #ifndef __FILE_NAME__
 char const *base_find_file_name(char const *s) {
@@ -50,7 +94,7 @@ static void global_hint_init(void) {
 #ifdef _WIN32
   LARGE_INTEGER f = {0}, c = {0};
   if (QueryPerformanceFrequency(&f) != 0 && QueryPerformanceCounter(&c) != 0) {
-    atomic_store_explicit(&g_global_hint, (c.QuadPart * 10e9) / f.QuadPart, memory_order_relaxed);
+    atomic_store_explicit(&g_global_hint, (c.QuadPart * 1000000000) / f.QuadPart, memory_order_relaxed);
   } else {
     atomic_store_explicit(
         &g_global_hint, GetTickCount() + GetCurrentProcessId() + GetCurrentThreadId(), memory_order_relaxed);
@@ -58,7 +102,7 @@ static void global_hint_init(void) {
 #else
   struct timespec v = {0};
   timespec_get(&v, TIME_UTC);
-  atomic_store_explicit(&g_global_hint, v.tv_sec * (uint64_t)10e9 + v.tv_nsec, memory_order_relaxed);
+  atomic_store_explicit(&g_global_hint, v.tv_sec * 1000000000 + v.tv_nsec, memory_order_relaxed);
 #endif
 }
 
@@ -81,14 +125,14 @@ static void report(NATIVE_CHAR const *const str) {
   // file with a byte order mark. For more information, see Using Byte Order
   // Marks.
   HANDLE const h = GetStdHandle(STD_ERROR_HANDLE);
-  size_t const len = wcslen(str);
+  DWORD const len = (DWORD)wcslen(str);
   if (GetConsoleMode(h, &(DWORD){0})) {
     WriteConsoleW(h, str, len, NULL, NULL);
   } else {
-    size_t const plen = WideCharToMultiByte(CP_UTF8, 0, str, len, NULL, 0, NULL, NULL);
+    DWORD const plen = (DWORD)WideCharToMultiByte(CP_UTF8, 0, str, (int)len, NULL, 0, NULL, NULL);
     if (plen) {
       void *const p = malloc(plen);
-      if (WideCharToMultiByte(CP_UTF8, 0, str, len, p, plen, NULL, NULL)) {
+      if (WideCharToMultiByte(CP_UTF8, 0, str, (int)len, p, (int)plen, NULL, NULL)) {
         WriteFile(h, p, plen, NULL, NULL);
       }
       free(p);
@@ -107,7 +151,7 @@ static void report(NATIVE_CHAR const *const str) {
 
 #ifdef ALLOCATE_LOGGER
 static mtx_t g_mem_mtx = {0};
-struct hashmap *g_allocated = NULL;
+static struct hashmap *g_allocated = NULL;
 struct allocated_at {
   void const *const p;
   struct base_filepos const filepos;
@@ -130,10 +174,10 @@ static int am_compare(void const *const a, void const *const b, void *udata) {
   struct allocated_at const *const aa0 = a;
   struct allocated_at const *const aa1 = b;
   (void)udata;
-  return (char *)aa1->p - (char *)aa0->p;
+  return (int)((char const *)aa1->p - (char const *)aa0->p);
 }
 
-void allocate_logger_init(void) {
+static void allocate_logger_init(void) {
   mtx_init(&g_mem_mtx, mtx_plain);
   uint64_t hash = base_splitmix64_next(get_global_hint());
   uint64_t const s0 = base_splitmix64(hash);
@@ -146,7 +190,7 @@ void allocate_logger_init(void) {
   }
 }
 
-void allocate_logger_exit(void) {
+static void allocate_logger_exit(void) {
   hashmap_free(g_allocated);
   g_allocated = NULL;
   mtx_destroy(&g_mem_mtx);
@@ -324,7 +368,7 @@ static struct hmap g_error_message_mapper = {0};
 static error_message_reporter g_error_reporter = error_default_reporter;
 
 struct error_message_mapping {
-  int type;
+  size_t type;
   NODISCARD error_message_mapper get;
 };
 
@@ -384,13 +428,13 @@ NODISCARD static error win32_error_message_mapper(uint_least32_t const code, str
 
   error err = eok();
   LPWSTR msg = NULL;
-  int msglen = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                              NULL,
-                              (DWORD)code,
-                              LANG_USER_DEFAULT,
-                              (LPWSTR)&msg,
-                              0,
-                              NULL);
+  DWORD msglen = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                                NULL,
+                                (DWORD)code,
+                                LANG_USER_DEFAULT,
+                                (LPWSTR)&msg,
+                                0,
+                                NULL);
   if (!msglen) {
     HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
     if (hr != HRESULT_FROM_WIN32(ERROR_MR_MID_NOT_FOUND)) {
@@ -431,7 +475,7 @@ cleanup:
 static void error_init(void) {
   mtx_init(&g_error_mtx, mtx_plain);
 
-  error err = hmnews(&g_error_message_mapper, sizeof(struct error_message_mapping), 0, sizeof(int));
+  error err = hmnews(&g_error_message_mapper, sizeof(struct error_message_mapping), 0, sizeof(size_t));
   if (efailed(err)) {
     goto failed;
   }
@@ -472,7 +516,7 @@ error error_register_message_mapper(int const type, error_message_mapper fn) {
   mtx_lock(&g_error_mtx);
   error err = hmset(&g_error_message_mapper,
                     (&(struct error_message_mapping){
-                        .type = type,
+                        .type = (size_t const)type,
                         .get = fn,
                     }));
   mtx_unlock(&g_error_mtx);
@@ -487,7 +531,7 @@ void error_register_reporter(error_message_reporter const fn) {
 
 NODISCARD static error error_get_registered_message_mapper(int const type, struct error_message_mapping **const em) {
   mtx_lock(&g_error_mtx);
-  error err = hmget(&g_error_message_mapper, &(struct error_message_mapping){.type = type}, em);
+  error err = hmget(&g_error_message_mapper, &(struct error_message_mapping){.type = (size_t const)type}, em);
   mtx_unlock(&g_error_mtx);
   return err;
 }
@@ -650,12 +694,10 @@ bool error_report_free_(error e, struct NATIVE_STR const *const message ERR_FILE
 // array
 
 bool array_grow_core_(struct array *const p, size_t const elem_size, size_t const least_size MEM_FILEPOS_PARAMS) {
-  enum {
-    block_size = 8,
-  };
   if (p->cap >= least_size) {
     return true;
   }
+  static size_t const block_size = 8;
   size_t const newcap = (least_size + block_size - 1) & ~(block_size - 1);
   if (!mem_core_(&p->ptr, newcap * elem_size MEM_FILEPOS_VALUES_PASSTHRU)) {
     return false;
@@ -718,7 +760,7 @@ error str_cpy_(struct str *const s, const char *s2 MEM_FILEPOS_PARAMS) {
 }
 
 error str_ncpy_(struct str *const s, char const *const s2, size_t const s2len MEM_FILEPOS_PARAMS) {
-  if (!s || !s2 || s2len < 0) {
+  if (!s || !s2) {
     return errg(err_invalid_arugment);
   }
 
@@ -749,7 +791,7 @@ error str_cat_(struct str *const s, char const *const s2 MEM_FILEPOS_PARAMS) {
 }
 
 error str_ncat_(struct str *const s, char const *const s2, size_t const s2len MEM_FILEPOS_PARAMS) {
-  if (!s || !s2 || s2len < 0) {
+  if (!s || !s2) {
     return errg(err_invalid_arugment);
   }
 
@@ -775,7 +817,7 @@ error str_str_(struct str const *const s, char const *const s2, int *const pos) 
     *pos = -1;
     return eok();
   }
-  *pos = found - s->ptr;
+  *pos = (int)(found - s->ptr);
   return eok();
 }
 
@@ -783,7 +825,7 @@ error str_replace_all_(struct str *const s, char const *const find, char const *
   if (!s || !find || !replacement) {
     return errg(err_invalid_arugment);
   }
-  int const findlen = strlen(find);
+  int const findlen = (int)strlen(find);
   if (findlen == 0) {
     return eok();
   }
@@ -800,8 +842,8 @@ error str_replace_all_(struct str *const s, char const *const find, char const *
       }
       break;
     }
-    int const foundpos = found - s->ptr;
-    err = str_ncat_(&tmp, s->ptr + pos, foundpos - pos MEM_FILEPOS_VALUES_PASSTHRU);
+    int const foundpos = (int)(found - s->ptr);
+    err = str_ncat_(&tmp, s->ptr + pos, (size_t)(foundpos - pos) MEM_FILEPOS_VALUES_PASSTHRU);
     if (efailed(err)) {
       err = ethru(err);
       goto cleanup;
@@ -848,7 +890,7 @@ error wstr_cpy_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARA
 }
 
 error wstr_ncpy_(struct wstr *const ws, wchar_t const *const ws2, size_t const ws2len MEM_FILEPOS_PARAMS) {
-  if (!ws || !ws2 || ws2len < 0) {
+  if (!ws || !ws2) {
     return errg(err_invalid_arugment);
   }
 
@@ -879,7 +921,7 @@ error wstr_cat_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARA
 }
 
 error wstr_ncat_(struct wstr *const ws, wchar_t const *const ws2, size_t const ws2len MEM_FILEPOS_PARAMS) {
-  if (!ws || !ws2 || ws2len < 0) {
+  if (!ws || !ws2) {
     return errg(err_invalid_arugment);
   }
 
@@ -905,7 +947,7 @@ error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, int *cons
     *pos = -1;
     return eok();
   }
-  *pos = found - ws->ptr;
+  *pos = (int)(found - ws->ptr);
   return eok();
 }
 
@@ -915,7 +957,7 @@ error wstr_replace_all_(struct wstr *const ws,
   if (!ws || !find || !replacement) {
     return errg(err_invalid_arugment);
   }
-  int const findlen = wcslen(find);
+  int const findlen = (int)wcslen(find);
   if (findlen == 0) {
     return eok();
   }
@@ -932,8 +974,8 @@ error wstr_replace_all_(struct wstr *const ws,
       }
       break;
     }
-    int const foundpos = found - ws->ptr;
-    err = wstr_ncat_(&tmp, ws->ptr + pos, foundpos - pos MEM_FILEPOS_VALUES_PASSTHRU);
+    int const foundpos = (int)(found - ws->ptr);
+    err = wstr_ncat_(&tmp, ws->ptr + pos, (size_t)(foundpos - pos) MEM_FILEPOS_VALUES_PASSTHRU);
     if (efailed(err)) {
       err = ethru(err);
       goto cleanup;

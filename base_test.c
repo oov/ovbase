@@ -472,7 +472,7 @@ static void test_str_str(void) {
   TEST_EISG_F(sstr(&s, "e", NULL), err_null_pointer);
 }
 
-#if _WIN32
+#ifdef _WIN32
 #define STR_PH "%hs"
 #else
 #define STR_PH "%s"
@@ -516,10 +516,10 @@ static void test_str_replace_all(void) {
 
 struct test_item_dynamic {
   struct wstr key;
-  int v;
+  size_t v;
 };
 
-void test_hmap_dynamic_get_key(void const *const item, void const **const key, size_t *const key_bytes) {
+static void test_hmap_dynamic_get_key(void const *const item, void const **const key, size_t *const key_bytes) {
   struct test_item_dynamic const *const it = item;
   *key = it->key.ptr;
   *key_bytes = it->key.len * sizeof(wchar_t);
@@ -591,6 +591,7 @@ static void test_hmap_static(void) {
   struct test_item_static {
     int64_t key;
     int v;
+    int reserved;
   };
   struct hmap tmp = {0};
   if (!TEST_SUCCEEDED_F(hmfree(&tmp))) {

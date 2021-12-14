@@ -1,8 +1,10 @@
 #pragma once
 
-#include <stdio.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
 
 #include "base.h"
+#include <stdio.h>
 
 static inline void test_init_(void) {
   base_init();
@@ -23,7 +25,11 @@ static inline void test_fini_(void) {
 }
 #define TEST_INIT test_init_()
 #define TEST_FINI test_fini_()
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include "3rd/acutest.h"
+#pragma GCC diagnostic pop
 
 static int test_eis(error err,
                     int const type,
@@ -34,7 +40,10 @@ static int test_eis(error err,
                     char const *const p1,
                     char const *const p2,
                     char const *const p3) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
   int r = acutest_check_((err == NULL && type == 0 && code == 0) || eis(err, type, code), file, line, fmt, p1, p2, p3);
+#pragma GCC diagnostic pop
   if (!r) {
     if (type == 0 && code == 0) {
       TEST_MSG("expected NULL");
@@ -83,3 +92,5 @@ static inline bool test_eis_f(error err,
 #define TEST_EISG_F(err, code)                                                                                         \
   (test_eis_f((err), err_type_generic, (code), __FILE__, __LINE__, "TEST_EISG_F(%s, %s)", #err, #code, NULL))
 #define TEST_SUCCEEDED_F(err) (test_eis_f((err), 0, 0, __FILE__, __LINE__, "TEST_SUCCEEDED_F(%s)", #err, NULL, NULL))
+
+#pragma GCC diagnostic pop

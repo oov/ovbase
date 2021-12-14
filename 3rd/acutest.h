@@ -499,7 +499,7 @@ acutest_exit_(int exit_code)
     static acutest_timer_type_ acutest_timer_start_;
     static acutest_timer_type_ acutest_timer_end_;
 
-    void
+    static void
     acutest_timer_init_(void)
     {}
 

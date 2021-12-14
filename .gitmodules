@@ -1,0 +1,4 @@
+[submodule "hashmap"]
+	path = 3rd/hashmap
+	url = https://github.com/oov/hashmap.c
+	branch = simplify

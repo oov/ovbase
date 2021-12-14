@@ -10,6 +10,9 @@
 #ifndef __has_attribute
 #define __has_attribute(x) 0
 #endif
+#ifndef __has_warning
+#define __has_warning(x) 0
+#endif
 
 #if __has_c_attribute(nodiscard)
 #define NODISCARD [[nodiscard]]
@@ -29,7 +32,7 @@ char const *base_find_file_name(char const *s);
 struct base_filepos {
   char const *file;
   char const *func;
-  long line;
+  size_t line;
 };
 
 void base_init(void);
@@ -173,9 +176,24 @@ static inline bool eignore(error err) {
 #ifdef _WIN32
 
 #ifndef _HRESULT_DEFINED
-#define _HRESULT_DEFINED
-typedef long HRESULT;
+
+#ifdef __GNUC__
+
+#pragma GCC diagnostic push
+#if __has_warning("-Wreserved-macro-identifier")
+#pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
 #endif
+#define _HRESULT_DEFINED
+#pragma GCC diagnostic pop
+
+#else
+
+#define _HRESULT_DEFINED
+
+#endif
+typedef long HRESULT;
+
+#endif // _HRESULT_DEFINED
 
 enum {
   err_type_hresult = 1,
@@ -183,7 +201,8 @@ enum {
 
 #define errhr(hr) (error_add_(NULL, err_type_hresult, (uint_least32_t)(hr), NULL ERR_FILEPOS_VALUES))
 static inline bool eis_hr(error err, HRESULT hr) { return error_is_(err, err_type_hresult, (uint_least32_t)hr); }
-#endif
+
+#endif // _WIN32
 
 // mem
 

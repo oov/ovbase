@@ -35,6 +35,21 @@
 #define TIME_UTC 1
 #endif
 
+#ifndef __has_c_attribute
+#define __has_c_attribute(x) 0
+#endif
+#ifndef __has_attribute
+#define __has_attribute(x) 0
+#endif
+
+#if __has_c_attribute(noreturn)
+#define NORETURN [[noreturn]]
+#elif __has_attribute(noreturn)
+#define NORETURN __attribute__((noreturn))
+#else
+#define NORETURN
+#endif
+
 /*---------------------------- types ----------------------------*/
 typedef void (*tss_dtor_t)(void*);
 typedef int (*thrd_start_t)(void*);
