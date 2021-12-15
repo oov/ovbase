@@ -27,10 +27,12 @@ static inline void test_fini_(void) {
   TEST_MY_FINI;
 #endif
   base_exit();
+#ifdef LEAK_DETECTOR
   if (mem_get_allocated_count()) {
     printf("!! MEMORY LEAKED !!\n");
     abort();
   }
+#endif
 }
 #define TEST_INIT test_init_()
 #define TEST_FINI test_fini_()
