@@ -302,6 +302,14 @@ static void test_wstr_replace_all(void) {
   TEST_SUCCEEDED_F(sfree(&ws));
 }
 
+static void test_wstr_const(void) {
+  static wchar_t const *const ws = L"hello";
+  int pos = 0;
+  if (TEST_SUCCEEDED_F(sstr(&wstr_unmanaged_const(ws), L"o", &pos))) {
+    TEST_CHECK(pos == 4);
+  }
+}
+
 #endif // USE_WSTR
 
 #ifdef USE_STR
@@ -520,6 +528,14 @@ static void test_str_replace_all(void) {
   TEST_SUCCEEDED_F(sfree(&s));
 }
 
+static void test_str_const(void) {
+  static char const *const s = "hello";
+  int pos = 0;
+  if (TEST_SUCCEEDED_F(sstr(&str_unmanaged_const(s), "o", &pos))) {
+    TEST_CHECK(pos == 4);
+  }
+}
+
 #endif // USE_STR
 
 struct test_item_dynamic {
@@ -674,6 +690,7 @@ TEST_LIST = {
     {"test_wstr_grow", test_wstr_grow},
     {"test_wstr_str", test_wstr_str},
     {"test_wstr_replace_all", test_wstr_replace_all},
+    {"test_wstr_const", test_wstr_const},
 #endif // USE_WSTR
 #ifdef USE_STR
     {"test_str_cpy_free", test_str_cpy_free},
@@ -683,6 +700,7 @@ TEST_LIST = {
     {"test_str_grow", test_str_grow},
     {"test_str_str", test_str_str},
     {"test_str_replace_all", test_str_replace_all},
+    {"test_str_const", test_str_const},
 #endif // USE_STR
     {"test_hmap_dynamic", test_hmap_dynamic},
     {"test_hmap_static", test_hmap_static},

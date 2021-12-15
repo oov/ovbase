@@ -66,6 +66,7 @@ void base_exit(void);
 #define NATIVE_STR wstr
 #define NSTR(str) L##str
 #define native_unmanaged(char_ptr) (wstr_unmanaged(char_ptr))
+#define native_unmanaged_const(char_ptr) (wstr_unmanaged_const(char_ptr))
 #ifndef USE_WSTR
 #define USE_WSTR
 #endif
@@ -74,10 +75,24 @@ void base_exit(void);
 #define NATIVE_STR str
 #define NSTR(str) str
 #define native_unmanaged(char_ptr) (str_unmanaged(char_ptr))
+#define native_unmanaged_const(char_ptr) (str_unmanaged_const(char_ptr))
 #ifndef USE_STR
 #define USE_STR
 #endif
 #endif
+
+static inline void *base_deconster_(void const *const ptr) {
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#if __has_warning("-Wcast-qual")
+#pragma GCC diagnostic ignored "-Wcast-qual"
+#endif
+  return (void *)ptr;
+#pragma GCC diagnostic pop
+#else
+  return (void *)ptr;
+#endif // __GNUC__
+}
 
 #ifdef USE_STR
 #include <string.h> // strlen
@@ -87,7 +102,9 @@ struct str {
   size_t cap;
 };
 #define str_unmanaged(char_ptr) ((struct str){.ptr = (char *)(char_ptr), .len = strlen((char_ptr))})
-#endif
+#define str_unmanaged_const(char_ptr)                                                                                  \
+  ((struct str const){.ptr = (char *)base_deconster_((char_ptr)), .len = strlen((char_ptr))})
+#endif // USE_STR
 
 #ifdef USE_WSTR
 #include <wchar.h> // wcslen
@@ -97,7 +114,9 @@ struct wstr {
   size_t cap;
 };
 #define wstr_unmanaged(wchar_ptr) ((struct wstr){.ptr = (wchar_t *)(wchar_ptr), .len = wcslen((wchar_ptr))})
-#endif
+#define wstr_unmanaged_const(wchar_ptr)                                                                                \
+  ((struct wstr const){.ptr = (wchar_t *)base_deconster_((wchar_ptr)), .len = wcslen((wchar_ptr))})
+#endif // USE_WSTR
 
 struct error {
   int type;
