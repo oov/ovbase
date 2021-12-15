@@ -556,7 +556,7 @@ thrd_equal(thrd_t thr0, thrd_t thr1)
 }
 
 // 7.25.5.5
-NORETURN static inline void
+static inline void
 thrd_exit(int res)
 {
     impl_tss_dtor_invoke();

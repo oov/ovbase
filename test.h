@@ -1,5 +1,10 @@
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "base.h"
+
 #ifdef __GNUC__
 
 #pragma GCC diagnostic push
@@ -8,9 +13,6 @@
 #endif
 
 #endif // __GNUC__
-
-#include "base.h"
-#include <stdio.h>
 
 static inline void test_init_(void) {
   if (!base_init()) {

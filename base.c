@@ -37,6 +37,9 @@ static _Atomic uint64_t g_global_hint = 0;
 #if __has_warning("-Wpadded")
 #pragma GCC diagnostic ignored "-Wpadded"
 #endif
+#if __has_warning("-Wmissing-noreturn")
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#endif
 #include "3rd/threads/threads.h"
 #pragma GCC diagnostic pop
 

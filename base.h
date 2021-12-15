@@ -22,6 +22,14 @@
 #define NODISCARD
 #endif
 
+#if __has_c_attribute(noreturn)
+#define NORETURN [[noreturn]]
+#elif __has_attribute(noreturn)
+#define NORETURN __attribute__((noreturn))
+#else
+#define NORETURN
+#endif
+
 #ifdef __FILE_NAME__
 #define SOURCE_CODE_FILE_NAME __FILE_NAME__
 #else

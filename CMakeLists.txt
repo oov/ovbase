@@ -28,7 +28,6 @@ add_compile_definitions(
   $<$<BOOL:${ALLOCATE_LOGGER}>:ALLOCATE_LOGGER>
   $<$<CONFIG:Release>:NDEBUG>
 )
-
 add_compile_options(
   $<$<BOOL:${WIN32}>:--rtlib=compiler-rt>
   -mstackrealign
