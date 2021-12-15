@@ -736,6 +736,8 @@ error array_free_(struct array *const p MEM_FILEPOS_PARAMS) {
 
 // str
 
+#ifdef USE_STR
+
 NODISCARD static inline error str_grow(struct str *const s, size_t const least_size MEM_FILEPOS_PARAMS) {
   return array_grow_((struct array *)s, sizeof(char), least_size MEM_FILEPOS_VALUES_PASSTHRU);
 }
@@ -864,7 +866,11 @@ cleanup:
   return err;
 }
 
+#endif // USE_STR
+
 // wstr
+
+#ifdef USE_WSTR
 
 NODISCARD static inline error wstr_grow(struct wstr *const ws, size_t const least_size MEM_FILEPOS_PARAMS) {
   return array_grow_((struct array *)ws, sizeof(wchar_t), least_size MEM_FILEPOS_VALUES_PASSTHRU);
@@ -995,6 +1001,8 @@ cleanup:
   array_free_core_((struct array *)&tmp MEM_FILEPOS_VALUES_PASSTHRU);
   return err;
 }
+
+#endif // USE_WSTR
 
 // hash map
 

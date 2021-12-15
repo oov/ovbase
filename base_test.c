@@ -92,6 +92,8 @@ static void test_array(void) {
   TEST_CHECK(arr.ptr == NULL);
 }
 
+#ifdef USE_WSTR
+
 static void test_wstr_cpy_free(void) {
   static wchar_t const *const test_str = L"hello";
   struct wstr ws = {0};
@@ -299,6 +301,10 @@ static void test_wstr_replace_all(void) {
   }
   TEST_SUCCEEDED_F(sfree(&ws));
 }
+
+#endif // USE_WSTR
+
+#ifdef USE_STR
 
 static void test_str_cpy_free(void) {
   static char const *const test_str = "hello";
@@ -514,6 +520,8 @@ static void test_str_replace_all(void) {
   TEST_SUCCEEDED_F(sfree(&s));
 }
 
+#endif // USE_STR
+
 struct test_item_dynamic {
   struct wstr key;
   size_t v;
@@ -658,6 +666,7 @@ TEST_LIST = {
     {"test_error", test_error},
     {"test_mem", test_mem},
     {"test_array", test_array},
+#ifdef USE_WSTR
     {"test_wstr_cpy_free", test_wstr_cpy_free},
     {"test_wstr_ncpy", test_wstr_ncpy},
     {"test_wstr_cat_free", test_wstr_cat_free},
@@ -665,6 +674,8 @@ TEST_LIST = {
     {"test_wstr_grow", test_wstr_grow},
     {"test_wstr_str", test_wstr_str},
     {"test_wstr_replace_all", test_wstr_replace_all},
+#endif // USE_WSTR
+#ifdef USE_STR
     {"test_str_cpy_free", test_str_cpy_free},
     {"test_str_ncpy", test_str_ncpy},
     {"test_str_cat_free", test_str_cat_free},
@@ -672,6 +683,7 @@ TEST_LIST = {
     {"test_str_grow", test_str_grow},
     {"test_str_str", test_str_str},
     {"test_str_replace_all", test_str_replace_all},
+#endif // USE_STR
     {"test_hmap_dynamic", test_hmap_dynamic},
     {"test_hmap_static", test_hmap_static},
     {NULL, NULL},
