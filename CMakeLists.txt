@@ -20,7 +20,6 @@ foreach(target ${targets})
   target_compile_definitions(${target} PRIVATE
     $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
     $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0502>
-    $<$<BOOL:${WIN32}>:_CONSOLE>
     USE_STR
     USE_WSTR
     $<$<CONFIG:Release>:NDEBUG>
@@ -58,7 +57,6 @@ foreach(target ${tests})
   target_compile_definitions(${target} PRIVATE
     $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
     $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0502>
-    $<$<BOOL:${WIN32}>:_CONSOLE>
     USE_STR
     USE_WSTR
     LEAK_DETECTOR

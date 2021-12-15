@@ -35,7 +35,7 @@ struct base_filepos {
   size_t line;
 };
 
-void base_init(void);
+NODISCARD bool base_init(void);
 void base_exit(void);
 
 #define ERR_FILEPOS_PARAMS , struct base_filepos const *const filepos
@@ -190,7 +190,8 @@ static inline bool eignore(error err) {
 
 #define _HRESULT_DEFINED
 
-#endif
+#endif // __GNUC__
+
 typedef long HRESULT;
 
 #endif // _HRESULT_DEFINED

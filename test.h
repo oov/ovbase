@@ -1,13 +1,22 @@
 #pragma once
 
+#ifdef __GNUC__
+
 #pragma GCC diagnostic push
+#if __has_warning("-Wused-but-marked-unused")
 #pragma GCC diagnostic ignored "-Wused-but-marked-unused"
+#endif
+
+#endif // __GNUC__
 
 #include "base.h"
 #include <stdio.h>
 
 static inline void test_init_(void) {
-  base_init();
+  if (!base_init()) {
+    printf("!! INITIALIZATION FAILED !!\n");
+    abort();
+  }
 #ifdef TEST_MY_INIT
   TEST_MY_INIT;
 #endif
@@ -25,11 +34,24 @@ static inline void test_fini_(void) {
 }
 #define TEST_INIT test_init_()
 #define TEST_FINI test_fini_()
+
+#ifdef __GNUC__
+
 #pragma GCC diagnostic push
+#if __has_warning("-Wpadded")
 #pragma GCC diagnostic ignored "-Wpadded"
+#endif
+#if __has_warning("-Wsign-conversion")
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
 #include "3rd/acutest.h"
 #pragma GCC diagnostic pop
+
+#else
+
+#include "3rd/acutest.h"
+
+#endif // __GNUC__
 
 static int test_eis(error err,
                     int const type,
@@ -93,4 +115,6 @@ static inline bool test_eis_f(error err,
   (test_eis_f((err), err_type_generic, (code), __FILE__, __LINE__, "TEST_EISG_F(%s, %s)", #err, #code, NULL))
 #define TEST_SUCCEEDED_F(err) (test_eis_f((err), 0, 0, __FILE__, __LINE__, "TEST_SUCCEEDED_F(%s)", #err, NULL, NULL))
 
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif // __GNUC__

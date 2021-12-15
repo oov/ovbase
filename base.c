@@ -110,10 +110,8 @@ uint64_t get_global_hint(void) {
   return base_splitmix64(atomic_fetch_add_explicit(&g_global_hint, 0x9e3779b97f4a7c15, memory_order_relaxed));
 }
 
-static void report(NATIVE_CHAR const *const str) {
+static void write_stderr(NATIVE_CHAR const *const str) {
 #ifdef _WIN32
-
-#ifdef _CONSOLE
   // https://docs.microsoft.com/en-us/windows/console/writeconsole
   // WriteConsole fails if it is used with a standard handle that is redirected
   // to a file. If an application processes multilingual output that can be
@@ -138,10 +136,6 @@ static void report(NATIVE_CHAR const *const str) {
       free(p);
     }
   }
-#else
-  OutputDebugStringW(str);
-#endif
-
 #else
   fprintf(stderr, "%s" NEWLINE, str);
 #endif
@@ -352,11 +346,11 @@ void error_default_reporter(error const e,
     err = ethru(err);
     goto cleanup;
   }
-  report(msg.ptr);
+  write_stderr(msg.ptr);
 
 cleanup:
   if (efailed(err)) {
-    report(NSTR("failed to report error"));
+    write_stderr(NSTR("failed to report error"));
     efree(&err);
   }
   eignore(sfree(&msg));
@@ -472,7 +466,7 @@ cleanup:
 }
 #endif
 
-static void error_init(void) {
+static bool error_init(void) {
   mtx_init(&g_error_mtx, mtx_plain);
 
   error err = hmnews(&g_error_message_mapper, sizeof(struct error_message_mapping), 0, sizeof(size_t));
@@ -489,17 +483,20 @@ static void error_init(void) {
     goto failed;
   }
 #endif
-  return;
+  return true;
 
 failed:
+  eignore(hmfree(&g_error_message_mapper));
+  mtx_destroy(&g_error_mtx);
   efree(&err);
-  report(NSTR("failed to initialize error system"));
-  abort();
+  return false;
 }
 
 static void error_exit(void) {
-  ereport(hmfree(&g_error_message_mapper));
-  mtx_destroy(&g_error_mtx);
+  if (g_error_message_mapper.get_key) {
+    ereport(hmfree(&g_error_message_mapper));
+    mtx_destroy(&g_error_mtx);
+  }
 }
 
 static error find_last_error(error e) {
@@ -1216,12 +1213,12 @@ error hmap_scan(struct hmap *const hm, bool (*iter)(void const *const item, void
 
 ////////////////////
 
-void base_init(void) {
+bool base_init(void) {
   global_hint_init();
 #ifdef ALLOCATE_LOGGER
   allocate_logger_init();
 #endif
-  error_init();
+  return error_init();
 }
 
 void base_exit(void) {
