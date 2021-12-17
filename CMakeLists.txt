@@ -45,7 +45,7 @@ add_compile_options(
 )
 add_link_options(
   -Wl,--gc-sections
-  -Wl,--print-gc-sections
+  # -Wl,--print-gc-sections
   $<$<BOOL:${WIN32}>:--rtlib=compiler-rt>
   $<$<BOOL:${WIN32}>:-no-pthread>
   -static
