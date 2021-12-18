@@ -119,6 +119,15 @@ static void write_stderr(NATIVE_CHAR const *const str) {
 #endif
 }
 
+static void *base_hm_malloc(size_t const s, void *const udata) {
+  (void)udata;
+  return REALLOC(NULL, s);
+}
+static void base_hm_free(void *const p, void *const udata) {
+  (void)udata;
+  FREE(p);
+}
+
 // mem
 
 #ifdef ALLOCATE_LOGGER
@@ -129,14 +138,6 @@ struct allocated_at {
   struct base_filepos const filepos;
 };
 
-static void *am_malloc(size_t const s, void *const udata) {
-  (void)udata;
-  return REALLOC(NULL, s);
-}
-static void am_free(void *const p, void *const udata) {
-  (void)udata;
-  FREE(p);
-}
 static uint64_t am_hash(void const *const item, uint64_t const seed0, uint64_t const seed1, void *const udata) {
   (void)udata;
   struct allocated_at const *const aa = item;
@@ -156,7 +157,7 @@ static void allocate_logger_init(void) {
   hash = base_splitmix64_next(hash);
   uint64_t const s1 = base_splitmix64(hash);
   g_allocated = hashmap_new_with_allocator(
-      am_malloc, am_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+      base_hm_malloc, base_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!g_allocated) {
     abort();
   }
@@ -182,7 +183,8 @@ static void allocated_put(void const *const p MEM_FILEPOS_PARAMS) {
 static void allocated_remove(void const *const p) {
   struct allocated_at *const aa = hashmap_delete(g_allocated, &(struct allocated_at){.p = p});
   if (aa == NULL) {
-    ereportmsg(errg(err_unexpected), &native_unmanaged(NSTR("double free detected.")));
+    ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(NSTR("double free detected."))),
+               &native_unmanaged(NSTR("allocate logger report")));
   }
 }
 
@@ -196,7 +198,8 @@ static bool report_leaks_iterate(void const *const item, void *const udata) {
 #else
   sprintf(buf, "Leak #%zu: %s:%ld %s()" NEWLINE, *n, aa->filepos.file, aa->filepos.line, aa->filepos.func);
 #endif
-  ereportmsg(errg(err_unexpected), &native_unmanaged(buf));
+  ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(buf)),
+             &native_unmanaged(NSTR("memory leak found")));
   return true;
 }
 
@@ -227,7 +230,8 @@ static void report_allocated_count(void) {
 #else
   sprintf(buf, "Not freed memory blocks: %ld" NEWLINE, n);
 #endif
-  ereportmsg(errg(err_unexpected), &native_unmanaged(buf));
+  ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(buf)),
+             &native_unmanaged(NSTR("memory leak found")));
 }
 #endif
 
@@ -336,13 +340,23 @@ cleanup:
 }
 
 static mtx_t g_error_mtx = {0};
-static struct hmap g_error_message_mapper = {0};
+static struct hashmap *g_error_message_mapper = NULL;
 static error_message_reporter g_error_reporter = error_default_reporter;
 
 struct error_message_mapping {
   size_t type;
   NODISCARD error_message_mapper get;
 };
+
+static uint64_t emm_hash(void const *const item, uint64_t const seed0, uint64_t const seed1, void *const udata) {
+  (void)udata;
+  return hashmap_sip(item, sizeof(size_t), seed0, seed1);
+}
+
+static int emm_compare(void const *a, void const *b, void *const udata) {
+  (void)udata;
+  return (int)(*(size_t const *)a - *(size_t const *)b);
+}
 
 NODISCARD error generic_error_message_mapper_en(uint_least32_t const code, struct NATIVE_STR *const message) {
   switch (code) {
@@ -446,12 +460,28 @@ cleanup:
 
 static bool error_init(void) {
   mtx_init(&g_error_mtx, mtx_plain);
-
-  error err = hmnews(&g_error_message_mapper, sizeof(struct error_message_mapping), 0, sizeof(size_t));
-  if (efailed(err)) {
+  uint64_t hash = base_splitmix64_next(get_global_hint());
+  uint64_t const s0 = base_splitmix64(hash);
+  hash = base_splitmix64_next(hash);
+  uint64_t const s1 = base_splitmix64(hash);
+  g_error_message_mapper = hashmap_new_with_allocator(
+      base_hm_malloc, base_hm_free, sizeof(struct error_message_mapping), 1, s0, s1, emm_hash, emm_compare, NULL, NULL);
+  if (!g_error_message_mapper) {
     goto failed;
   }
-  err = error_register_message_mapper(err_type_generic, generic_error_message_mapper_en);
+  return true;
+
+failed:
+  if (g_error_message_mapper) {
+    hashmap_free(g_error_message_mapper);
+    g_error_message_mapper = NULL;
+  }
+  mtx_destroy(&g_error_mtx);
+  return false;
+}
+
+static bool error_register_default_mapper(void) {
+  error err = error_register_message_mapper(err_type_generic, generic_error_message_mapper_en);
   if (efailed(err)) {
     goto failed;
   }
@@ -464,15 +494,14 @@ static bool error_init(void) {
   return true;
 
 failed:
-  eignore(hmfree(&g_error_message_mapper));
-  mtx_destroy(&g_error_mtx);
   efree(&err);
   return false;
 }
 
 static void error_exit(void) {
-  if (g_error_message_mapper.get_key) {
-    ereport(hmfree(&g_error_message_mapper));
+  if (g_error_message_mapper) {
+    hashmap_free(g_error_message_mapper);
+    g_error_message_mapper = NULL;
     mtx_destroy(&g_error_mtx);
   }
 }
@@ -489,11 +518,12 @@ static error find_last_error(error e) {
 
 error error_register_message_mapper(int const type, error_message_mapper fn) {
   mtx_lock(&g_error_mtx);
-  error err = hmset(&g_error_message_mapper,
-                    (&(struct error_message_mapping){
-                        .type = (size_t const)type,
-                        .get = fn,
-                    }));
+  void *r = hashmap_set(g_error_message_mapper,
+                        &(struct error_message_mapping){
+                            .type = (size_t const)type,
+                            .get = fn,
+                        });
+  error err = r == NULL && hashmap_oom(g_error_message_mapper) ? errg(err_out_of_memory) : eok();
   mtx_unlock(&g_error_mtx);
   return err;
 }
@@ -506,7 +536,12 @@ void error_register_reporter(error_message_reporter const fn) {
 
 NODISCARD static error error_get_registered_message_mapper(int const type, struct error_message_mapping **const em) {
   mtx_lock(&g_error_mtx);
-  error err = hmget(&g_error_message_mapper, &(struct error_message_mapping){.type = (size_t const)type}, em);
+  struct error_message_mapping *found =
+      hashmap_get(g_error_message_mapper, &(struct error_message_mapping){.type = (size_t const)type});
+  error err = found ? eok() : errg(err_not_found);
+  if (esucceeded(err)) {
+    *em = found;
+  }
   mtx_unlock(&g_error_mtx);
   return err;
 }
@@ -1201,14 +1236,16 @@ error hmap_scan(struct hmap *const hm, bool (*iter)(void const *const item, void
 
 bool base_init(void) {
   global_hint_init();
+  if (!error_init()) {
+    return false;
+  }
 #ifdef ALLOCATE_LOGGER
   allocate_logger_init();
 #endif
-  return error_init();
+  return error_register_default_mapper();
 }
 
 void base_exit(void) {
-  error_exit();
 #ifdef ALLOCATE_LOGGER
   report_leaks();
   allocate_logger_exit();
@@ -1216,4 +1253,5 @@ void base_exit(void) {
 #ifdef LEAK_DETECTOR
   report_allocated_count();
 #endif
+  error_exit();
 }
