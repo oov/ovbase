@@ -452,7 +452,7 @@ NODISCARD error hmap_scan(struct hmap *const hm,
   hmap_get((struct_hmap_ptr), (key_item_ptr), (void **)(item_ptr_ptr))
 #define hmset(struct_hmap_ptr, item_ptr) hmap_set((struct_hmap_ptr), (item_ptr)MEM_FILEPOS_VALUES)
 #define hmdelete(struct_hmap_ptr, key_item_ptr) hmap_delete((struct_hmap_ptr), (key_item_ptr)MEM_FILEPOS_VALUES)
-#define hmscan(struct_hmap_ptr, iter, udata_ptr) hmap_scan((struct_hmap_ptr), (iter), (udata_ptr)MEM_FILEPOS_VALUES)
+#define hmscan(struct_hmap_ptr, iter, udata_ptr) hmap_scan((struct_hmap_ptr), (iter), (udata_ptr))
 
 uint64_t get_global_hint(void);
 
