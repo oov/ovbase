@@ -646,8 +646,14 @@ timespec_get(struct timespec *ts, int base)
 {
     if (!ts) return 0;
     if (base == TIME_UTC) {
-        ts->tv_sec = time(NULL);
-        ts->tv_nsec = 0;
+        FILETIME ft1601 = {0};
+        GetSystemTimeAsFileTime(&ft1601);
+        uint64_t const t = (ULARGE_INTEGER){
+          .LowPart = ft1601.dwLowDateTime,
+          .HighPart = ft1601.dwHighDateTime,
+        }.QuadPart - UINT64_C(0x019DB1DED53E8000); // 1601-01-01 to 1970-01-01
+        ts->tv_sec  = (time_t)(t / 10000000);
+        ts->tv_nsec = (long)((t % 10000000)*100);
         return base;
     }
     return 0;

@@ -26,6 +26,11 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
+// NOTICE
+//   This source code contains a few changes.
+//   You can get the original source code from below.
+//   https://gist.github.com/yohhoy/2223710
+//   https://cgit.freedesktop.org/mesa/mesa/tree/include/c11
 #ifndef EMULATED_THREADS_H_INCLUDED_
 #define EMULATED_THREADS_H_INCLUDED_
 
