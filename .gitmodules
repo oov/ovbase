@@ -2,3 +2,6 @@
 	path = 3rd/hashmap
 	url = https://github.com/oov/hashmap.c
 	branch = simplify
+[submodule "3rd/tinycthread"]
+	path = 3rd/tinycthread
+	url = https://github.com/tinycthread/tinycthread

@@ -14,18 +14,21 @@
 #if __has_warning("-Wreserved-macro-identifier")
 #pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
 #endif
+#if __has_warning("-Wreserved-identifier")
+#pragma GCC diagnostic ignored "-Wreserved-identifier"
+#endif
+#if __has_warning("-Wdocumentation")
+#pragma GCC diagnostic ignored "-Wdocumentation"
+#endif
 #if __has_warning("-Wpadded")
 #pragma GCC diagnostic ignored "-Wpadded"
 #endif
-#if __has_warning("-Wmissing-noreturn")
-#pragma GCC diagnostic ignored "-Wmissing-noreturn"
-#endif
-#include "3rd/threads/threads.h"
+#include "3rd/tinycthread/source/tinycthread.h"
 #pragma GCC diagnostic pop
 
 #else
 
-#include "3rd/threads/threads.h"
+#include "3rd/tinycthread/source/tinycthread.h"
 
 #endif // __GNUC__
 

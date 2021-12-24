@@ -24,7 +24,40 @@
 #include <stdatomic.h>
 static _Atomic uint64_t g_global_hint = 0;
 
+#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
 #include "threads.h"
+#else
+
+#include "threads.h"
+
+#ifdef __GNUC__
+
+#pragma GCC diagnostic push
+#if __has_warning("-Wsign-conversion")
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+#if __has_warning("-Wreserved-macro-identifier")
+#pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
+#endif
+#if __has_warning("-Wreserved-identifier")
+#pragma GCC diagnostic ignored "-Wreserved-identifier"
+#endif
+#if __has_warning("-Wmissing-variable-declarations")
+#pragma GCC diagnostic ignored "-Wmissing-variable-declarations"
+#endif
+#if __has_warning("-Wpadded")
+#pragma GCC diagnostic ignored "-Wpadded"
+#endif
+#include "3rd/tinycthread/source/tinycthread.c"
+#pragma GCC diagnostic pop
+
+#else
+
+#include "3rd/tinycthread/source/tinycthread.c"
+
+#endif // __GNUC__
+
+#endif // __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
 
 #ifdef __GNUC__
 
