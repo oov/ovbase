@@ -80,6 +80,29 @@ Configuration macro:
 #define HAVE_TIMESPEC_GET
 #endif
 
+
+/*-------------------- 7.25.7 Time functions --------------------*/
+// 7.25.6.1
+#ifndef HAVE_TIMESPEC_GET
+static inline int
+timespec_get(struct timespec *ts, int base)
+{
+    if (!ts) return 0;
+    if (base == TIME_UTC) {
+        FILETIME ft1601 = {0};
+        GetSystemTimeAsFileTime(&ft1601);
+        uint64_t const t = (ULARGE_INTEGER){
+          .LowPart = ft1601.dwLowDateTime,
+          .HighPart = ft1601.dwHighDateTime,
+        }.QuadPart - UINT64_C(0x019DB1DED53E8000); // 1601-01-01 to 1970-01-01
+        ts->tv_sec  = (time_t)(t / 10000000);
+        ts->tv_nsec = (long)((t % 10000000)*100);
+        return base;
+    }
+    return 0;
+}
+#endif
+
 /*---------------------------- macros ----------------------------*/
 #ifdef EMULATED_THREADS_USE_NATIVE_CALL_ONCE
 #define ONCE_FLAG_INIT INIT_ONCE_STATIC_INIT
@@ -152,7 +175,13 @@ static unsigned __stdcall impl_thrd_routine(void *p)
 
 static DWORD impl_timespec2msec(const struct timespec *ts)
 {
-    return (DWORD)((ts->tv_sec * 1000L) + (ts->tv_nsec / 1000000L));
+    struct timespec now = {0};
+    if (timespec_get(&now, TIME_UTC) != TIME_UTC) {
+      return 0;
+    }
+    uint64_t const now_msec = ((uint64_t)(now.tv_sec) * UINT64_C(1000)) + ((uint64_t)(now.tv_nsec) / UINT64_C(1000000));
+    uint64_t const ts_msec = ((uint64_t)(ts->tv_sec) * UINT64_C(1000)) + ((uint64_t)(ts->tv_nsec) / UINT64_C(1000000));
+    return now_msec > ts_msec ? 0 : (DWORD)(ts_msec - now_msec);
 }
 
 #ifdef EMULATED_THREADS_USE_NATIVE_CALL_ONCE
@@ -259,7 +288,7 @@ static int impl_cond_do_wait(cnd_t *cond, mtx_t *mtx, const struct timespec *ts)
     }
 
     mtx_lock(mtx);
-    return timeout ? thrd_busy : thrd_success;
+    return timeout ? thrd_timedout : thrd_success;
 }
 #endif  // ifndef EMULATED_THREADS_USE_NATIVE_CV
 
@@ -389,7 +418,7 @@ cnd_timedwait(cnd_t *cond, mtx_t *mtx, const struct timespec *abs_time)
 #ifdef EMULATED_THREADS_USE_NATIVE_CV
     if (SleepConditionVariableCS(&cond->condvar, mtx, impl_timespec2msec(abs_time)))
         return thrd_success;
-    return (GetLastError() == ERROR_TIMEOUT) ? thrd_busy : thrd_error;
+    return (GetLastError() == ERROR_TIMEOUT) ? thrd_timedout : thrd_error;
 #else
     return impl_cond_do_wait(cond, mtx, abs_time);
 #endif
@@ -445,14 +474,14 @@ mtx_lock(mtx_t *mtx)
 static inline int
 mtx_timedlock(mtx_t *mtx, const struct timespec *ts)
 {
-    time_t expire, now;
+    struct timespec now;
     if (!mtx || !ts) return thrd_error;
-    expire = time(NULL);
-    expire += ts->tv_sec;
     while (mtx_trylock(mtx) != thrd_success) {
-        now = time(NULL);
-        if (expire < now)
-            return thrd_busy;
+        if (timespec_get(&now, TIME_UTC) != TIME_UTC) {
+          return thrd_error;
+        }
+        if (ts->tv_sec < now.tv_sec || (ts->tv_sec == now.tv_sec && ts->tv_nsec < now.tv_nsec))
+            return thrd_timedout;
         // busy loop!
         thrd_yield();
     }
@@ -636,26 +665,3 @@ tss_set(tss_t key, void *val)
 {
     return TlsSetValue(key, val) ? thrd_success : thrd_error;
 }
-
-
-/*-------------------- 7.25.7 Time functions --------------------*/
-// 7.25.6.1
-#ifndef HAVE_TIMESPEC_GET
-static inline int
-timespec_get(struct timespec *ts, int base)
-{
-    if (!ts) return 0;
-    if (base == TIME_UTC) {
-        FILETIME ft1601 = {0};
-        GetSystemTimeAsFileTime(&ft1601);
-        uint64_t const t = (ULARGE_INTEGER){
-          .LowPart = ft1601.dwLowDateTime,
-          .HighPart = ft1601.dwHighDateTime,
-        }.QuadPart - UINT64_C(0x019DB1DED53E8000); // 1601-01-01 to 1970-01-01
-        ts->tv_sec  = (time_t)(t / 10000000);
-        ts->tv_nsec = (long)((t % 10000000)*100);
-        return base;
-    }
-    return 0;
-}
-#endif
