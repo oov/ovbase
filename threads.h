@@ -23,13 +23,28 @@
 #if __has_warning("-Wpadded")
 #pragma GCC diagnostic ignored "-Wpadded"
 #endif
+
+#endif // __GNUC__
+
+#include <time.h>
+
+#if !defined(TIME_UTC) && defined(_WIN32)
+#define IMPLEMENT_BASE_TIMESPEC_WIN32
+#define TIME_UTC (1)
+struct base_timespec_ {
+  time_t tv_sec;
+  long tv_nsec;
+};
+#define timespec base_timespec_
+
+int base_timespec_get_(struct timespec *ts, int base);
+#define timespec_get base_timespec_get_
+#endif
+
 #include "3rd/tinycthread/source/tinycthread.h"
+
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
-
-#else
-
-#include "3rd/tinycthread/source/tinycthread.h"
-
 #endif // __GNUC__
 
 #endif // __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)

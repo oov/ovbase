@@ -30,6 +30,30 @@ static _Atomic uint64_t g_global_hint = 0;
 
 #include "threads.h"
 
+#if defined(IMPLEMENT_BASE_TIMESPEC_WIN32)
+int base_timespec_get_(struct timespec *ts, int base) {
+  if (!ts)
+    return 0;
+  if (base == TIME_UTC) {
+    ts->tv_sec = time(NULL);
+    ts->tv_nsec = 0;
+    FILETIME ft1601 = {0};
+    GetSystemTimeAsFileTime(&ft1601);
+    uint64_t const t =
+        (ULARGE_INTEGER){
+            .LowPart = ft1601.dwLowDateTime,
+            .HighPart = ft1601.dwHighDateTime,
+        }
+            .QuadPart -
+        UINT64_C(0x019DB1DED53E8000); // 1601-01-01 to 1970-01-01
+    ts->tv_sec = (time_t)(t / 10000000);
+    ts->tv_nsec = (long)((t % 10000000) * 100);
+    return base;
+  }
+  return 0;
+}
+#endif
+
 #ifdef __GNUC__
 
 #pragma GCC diagnostic push
