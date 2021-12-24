@@ -436,8 +436,10 @@ NODISCARD error hmap_free(struct hmap *const hm MEM_FILEPOS_PARAMS);
 NODISCARD error hmap_clear(struct hmap *const hm);
 NODISCARD error hmap_count(struct hmap const *const hm, size_t *const dest);
 NODISCARD error hmap_get(struct hmap *const hm, void const *const key_item, void **const item);
-NODISCARD error hmap_set(struct hmap *const hm, void const *const item MEM_FILEPOS_PARAMS);
-NODISCARD error hmap_delete(struct hmap *const hm, void const *const key_item MEM_FILEPOS_PARAMS);
+NODISCARD error hmap_set(struct hmap *const hm, void const *const item, void **const old_item MEM_FILEPOS_PARAMS);
+NODISCARD error hmap_delete(struct hmap *const hm,
+                            void const *const key_item,
+                            void **const old_item MEM_FILEPOS_PARAMS);
 NODISCARD error hmap_scan(struct hmap *const hm,
                           bool (*iter)(void const *const item, void *const udata),
                           void *const udata);
@@ -450,8 +452,10 @@ NODISCARD error hmap_scan(struct hmap *const hm,
 #define hmcount(struct_hmap_ptr, size_t_ptr) hmap_count((struct_hmap_ptr), (size_t_ptr))
 #define hmget(struct_hmap_ptr, key_item_ptr, item_ptr_ptr)                                                             \
   hmap_get((struct_hmap_ptr), (key_item_ptr), (void **)(item_ptr_ptr))
-#define hmset(struct_hmap_ptr, item_ptr) hmap_set((struct_hmap_ptr), (item_ptr)MEM_FILEPOS_VALUES)
-#define hmdelete(struct_hmap_ptr, key_item_ptr) hmap_delete((struct_hmap_ptr), (key_item_ptr)MEM_FILEPOS_VALUES)
+#define hmset(struct_hmap_ptr, item_ptr, old_item_ptr_ptr)                                                             \
+  hmap_set((struct_hmap_ptr), (item_ptr), (void **)(old_item_ptr_ptr)MEM_FILEPOS_VALUES)
+#define hmdelete(struct_hmap_ptr, key_item_ptr, old_item_ptr_ptr)                                                      \
+  hmap_delete((struct_hmap_ptr), (key_item_ptr), (void **)(old_item_ptr_ptr)MEM_FILEPOS_VALUES)
 #define hmscan(struct_hmap_ptr, iter, udata_ptr) hmap_scan((struct_hmap_ptr), (iter), (udata_ptr))
 
 uint64_t get_global_hint(void);

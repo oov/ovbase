@@ -573,10 +573,10 @@ static void test_hmap_dynamic(void) {
   if (!TEST_CHECK(got == NULL)) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_dynamic){.key = wstr_unmanaged(L"test1"), .v = 100})))) {
+  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_dynamic){.key = wstr_unmanaged(L"test1"), .v = 100}), NULL))) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_dynamic){.key = wstr_unmanaged(L"test2"), .v = 200})))) {
+  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_dynamic){.key = wstr_unmanaged(L"test2"), .v = 200}), NULL))) {
     goto cleanup;
   }
   if (!TEST_SUCCEEDED_F(hmcount(&tmp, &count))) {
@@ -594,7 +594,7 @@ static void test_hmap_dynamic(void) {
   if (!TEST_CHECK(got->v == 100)) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(hmdelete(&tmp, &(struct test_item_dynamic){.key = wstr_unmanaged(L"test1")}))) {
+  if (!TEST_SUCCEEDED_F(hmdelete(&tmp, &(struct test_item_dynamic){.key = wstr_unmanaged(L"test1")}, NULL))) {
     goto cleanup;
   }
   if (!TEST_SUCCEEDED_F(hmcount(&tmp, &count))) {
@@ -640,10 +640,10 @@ static void test_hmap_static(void) {
   if (!TEST_CHECK(got == NULL)) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_static){.key = 123, .v = 100})))) {
+  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_static){.key = 123, .v = 100}), NULL))) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_static){.key = 456, .v = 200})))) {
+  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_static){.key = 456, .v = 200}), NULL))) {
     goto cleanup;
   }
   if (!TEST_SUCCEEDED_F(hmcount(&tmp, &count))) {
@@ -661,7 +661,7 @@ static void test_hmap_static(void) {
   if (!TEST_CHECK(got->v == 100)) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(hmdelete(&tmp, &(struct test_item_static){.key = 123}))) {
+  if (!TEST_SUCCEEDED_F(hmdelete(&tmp, &(struct test_item_static){.key = 123}, NULL))) {
     goto cleanup;
   }
   if (!TEST_SUCCEEDED_F(hmcount(&tmp, &count))) {
