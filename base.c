@@ -894,7 +894,7 @@ error str_replace_all_(struct str *const s, char const *const find, char const *
   if (!s || !find || !replacement) {
     return errg(err_invalid_arugment);
   }
-  int const findlen = (int)strlen(find);
+  ptrdiff_t const findlen = (ptrdiff_t)strlen(find);
   if (findlen == 0) {
     return eok();
   }
@@ -911,7 +911,7 @@ error str_replace_all_(struct str *const s, char const *const find, char const *
       }
       break;
     }
-    int const foundpos = (int)(found - s->ptr);
+    ptrdiff_t const foundpos = found - s->ptr;
     err = str_ncat_(&tmp, s->ptr + pos, (size_t)(foundpos - pos) MEM_FILEPOS_VALUES_PASSTHRU);
     if (efailed(err)) {
       err = ethru(err);
@@ -1030,7 +1030,7 @@ error wstr_replace_all_(struct wstr *const ws,
   if (!ws || !find || !replacement) {
     return errg(err_invalid_arugment);
   }
-  int const findlen = (int)wcslen(find);
+  ptrdiff_t const findlen = (ptrdiff_t)wcslen(find);
   if (findlen == 0) {
     return eok();
   }
@@ -1047,7 +1047,7 @@ error wstr_replace_all_(struct wstr *const ws,
       }
       break;
     }
-    int const foundpos = (int)(found - ws->ptr);
+    ptrdiff_t const foundpos = found - ws->ptr;
     err = wstr_ncat_(&tmp, ws->ptr + pos, (size_t)(foundpos - pos) MEM_FILEPOS_VALUES_PASSTHRU);
     if (efailed(err)) {
       err = ethru(err);

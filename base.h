@@ -335,7 +335,7 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
            BASE_GENERIC_CASE(struct wstr *const, wstr_ncat_),                                                          \
            BASE_GENERIC_CASE(struct str *, str_ncat_),                                                                 \
            BASE_GENERIC_CASE(struct str *const, str_ncat_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
-#define sstr(struct_str_ptr, char_ptr, int_ptr)                                                                        \
+#define sstr(struct_str_ptr, char_ptr, ptrdiff_t_ptr)                                                                  \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_str_),                                                                \
            BASE_GENERIC_CASE(struct wstr *const, wstr_str_),                                                           \
@@ -344,7 +344,7 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
            BASE_GENERIC_CASE(struct str *, str_str_),                                                                  \
            BASE_GENERIC_CASE(struct str *const, str_str_),                                                             \
            BASE_GENERIC_CASE(struct str const *, str_str_),                                                            \
-           BASE_GENERIC_CASE(struct str const *const, str_str_))((struct_str_ptr), (char_ptr), (int_ptr))
+           BASE_GENERIC_CASE(struct str const *const, str_str_))((struct_str_ptr), (char_ptr), (ptrdiff_t_ptr))
 #define sreplace_all(struct_str_ptr, char_ptr_find, char_ptr_replacement)                                              \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_replace_all_),                                                        \
@@ -369,12 +369,12 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct str *, str_ncat_),                                                                 \
            BASE_GENERIC_CASE(struct str *const, str_ncat_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
-#define sstr(struct_str_ptr, char_ptr, int_ptr)                                                                        \
+#define sstr(struct_str_ptr, char_ptr, ptrdiff_t_ptr)                                                                  \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct str const *, str_str_),                                                            \
            BASE_GENERIC_CASE(struct str const *const, str_str_),                                                       \
            BASE_GENERIC_CASE(struct str *, str_str_),                                                                  \
-           BASE_GENERIC_CASE(struct str *const, str_str_))((struct_str_ptr), (char_ptr), (int_ptr))
+           BASE_GENERIC_CASE(struct str *const, str_str_))((struct_str_ptr), (char_ptr), (ptrdiff_t_ptr))
 #define sreplace_all(struct_str_ptr, char_ptr_find, char_ptr_replacement)                                              \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct str *, str_replace_all_),                                                          \
@@ -399,12 +399,12 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
            BASE_GENERIC_CASE(struct wstr *, wstr_ncat_),                                                               \
            BASE_GENERIC_CASE(struct wstr *const, wstr_ncat_))(                                                         \
       (struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
-#define sstr(struct_str_ptr, char_ptr, int_ptr)                                                                        \
+#define sstr(struct_str_ptr, char_ptr, ptrdiff_t_ptr)                                                                  \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr const *, wstr_str_),                                                          \
            BASE_GENERIC_CASE(struct wstr const *const, wstr_str_),                                                     \
            BASE_GENERIC_CASE(struct wstr *, wstr_str_),                                                                \
-           BASE_GENERIC_CASE(struct wstr *const, wstr_str_))((struct_str_ptr), (char_ptr), (int_ptr))
+           BASE_GENERIC_CASE(struct wstr *const, wstr_str_))((struct_str_ptr), (char_ptr), (ptrdiff_t_ptr))
 #define sreplace_all(struct_str_ptr, char_ptr_find, char_ptr_replacement)                                              \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_replace_all_),                                                        \
