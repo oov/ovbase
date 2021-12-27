@@ -208,7 +208,7 @@ static int am_compare(void const *const a, void const *const b, void *udata) {
 }
 
 static void allocate_logger_init(void) {
-  mtx_init(&g_mem_mtx, mtx_plain);
+  mtx_init(&g_mem_mtx, mtx_recursive);
   uint64_t hash = base_splitmix64_next(get_global_hint());
   uint64_t const s0 = base_splitmix64(hash);
   hash = base_splitmix64_next(hash);
@@ -251,9 +251,9 @@ static bool report_leaks_iterate(void const *const item, void *const udata) {
   struct allocated_at const *const aa = item;
   NATIVE_CHAR buf[1024] = {0};
 #ifdef _WIN32
-  wsprintfW(buf, "Leak #%u: %hs:%ld %hs()" NEWLINE, *n, aa->filepos.file, aa->filepos.line, aa->filepos.func);
+  wsprintfW(buf, NSTR("Leak #%u: %hs:%ld %hs()") NEWLINE, *n, aa->filepos.file, aa->filepos.line, aa->filepos.func);
 #else
-  sprintf(buf, "Leak #%zu: %s:%ld %s()" NEWLINE, *n, aa->filepos.file, aa->filepos.line, aa->filepos.func);
+  sprintf(buf, NSTR("Leak #%zu: %s:%ld %s()") NEWLINE, *n, aa->filepos.file, aa->filepos.line, aa->filepos.func);
 #endif
   ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(buf)),
              &native_unmanaged(NSTR("memory leak found")));
