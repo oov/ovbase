@@ -900,7 +900,7 @@ error str_replace_all_(struct str *const s, char const *const find, char const *
   }
   error err = eok();
   struct str tmp = {0};
-  int pos = 0;
+  ptrdiff_t pos = 0;
   for (;;) {
     char const *const found = strstr(s->ptr + pos, find);
     if (!found) {
@@ -1036,7 +1036,7 @@ error wstr_replace_all_(struct wstr *const ws,
   }
   error err = eok();
   struct wstr tmp = {0};
-  int pos = 0;
+  ptrdiff_t pos = 0;
   for (;;) {
     wchar_t const *const found = wcsstr(ws->ptr + pos, find);
     if (!found) {

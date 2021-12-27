@@ -739,8 +739,7 @@ static void test_mtx_timedwait(void) {
   TEST_MSG("before %" PRIu64, (uint64_t)before.tv_sec);
   TEST_MSG("after  %" PRIu64, (uint64_t)after.tv_sec);
 
-  int tr = 0;
-  thrd_join(t, &tr);
+  thrd_join(t, NULL);
   cnd_destroy(&m.c2);
   mtx_destroy(&m.m2);
   cnd_destroy(&m.c1);
