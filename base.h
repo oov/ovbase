@@ -284,7 +284,7 @@ NODISCARD error str_cpy_(struct str *const s, char const *const s2 MEM_FILEPOS_P
 NODISCARD error str_ncpy_(struct str *const s, char const *const s2, size_t s2len MEM_FILEPOS_PARAMS);
 NODISCARD error str_cat_(struct str *const s, char const *const s2 MEM_FILEPOS_PARAMS);
 NODISCARD error str_ncat_(struct str *const s, char const *const s2, size_t s2len MEM_FILEPOS_PARAMS);
-NODISCARD error str_str_(struct str const *const s, char const *const s2, int *pos);
+NODISCARD error str_str_(struct str const *const s, char const *const s2, ptrdiff_t *pos);
 NODISCARD error str_replace_all_(struct str *const s,
                                  char const *const find,
                                  char const *const replacement MEM_FILEPOS_PARAMS);
@@ -297,7 +297,7 @@ NODISCARD error wstr_cpy_(struct wstr *const ws, wchar_t const *const ws2 MEM_FI
 NODISCARD error wstr_ncpy_(struct wstr *const ws, wchar_t const *const ws2, size_t ws2len MEM_FILEPOS_PARAMS);
 NODISCARD error wstr_cat_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARAMS);
 NODISCARD error wstr_ncat_(struct wstr *const ws, wchar_t const *const ws2, size_t ws2len MEM_FILEPOS_PARAMS);
-NODISCARD error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, int *pos);
+NODISCARD error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, ptrdiff_t *pos);
 NODISCARD error wstr_replace_all_(struct wstr *const ws,
                                   wchar_t const *const find,
                                   wchar_t const *const replacement MEM_FILEPOS_PARAMS);
@@ -431,7 +431,7 @@ NODISCARD error hmap_new_dynamic(struct hmap *const hm,
 NODISCARD error hmap_new_static(struct hmap *const hm,
                                 size_t const item_size,
                                 size_t const cap,
-                                size_t const key_size MEM_FILEPOS_PARAMS);
+                                size_t const key_bytes MEM_FILEPOS_PARAMS);
 NODISCARD error hmap_free(struct hmap *const hm MEM_FILEPOS_PARAMS);
 NODISCARD error hmap_clear(struct hmap *const hm);
 NODISCARD error hmap_count(struct hmap const *const hm, size_t *const dest);

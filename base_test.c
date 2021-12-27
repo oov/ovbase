@@ -246,23 +246,23 @@ static void test_wstr_grow(void) {
 
 static void test_wstr_str(void) {
   struct wstr ws = wstr_unmanaged(L"hello");
-  int pos = 0, expected = -1;
+  ptrdiff_t pos = 0, expected = -1;
   if (TEST_SUCCEEDED_F(sstr(&ws, L"!", &pos))) {
     TEST_CHECK(pos == expected);
-    TEST_MSG("expected %d", expected);
-    TEST_MSG("got %d", pos);
+    TEST_MSG("expected %td", expected);
+    TEST_MSG("got %td", pos);
   }
   expected = 1;
   if (TEST_SUCCEEDED_F(sstr(&ws, L"e", &pos))) {
     TEST_CHECK(pos == expected);
-    TEST_MSG("expected %d", expected);
-    TEST_MSG("got %d", pos);
+    TEST_MSG("expected %td", expected);
+    TEST_MSG("got %td", pos);
   }
   expected = 4;
   if (TEST_SUCCEEDED_F(sstr(&ws, L"o", &pos))) {
     TEST_CHECK(pos == expected);
-    TEST_MSG("expected %d", expected);
-    TEST_MSG("got %d", pos);
+    TEST_MSG("expected %td", expected);
+    TEST_MSG("got %td", pos);
   }
   TEST_EISG_F(sstr(&ws, NULL, NULL), err_invalid_arugment);
   TEST_EISG_F(sstr(&ws, L"e", NULL), err_null_pointer);
@@ -306,7 +306,7 @@ static void test_wstr_replace_all(void) {
 
 static void test_wstr_const(void) {
   static wchar_t const *const ws = L"hello";
-  int pos = 0;
+  ptrdiff_t pos = 0;
   if (TEST_SUCCEEDED_F(sstr(&wstr_unmanaged_const(ws), L"o", &pos))) {
     TEST_CHECK(pos == 4);
   }
@@ -466,23 +466,23 @@ static void test_str_grow(void) {
 
 static void test_str_str(void) {
   struct str s = str_unmanaged("hello");
-  int pos = 0, expected = -1;
+  ptrdiff_t pos = 0, expected = -1;
   if (TEST_SUCCEEDED_F(sstr(&s, "!", &pos))) {
     TEST_CHECK(pos == expected);
-    TEST_MSG("expected %d", expected);
-    TEST_MSG("got %d", pos);
+    TEST_MSG("expected %td", expected);
+    TEST_MSG("got %td", pos);
   }
   expected = 1;
   if (TEST_SUCCEEDED_F(sstr(&s, "e", &pos))) {
     TEST_CHECK(pos == expected);
-    TEST_MSG("expected %d", expected);
-    TEST_MSG("got %d", pos);
+    TEST_MSG("expected %td", expected);
+    TEST_MSG("got %td", pos);
   }
   expected = 4;
   if (TEST_SUCCEEDED_F(sstr(&s, "o", &pos))) {
     TEST_CHECK(pos == expected);
-    TEST_MSG("expected %d", expected);
-    TEST_MSG("got %d", pos);
+    TEST_MSG("expected %td", expected);
+    TEST_MSG("got %td", pos);
   }
   TEST_EISG_F(sstr(&s, NULL, NULL), err_invalid_arugment);
   TEST_EISG_F(sstr(&s, "e", NULL), err_null_pointer);
@@ -532,7 +532,7 @@ static void test_str_replace_all(void) {
 
 static void test_str_const(void) {
   static char const *const s = "hello";
-  int pos = 0;
+  ptrdiff_t pos = 0;
   if (TEST_SUCCEEDED_F(sstr(&str_unmanaged_const(s), "o", &pos))) {
     TEST_CHECK(pos == 4);
   }

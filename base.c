@@ -874,7 +874,7 @@ error str_ncat_(struct str *const s, char const *const s2, size_t const s2len ME
   return eok();
 }
 
-error str_str_(struct str const *const s, char const *const s2, int *const pos) {
+error str_str_(struct str const *const s, char const *const s2, ptrdiff_t *const pos) {
   if (!s || !s2) {
     return errg(err_invalid_arugment);
   }
@@ -1008,7 +1008,7 @@ error wstr_ncat_(struct wstr *const ws, wchar_t const *const ws2, size_t const w
   return eok();
 }
 
-error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, int *const pos) {
+error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, ptrdiff_t *const pos) {
   if (!ws || !ws2) {
     return errg(err_invalid_arugment);
   }
@@ -1020,7 +1020,7 @@ error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, int *cons
     *pos = -1;
     return eok();
   }
-  *pos = (int)(found - ws->ptr);
+  *pos = found - ws->ptr;
   return eok();
 }
 
@@ -1139,7 +1139,7 @@ static int hm_compare_dynamic(void const *const a, void const *const b, void *co
 error hmap_new_static(struct hmap *const hm,
                       size_t const item_size,
                       size_t const cap,
-                      size_t const key_size MEM_FILEPOS_PARAMS) {
+                      size_t const key_bytes MEM_FILEPOS_PARAMS) {
   if (!hm || hm->ptr) {
     return errg(err_invalid_arugment);
   }
@@ -1159,7 +1159,7 @@ error hmap_new_static(struct hmap *const hm,
     return errg(err_out_of_memory);
   }
   hm->ptr = h;
-  hm->size = key_size;
+  hm->size = key_bytes;
   return eok();
 }
 
