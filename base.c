@@ -1,8 +1,10 @@
 #include "base.h"
 
+#include <stdarg.h>
+#include <stdlib.h> // realloc, free
+
 #ifdef _WIN32
 
-#include <stdlib.h> // realloc, free
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -12,8 +14,7 @@
 
 #else
 
-#include <stdio.h>  // fprintf
-#include <stdlib.h> // realloc, free
+#include <stdio.h> // fprintf
 
 #define NEWLINE NSTR("\n")
 #define REALLOC(ptr, size) (realloc(ptr, size))
@@ -828,6 +829,21 @@ error str_cpy_(struct str *const s, const char *s2 MEM_FILEPOS_PARAMS) {
   return eok();
 }
 
+error str_cpy_m_(struct str *const s, char const *const *const s2 MEM_FILEPOS_PARAMS) {
+  if (!s || !s2) {
+    return errg(err_invalid_arugment);
+  }
+  error err = eok();
+  for (size_t i = 0; s2[i] != NULL; ++i) {
+    err = (i == 0 ? str_cpy_ : str_cat_)(s, s2[i] MEM_FILEPOS_VALUES_PASSTHRU);
+    if (efailed(err)) {
+      err = ethru(err);
+      return err;
+    }
+  }
+  return err;
+}
+
 error str_ncpy_(struct str *const s, char const *const s2, size_t const s2len MEM_FILEPOS_PARAMS) {
   if (!s || !s2) {
     return errg(err_invalid_arugment);
@@ -857,6 +873,21 @@ error str_cat_(struct str *const s, char const *const s2 MEM_FILEPOS_PARAMS) {
   strcat(s->ptr, s2);
   s->len += s2len;
   return eok();
+}
+
+error str_cat_m_(struct str *const s, char const *const *const s2 MEM_FILEPOS_PARAMS) {
+  if (!s || !s2) {
+    return errg(err_invalid_arugment);
+  }
+  error err = eok();
+  for (size_t i = 0; s2[i] != NULL; ++i) {
+    err = str_cat_(s, s2[i] MEM_FILEPOS_VALUES_PASSTHRU);
+    if (efailed(err)) {
+      err = ethru(err);
+      return err;
+    }
+  }
+  return err;
 }
 
 error str_ncat_(struct str *const s, char const *const s2, size_t const s2len MEM_FILEPOS_PARAMS) {
@@ -962,6 +993,21 @@ error wstr_cpy_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARA
   return eok();
 }
 
+error wstr_cpy_m_(struct wstr *const ws, wchar_t const *const *const ws2 MEM_FILEPOS_PARAMS) {
+  if (!ws || !ws2) {
+    return errg(err_invalid_arugment);
+  }
+  error err = eok();
+  for (size_t i = 0; ws2[i] != NULL; ++i) {
+    err = (i == 0 ? wstr_cpy_ : wstr_cat_)(ws, ws2[i] MEM_FILEPOS_VALUES_PASSTHRU);
+    if (efailed(err)) {
+      err = ethru(err);
+      return err;
+    }
+  }
+  return err;
+}
+
 error wstr_ncpy_(struct wstr *const ws, wchar_t const *const ws2, size_t const ws2len MEM_FILEPOS_PARAMS) {
   if (!ws || !ws2) {
     return errg(err_invalid_arugment);
@@ -991,6 +1037,21 @@ error wstr_cat_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARA
   wcscat(ws->ptr, ws2);
   ws->len += ws2len;
   return eok();
+}
+
+error wstr_cat_m_(struct wstr *const ws, wchar_t const *const *const ws2 MEM_FILEPOS_PARAMS) {
+  if (!ws || !ws2) {
+    return errg(err_invalid_arugment);
+  }
+  error err = eok();
+  for (size_t i = 0; ws2[i] != NULL; ++i) {
+    err = wstr_cat_(ws, ws2[i] MEM_FILEPOS_VALUES_PASSTHRU);
+    if (efailed(err)) {
+      err = ethru(err);
+      return err;
+    }
+  }
+  return err;
 }
 
 error wstr_ncat_(struct wstr *const ws, wchar_t const *const ws2, size_t const ws2len MEM_FILEPOS_PARAMS) {

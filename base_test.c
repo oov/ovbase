@@ -134,6 +134,24 @@ static void test_wstr_cpy_free(void) {
   TEST_EISG_F(scpy(&ws, NULL), err_invalid_arugment);
 }
 
+static void test_wstr_cpym(void) {
+  static wchar_t const *const ws1 = L"hello";
+  static wchar_t const *const ws2 = L"world";
+  static wchar_t const *const expected = L"helloworld";
+  struct wstr ws = {0};
+  if (TEST_SUCCEEDED_F(scpym(&ws, ws1, ws2))) {
+    TEST_CHECK(wcscmp(ws.ptr, expected) == 0);
+    TEST_MSG("expected %ls", expected);
+    TEST_MSG("got %ls", ws.ptr);
+  }
+  if (TEST_SUCCEEDED_F(scpym(&ws, ws1, ws2))) {
+    TEST_CHECK(wcscmp(ws.ptr, expected) == 0);
+    TEST_MSG("expected %ls", expected);
+    TEST_MSG("got %ls", ws.ptr);
+  }
+  TEST_SUCCEEDED_F(sfree(&ws));
+}
+
 static void test_wstr_ncpy(void) {
   static wchar_t const *const test_str = L"hello";
   struct wstr ws = {0};
@@ -192,6 +210,25 @@ static void test_wstr_cat_free(void) {
   }
   TEST_SUCCEEDED_F(sfree(&ws));
   TEST_EISG_F(scat(&ws, NULL), err_invalid_arugment);
+}
+
+static void test_wstr_catm(void) {
+  static wchar_t const *const ws1 = L"hello";
+  static wchar_t const *const ws2 = L"world";
+  static wchar_t const *const expected1 = L"helloworld";
+  static wchar_t const *const expected2 = L"helloworldhelloworld";
+  struct wstr ws = {0};
+  if (TEST_SUCCEEDED_F(scatm(&ws, ws1, ws2))) {
+    TEST_CHECK(wcscmp(ws.ptr, expected1) == 0);
+    TEST_MSG("expected %ls", expected1);
+    TEST_MSG("got %ls", ws.ptr);
+  }
+  if (TEST_SUCCEEDED_F(scatm(&ws, ws1, ws2))) {
+    TEST_CHECK(wcscmp(ws.ptr, expected2) == 0);
+    TEST_MSG("expected %ls", expected2);
+    TEST_MSG("got %ls", ws.ptr);
+  }
+  TEST_SUCCEEDED_F(sfree(&ws));
 }
 
 static void test_wstr_ncat(void) {
@@ -311,8 +348,13 @@ static void test_wstr_const(void) {
     TEST_CHECK(pos == 4);
   }
 }
-
 #endif // USE_WSTR
+
+#ifdef _WIN32
+#define STR_PH "%hs"
+#else
+#define STR_PH "%s"
+#endif
 
 #ifdef USE_STR
 
@@ -352,6 +394,24 @@ static void test_str_cpy_free(void) {
   }
 
   TEST_EISG_F(scpy(&s, NULL), err_invalid_arugment);
+}
+
+static void test_str_cpym(void) {
+  static char const *const s1 = "hello";
+  static char const *const s2 = "world";
+  static char const *const expected = "helloworld";
+  struct str s = {0};
+  if (TEST_SUCCEEDED_F(scpym(&s, s1, s2))) {
+    TEST_CHECK(strcmp(s.ptr, expected) == 0);
+    TEST_MSG("expected " STR_PH, expected);
+    TEST_MSG("got " STR_PH, s.ptr);
+  }
+  if (TEST_SUCCEEDED_F(scpym(&s, s1, s2))) {
+    TEST_CHECK(strcmp(s.ptr, expected) == 0);
+    TEST_MSG("expected " STR_PH, expected);
+    TEST_MSG("got " STR_PH, s.ptr);
+  }
+  TEST_SUCCEEDED_F(sfree(&s));
 }
 
 static void test_str_ncpy(void) {
@@ -412,6 +472,25 @@ static void test_str_cat_free(void) {
   }
   TEST_SUCCEEDED_F(sfree(&s));
   TEST_EISG_F(scat(&s, NULL), err_invalid_arugment);
+}
+
+static void test_str_catm(void) {
+  static char const *const s1 = "hello";
+  static char const *const s2 = "world";
+  static char const *const expected1 = "helloworld";
+  static char const *const expected2 = "helloworldhelloworld";
+  struct str s = {0};
+  if (TEST_SUCCEEDED_F(scatm(&s, s1, s2))) {
+    TEST_CHECK(strcmp(s.ptr, expected1) == 0);
+    TEST_MSG("expected " STR_PH, expected1);
+    TEST_MSG("got " STR_PH, s.ptr);
+  }
+  if (TEST_SUCCEEDED_F(scatm(&s, s1, s2))) {
+    TEST_CHECK(strcmp(s.ptr, expected2) == 0);
+    TEST_MSG("expected " STR_PH, expected2);
+    TEST_MSG("got " STR_PH, s.ptr);
+  }
+  TEST_SUCCEEDED_F(sfree(&s));
 }
 
 static void test_str_ncat(void) {
@@ -488,12 +567,6 @@ static void test_str_str(void) {
   TEST_EISG_F(sstr(&s, "e", NULL), err_null_pointer);
 }
 
-#ifdef _WIN32
-#define STR_PH "%hs"
-#else
-#define STR_PH "%s"
-#endif
-
 static void test_str_replace_all(void) {
   struct str s = {0};
   if (TEST_SUCCEEDED_F(scpy(&s, "hello world"))) {
@@ -537,7 +610,6 @@ static void test_str_const(void) {
     TEST_CHECK(pos == 4);
   }
 }
-
 #endif // USE_STR
 
 struct test_item_dynamic {
@@ -767,8 +839,10 @@ TEST_LIST = {
     {"test_array", test_array},
 #ifdef USE_WSTR
     {"test_wstr_cpy_free", test_wstr_cpy_free},
+    {"test_wstr_cpym", test_wstr_cpym},
     {"test_wstr_ncpy", test_wstr_ncpy},
     {"test_wstr_cat_free", test_wstr_cat_free},
+    {"test_wstr_catm", test_wstr_catm},
     {"test_wstr_ncat", test_wstr_ncat},
     {"test_wstr_grow", test_wstr_grow},
     {"test_wstr_str", test_wstr_str},
@@ -777,8 +851,10 @@ TEST_LIST = {
 #endif // USE_WSTR
 #ifdef USE_STR
     {"test_str_cpy_free", test_str_cpy_free},
+    {"test_str_cpym", test_str_cpym},
     {"test_str_ncpy", test_str_ncpy},
     {"test_str_cat_free", test_str_cat_free},
+    {"test_str_catm", test_str_catm},
     {"test_str_ncat", test_str_ncat},
     {"test_str_grow", test_str_grow},
     {"test_str_str", test_str_str},

@@ -281,8 +281,10 @@ static inline size_t array_cap_(struct array const *const p) { return p ? p->cap
 
 #ifdef USE_STR
 NODISCARD error str_cpy_(struct str *const s, char const *const s2 MEM_FILEPOS_PARAMS);
+NODISCARD error str_cpy_m_(struct str *const s, char const *const *const s2 MEM_FILEPOS_PARAMS);
 NODISCARD error str_ncpy_(struct str *const s, char const *const s2, size_t s2len MEM_FILEPOS_PARAMS);
 NODISCARD error str_cat_(struct str *const s, char const *const s2 MEM_FILEPOS_PARAMS);
+NODISCARD error str_cat_m_(struct str *const s, char const *const *const s2 MEM_FILEPOS_PARAMS);
 NODISCARD error str_ncat_(struct str *const s, char const *const s2, size_t s2len MEM_FILEPOS_PARAMS);
 NODISCARD error str_str_(struct str const *const s, char const *const s2, ptrdiff_t *pos);
 NODISCARD error str_replace_all_(struct str *const s,
@@ -294,8 +296,10 @@ NODISCARD error str_replace_all_(struct str *const s,
 
 #ifdef USE_WSTR
 NODISCARD error wstr_cpy_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARAMS);
+NODISCARD error wstr_cpy_m_(struct wstr *const ws, wchar_t const *const *const ws2 MEM_FILEPOS_PARAMS);
 NODISCARD error wstr_ncpy_(struct wstr *const ws, wchar_t const *const ws2, size_t ws2len MEM_FILEPOS_PARAMS);
 NODISCARD error wstr_cat_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARAMS);
+NODISCARD error wstr_cat_m_(struct wstr *const ws, wchar_t const *const *const ws2 MEM_FILEPOS_PARAMS);
 NODISCARD error wstr_ncat_(struct wstr *const ws, wchar_t const *const ws2, size_t ws2len MEM_FILEPOS_PARAMS);
 NODISCARD error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, ptrdiff_t *pos);
 NODISCARD error wstr_replace_all_(struct wstr *const ws,
@@ -317,6 +321,13 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
            BASE_GENERIC_CASE(struct wstr *const, wstr_cpy_),                                                           \
            BASE_GENERIC_CASE(struct str *, str_cpy_),                                                                  \
            BASE_GENERIC_CASE(struct str *const, str_cpy_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+#define scpym(struct_str_ptr, ...)                                                                                     \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct wstr *, wstr_cpy_m_),                                                              \
+           BASE_GENERIC_CASE(struct wstr *const, wstr_cpy_m_),                                                         \
+           BASE_GENERIC_CASE(struct str *, str_cpy_m_),                                                                \
+           BASE_GENERIC_CASE(struct str *const, str_cpy_m_))(                                                          \
+      (struct_str_ptr), (void *)(void const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #define sncpy(struct_str_ptr, char_ptr, size_t)                                                                        \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_ncpy_),                                                               \
@@ -329,6 +340,13 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
            BASE_GENERIC_CASE(struct wstr *const, wstr_cat_),                                                           \
            BASE_GENERIC_CASE(struct str *, str_cat_),                                                                  \
            BASE_GENERIC_CASE(struct str *const, str_cat_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+#define scatm(struct_str_ptr, ...)                                                                                     \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct wstr *, wstr_cat_m_),                                                              \
+           BASE_GENERIC_CASE(struct wstr *const, wstr_cat_m_),                                                         \
+           BASE_GENERIC_CASE(struct str *, str_cat_m_),                                                                \
+           BASE_GENERIC_CASE(struct str *const, str_cat_m_))(                                                          \
+      (struct_str_ptr), (void *)(void const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #define sncat(struct_str_ptr, char_ptr, size_t)                                                                        \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_ncat_),                                                               \
@@ -357,6 +375,11 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct str *, str_cpy_),                                                                  \
            BASE_GENERIC_CASE(struct str *const, str_cpy_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+#define scpym(struct_str_ptr, ...)                                                                                     \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct str *, str_cpy_m_),                                                                \
+           BASE_GENERIC_CASE(struct str *const, str_cpy_m_))((struct_str_ptr),                                         \
+                                                             (char const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #define sncpy(struct_str_ptr, char_ptr, size_t)                                                                        \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct str *, str_ncpy_),                                                                 \
@@ -365,6 +388,11 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct str *, str_cat_),                                                                  \
            BASE_GENERIC_CASE(struct str *const, str_cat_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+#define scatm(struct_str_ptr, ...)                                                                                     \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct str *, str_cat_m_),                                                                \
+           BASE_GENERIC_CASE(struct str *const, str_cat_m_))((struct_str_ptr),                                         \
+                                                             (char const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #define sncat(struct_str_ptr, char_ptr, size_t)                                                                        \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct str *, str_ncat_),                                                                 \
@@ -385,6 +413,11 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_cpy_),                                                                \
            BASE_GENERIC_CASE(struct wstr *const, wstr_cpy_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+#define scpym(struct_str_ptr, ...)                                                                                     \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct wstr *, wstr_cpy_m_),                                                              \
+           BASE_GENERIC_CASE(struct wstr *const, wstr_cpy_m_))(                                                        \
+      (struct_str_ptr), (wchar_t const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #define sncpy(struct_str_ptr, char_ptr, size_t)                                                                        \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_ncpy_),                                                               \
@@ -394,6 +427,11 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_cat_),                                                                \
            BASE_GENERIC_CASE(struct wstr *const, wstr_cat_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+#define scatm(struct_str_ptr, ...)                                                                                     \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct wstr *, wstr_cat_m_),                                                              \
+           BASE_GENERIC_CASE(struct wstr *const, wstr_cat_m_))(                                                        \
+      (struct_str_ptr), (wchar_t const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #define sncat(struct_str_ptr, char_ptr, size_t)                                                                        \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_ncat_),                                                               \
