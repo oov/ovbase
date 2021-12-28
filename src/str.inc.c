@@ -48,6 +48,7 @@ error str_ncpy_(struct str *const s, char const *const s2, size_t const s2len ME
     return err;
   }
   strncpy(s->ptr, s2, s2len);
+  s->ptr[s2len] = '\0';
   s->len = strlen(s->ptr);
   return eok();
 }

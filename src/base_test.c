@@ -162,6 +162,15 @@ static void test_wstr_ncpy(void) {
     TEST_CHECK(ws.ptr[ws.len] == L'\0');
     TEST_SUCCEEDED_F(sfree(&ws));
   }
+  if (TEST_SUCCEEDED_F(sncpy(&ws, test_str, 5))) {
+    if (TEST_SUCCEEDED_F(sncpy(&ws, test_str, 2))) {
+      TEST_CHECK(ws.ptr != NULL);
+      TEST_CHECK(ws.len == 2);
+      TEST_CHECK(ws.cap > 2);
+      TEST_CHECK(ws.ptr[ws.len] == L'\0');
+      TEST_SUCCEEDED_F(sfree(&ws));
+    }
+  }
   if (TEST_SUCCEEDED_F(sncpy(&ws, test_str, 100))) {
     TEST_CHECK(ws.ptr != NULL);
     TEST_CHECK(ws.len == 5);
@@ -423,6 +432,15 @@ static void test_str_ncpy(void) {
     TEST_CHECK(s.cap > 2);
     TEST_CHECK(s.ptr[s.len] == L'\0');
     TEST_SUCCEEDED_F(sfree(&s));
+  }
+  if (TEST_SUCCEEDED_F(sncpy(&s, test_str, 5))) {
+    if (TEST_SUCCEEDED_F(sncpy(&s, test_str, 2))) {
+      TEST_CHECK(s.ptr != NULL);
+      TEST_CHECK(s.len == 2);
+      TEST_CHECK(s.cap > 2);
+      TEST_CHECK(s.ptr[s.len] == L'\0');
+      TEST_SUCCEEDED_F(sfree(&s));
+    }
   }
   if (TEST_SUCCEEDED_F(sncpy(&s, test_str, 100))) {
     TEST_CHECK(s.ptr != NULL);

@@ -48,6 +48,7 @@ error wstr_ncpy_(struct wstr *const ws, wchar_t const *const ws2, size_t const w
     return err;
   }
   wcsncpy(ws->ptr, ws2, ws2len);
+  ws->ptr[ws2len] = L'\0';
   ws->len = wcslen(ws->ptr);
   return eok();
 }
