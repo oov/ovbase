@@ -1,5 +1,5 @@
+#include "../include/test.h"
 #include "base.c"
-#include "test.h"
 
 #include <inttypes.h>
 

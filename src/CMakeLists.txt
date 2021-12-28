@@ -3,15 +3,12 @@ option(USE_WSTR "use struct wstr" ON)
 option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
 
-file(GLOB sources "*.c" "*.h")
+file(GLOB sources "*.c" "../include/*.h")
 find_program(CLANG_FORMAT_EXE clang-format)
 add_custom_target(${PROJECT_NAME}-format ALL
   COMMAND ${CLANG_FORMAT_EXE} -style=file -i ${sources}
 )
 
-include_directories(
-  "${CMAKE_CURRENT_SOURCE_DIR}/../include/" # for base.h
-)
 add_compile_definitions(
   $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
   $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0502>

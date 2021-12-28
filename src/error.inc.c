@@ -1,6 +1,6 @@
-#include "base.h"
+#include "../include/base.h"
 
-#include "threads.h"
+#include "../include/threads.h"
 
 static void *base_hm_malloc(size_t const s, void *const udata);
 static void base_hm_free(void *const p, void *const udata);

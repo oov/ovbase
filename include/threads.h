@@ -41,7 +41,7 @@ int base_timespec_get_(struct timespec *ts, int base);
 #define timespec_get base_timespec_get_
 #endif
 
-#include "3rd/tinycthread/source/tinycthread.h"
+#include "../3rd/tinycthread/source/tinycthread.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop

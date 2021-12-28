@@ -1,4 +1,4 @@
-#include "base.h"
+#include "../include/base.h"
 
 #include <stdarg.h>
 #include <stdlib.h> // realloc, free
@@ -23,11 +23,9 @@
 #include <stdatomic.h>
 static _Atomic uint64_t g_global_hint = 0;
 
-#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
-#include "threads.h"
-#else
+#include "../include/threads.h"
 
-#include "threads.h"
+#if __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
 
 #if defined(IMPLEMENT_BASE_TIMESPEC_WIN32)
 int base_timespec_get_(struct timespec *ts, int base) {
@@ -71,16 +69,16 @@ int base_timespec_get_(struct timespec *ts, int base) {
 #if __has_warning("-Wpadded")
 #pragma GCC diagnostic ignored "-Wpadded"
 #endif
-#include "3rd/tinycthread/source/tinycthread.c"
+#include "../3rd/tinycthread/source/tinycthread.c"
 #pragma GCC diagnostic pop
 
 #else
 
-#include "3rd/tinycthread/source/tinycthread.c"
+#include "../3rd/tinycthread/source/tinycthread.c"
 
 #endif // __GNUC__
 
-#endif // __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+#endif // __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
 
 #ifdef __GNUC__
 
@@ -103,12 +101,12 @@ int base_timespec_get_(struct timespec *ts, int base) {
 #if __has_warning("-Wimplicit-fallthrough")
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
-#include "3rd/hashmap.c/hashmap.c"
+#include "../3rd/hashmap.c/hashmap.c"
 #pragma GCC diagnostic pop
 
 #else
 
-#include "3rd/hashmap.c/hashmap.c"
+#include "../3rd/hashmap.c/hashmap.c"
 
 #endif // __GNUC__
 
