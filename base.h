@@ -65,6 +65,7 @@ void base_exit(void);
 #define NATIVE_CHAR wchar_t
 #define NATIVE_STR wstr
 #define NSTR(str) L##str
+#define NEWLINE NSTR("\r\n")
 #define native_unmanaged(char_ptr) (wstr_unmanaged(char_ptr))
 #define native_unmanaged_const(char_ptr) (wstr_unmanaged_const(char_ptr))
 #ifndef USE_WSTR
@@ -74,6 +75,7 @@ void base_exit(void);
 #define NATIVE_CHAR char
 #define NATIVE_STR str
 #define NSTR(str) str
+#define NEWLINE NSTR("\n")
 #define native_unmanaged(char_ptr) (str_unmanaged(char_ptr))
 #define native_unmanaged_const(char_ptr) (str_unmanaged_const(char_ptr))
 #ifndef USE_STR
