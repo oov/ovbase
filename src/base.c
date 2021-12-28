@@ -103,12 +103,12 @@ int base_timespec_get_(struct timespec *ts, int base) {
 #if __has_warning("-Wimplicit-fallthrough")
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
-#include "3rd/hashmap/hashmap.c"
+#include "3rd/hashmap.c/hashmap.c"
 #pragma GCC diagnostic pop
 
 #else
 
-#include "3rd/hashmap/hashmap.c"
+#include "3rd/hashmap.c/hashmap.c"
 
 #endif // __GNUC__
 

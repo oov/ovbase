@@ -48,12 +48,15 @@ static inline void test_fini_(void) {
 #if __has_warning("-Wsign-conversion")
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #endif
-#include "3rd/acutest.h"
+#if __has_warning("-Wmissing-prototypes")
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#endif
+#include "3rd/acutest/include/acutest.h"
 #pragma GCC diagnostic pop
 
 #else
 
-#include "3rd/acutest.h"
+#include "3rd/acutest/include/acutest.h"
 
 #endif // __GNUC__
 

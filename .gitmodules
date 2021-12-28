@@ -1,7 +1,10 @@
-[submodule "hashmap"]
-	path = 3rd/hashmap
+[submodule "src/3rd/hashmap.c"]
+	path = src/3rd/hashmap.c
 	url = https://github.com/oov/hashmap.c
 	branch = simplify
-[submodule "3rd/tinycthread"]
-	path = 3rd/tinycthread
+[submodule "src/3rd/tinycthread"]
+	path = src/3rd/tinycthread
 	url = https://github.com/tinycthread/tinycthread
+[submodule "src/3rd/acutest"]
+	path = src/3rd/acutest
+	url = https://github.com/mity/acutest
