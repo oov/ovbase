@@ -283,9 +283,9 @@ static void report_allocated_count(void) {
   }
   NATIVE_CHAR buf[64] = {0};
 #ifdef _WIN32
-  wsprintfW(buf, L"Not freed memory blocks: %ld" NEWLINE, n);
+  wsprintfW(buf, NSTR("Not freed memory blocks: %ld") NEWLINE, n);
 #else
-  sprintf(buf, "Not freed memory blocks: %ld" NEWLINE, n);
+  sprintf(buf, NSTR("Not freed memory blocks: %ld") NEWLINE, n);
 #endif
   ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(buf)),
              &native_unmanaged(NSTR("memory leak found")));
@@ -1317,10 +1317,12 @@ bool base_init(void) {
 void base_exit(void) {
 #ifdef ALLOCATE_LOGGER
   report_leaks();
-  allocate_logger_exit();
 #endif
 #ifdef LEAK_DETECTOR
   report_allocated_count();
+#endif
+#ifdef ALLOCATE_LOGGER
+  allocate_logger_exit();
 #endif
   error_exit();
 }
