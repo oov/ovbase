@@ -9,6 +9,9 @@ add_custom_target(${PROJECT_NAME}-format ALL
   COMMAND ${CLANG_FORMAT_EXE} -style=file -i ${sources}
 )
 
+include_directories(
+  "${CMAKE_CURRENT_SOURCE_DIR}/../include/" # for base.h
+)
 add_compile_definitions(
   $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
   $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0502>
