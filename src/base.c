@@ -69,7 +69,21 @@ int base_timespec_get_(struct timespec *ts, int base) {
 #if __has_warning("-Wpadded")
 #pragma GCC diagnostic ignored "-Wpadded"
 #endif
+#if defined(USE_COMPILER_RT) && defined(_WIN32)
+static void NTAPI disable_tinycthread_tls_finalizer(PVOID h, DWORD dwReason, PVOID pv);
+PIMAGE_TLS_CALLBACK g_disable_tinycthread_tls_finalizer __attribute__((section(".CRT$XLB"))) =
+    disable_tinycthread_tls_finalizer;
+#endif
 #include "../3rd/tinycthread/source/tinycthread.c"
+#if defined(USE_COMPILER_RT) && defined(_WIN32)
+static void NTAPI disable_tinycthread_tls_finalizer(PVOID h, DWORD dwReason, PVOID pv) {
+  (void)h;
+  (void)pv;
+  if (dwReason == DLL_PROCESS_DETACH) {
+    p_thread_callback = NULL;
+  }
+}
+#endif
 #pragma GCC diagnostic pop
 
 #else
@@ -377,4 +391,8 @@ void base_exit(void) {
   allocate_logger_exit();
 #endif
   error_exit();
+
+#if defined(USE_COMPILER_RT) && defined(_WIN32)
+  _tinycthread_tss_callback(NULL, DLL_PROCESS_DETACH, NULL);
+#endif
 }

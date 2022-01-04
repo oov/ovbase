@@ -2,6 +2,7 @@ option(USE_STR "use struct str" ON)
 option(USE_WSTR "use struct wstr" ON)
 option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
+option(USE_COMPILER_RT "use compiler-rt runtime" ON)
 
 file(GLOB sources "*.c" "../include/*.h")
 find_program(CLANG_FORMAT_EXE clang-format)
@@ -12,6 +13,7 @@ add_custom_target(${PROJECT_NAME}-format ALL
 add_compile_definitions(
   $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
   $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0502>
+  $<$<BOOL:${USE_COMPILER_RT}>:USE_COMPILER_RT>
   $<$<BOOL:${USE_STR}>:USE_STR>
   $<$<BOOL:${USE_WSTR}>:USE_WSTR>
   $<$<BOOL:${LEAK_DETECTOR}>:LEAK_DETECTOR>
@@ -19,7 +21,7 @@ add_compile_definitions(
   $<$<CONFIG:Release>:NDEBUG>
 )
 add_compile_options(
-  $<$<BOOL:${WIN32}>:--rtlib=compiler-rt>
+  $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
   -mstackrealign
   -Wall
   -Wextra
@@ -36,7 +38,7 @@ add_compile_options(
 add_link_options(
   -Wl,--gc-sections
   # -Wl,--print-gc-sections
-  $<$<BOOL:${WIN32}>:--rtlib=compiler-rt>
+  $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
   $<$<BOOL:${WIN32}>:-no-pthread>
   -static
 )
