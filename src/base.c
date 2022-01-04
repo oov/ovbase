@@ -28,7 +28,7 @@ static _Atomic uint64_t g_global_hint = 0;
 #if __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
 
 #if defined(IMPLEMENT_BASE_TIMESPEC_WIN32)
-int base_timespec_get_(struct timespec *ts, int base) {
+int timespec_get(struct timespec *ts, int base) {
   if (!ts)
     return 0;
   if (base == TIME_UTC) {
@@ -51,39 +51,18 @@ int base_timespec_get_(struct timespec *ts, int base) {
 }
 #endif
 
+#define DISABLE_TLS
+#define DISABLE_CALL_ONCE
 #ifdef __GNUC__
 
 #pragma GCC diagnostic push
-#if __has_warning("-Wsign-conversion")
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#endif
-#if __has_warning("-Wreserved-macro-identifier")
-#pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
-#endif
 #if __has_warning("-Wreserved-identifier")
 #pragma GCC diagnostic ignored "-Wreserved-identifier"
-#endif
-#if __has_warning("-Wmissing-variable-declarations")
-#pragma GCC diagnostic ignored "-Wmissing-variable-declarations"
 #endif
 #if __has_warning("-Wpadded")
 #pragma GCC diagnostic ignored "-Wpadded"
 #endif
-#if defined(USE_COMPILER_RT) && defined(_WIN32)
-static void NTAPI disable_tinycthread_tls_finalizer(PVOID h, DWORD dwReason, PVOID pv);
-PIMAGE_TLS_CALLBACK g_disable_tinycthread_tls_finalizer __attribute__((section(".CRT$XLB"))) =
-    disable_tinycthread_tls_finalizer;
-#endif
 #include "../3rd/tinycthread/source/tinycthread.c"
-#if defined(USE_COMPILER_RT) && defined(_WIN32)
-static void NTAPI disable_tinycthread_tls_finalizer(PVOID h, DWORD dwReason, PVOID pv) {
-  (void)h;
-  (void)pv;
-  if (dwReason == DLL_PROCESS_DETACH) {
-    p_thread_callback = NULL;
-  }
-}
-#endif
 #pragma GCC diagnostic pop
 
 #else
@@ -91,6 +70,8 @@ static void NTAPI disable_tinycthread_tls_finalizer(PVOID h, DWORD dwReason, PVO
 #include "../3rd/tinycthread/source/tinycthread.c"
 
 #endif // __GNUC__
+#undef DISABLE_TLS
+#undef DISABLE_CALL_ONCE
 
 #endif // __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
 
@@ -391,8 +372,4 @@ void base_exit(void) {
   allocate_logger_exit();
 #endif
   error_exit();
-
-#if defined(USE_COMPILER_RT) && defined(_WIN32)
-  _tinycthread_tss_callback(NULL, DLL_PROCESS_DETACH, NULL);
-#endif
 }

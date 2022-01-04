@@ -11,14 +11,8 @@
 #endif
 
 #pragma GCC diagnostic push
-#if __has_warning("-Wreserved-macro-identifier")
-#pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
-#endif
 #if __has_warning("-Wreserved-identifier")
 #pragma GCC diagnostic ignored "-Wreserved-identifier"
-#endif
-#if __has_warning("-Wdocumentation")
-#pragma GCC diagnostic ignored "-Wdocumentation"
 #endif
 #if __has_warning("-Wpadded")
 #pragma GCC diagnostic ignored "-Wpadded"
@@ -31,17 +25,14 @@
 #if !defined(TIME_UTC) && defined(_WIN32)
 #define IMPLEMENT_BASE_TIMESPEC_WIN32
 #define TIME_UTC (1)
-struct base_timespec_ {
-  time_t tv_sec;
-  long tv_nsec;
-};
-#define timespec base_timespec_
-
-int base_timespec_get_(struct timespec *ts, int base);
-#define timespec_get base_timespec_get_
+int timespec_get(struct timespec *ts, int base);
 #endif
 
+#define DISABLE_TLS
+#define DISABLE_CALL_ONCE
 #include "../3rd/tinycthread/source/tinycthread.h"
+#undef DISABLE_TLS
+#undef DISABLE_CALL_ONCE
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
