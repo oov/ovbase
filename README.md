@@ -36,7 +36,7 @@ IN THE SOFTWARE.
 
 https://github.com/tidwall/hashmap.c
 
-NOTICE: This program used a modified version of hashmap.c.
+NOTICE: This program used a modified version of hashmap.c.  
         https://github.com/oov/hashmap.c/tree/simplify
 
 The MIT License (MIT)
@@ -64,7 +64,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 https://github.com/tinycthread/tinycthread
 
-NOTICE: This program used a modified version of TinyCThread.
+NOTICE: This program used a modified version of TinyCThread.  
         https://github.com/oov/tinycthread
 
 Copyright (c) 2012 Marcus Geelnard
