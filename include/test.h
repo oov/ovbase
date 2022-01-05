@@ -51,6 +51,9 @@ static inline void test_fini_(void) {
 #if __has_warning("-Wmissing-prototypes")
 #pragma GCC diagnostic ignored "-Wmissing-prototypes"
 #endif
+#if __has_warning("-Wimplicit-int-float-conversion")
+#pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
+#endif
 #include "../3rd/acutest/include/acutest.h"
 #pragma GCC diagnostic pop
 
