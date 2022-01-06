@@ -4,20 +4,14 @@
 #include <stdlib.h> // realloc, free
 
 #ifdef _WIN32
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-#define REALLOC(ptr, size) (realloc(ptr, size))
-#define FREE(ptr) (free(ptr))
-
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+#  define REALLOC(ptr, size) (realloc(ptr, size))
+#  define FREE(ptr) (free(ptr))
 #else
-
-#include <stdio.h> // fprintf
-
-#define REALLOC(ptr, size) (realloc(ptr, size))
-#define FREE(ptr) (free(ptr))
-
+#  include <stdio.h> // fprintf
+#  define REALLOC(ptr, size) (realloc(ptr, size))
+#  define FREE(ptr) (free(ptr))
 #endif
 
 #include <stdatomic.h>
@@ -26,8 +20,7 @@ static _Atomic uint64_t g_global_hint = 0;
 #include "../include/threads.h"
 
 #if __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
-
-#if defined(IMPLEMENT_BASE_TIMESPEC_WIN32)
+#  if defined(IMPLEMENT_BASE_TIMESPEC_WIN32)
 int timespec_get(struct timespec *ts, int base) {
   if (!ts)
     return 0;
@@ -49,63 +42,55 @@ int timespec_get(struct timespec *ts, int base) {
   }
   return 0;
 }
-#endif
+#  endif
 
-#define DISABLE_TLS
-#define DISABLE_CALL_ONCE
-#ifdef __GNUC__
-
-#pragma GCC diagnostic push
-#if __has_warning("-Wreserved-identifier")
-#pragma GCC diagnostic ignored "-Wreserved-identifier"
-#endif
-#if __has_warning("-Wreserved-id-macro")
-#pragma GCC diagnostic ignored "-Wreserved-id-macro"
-#endif
-#if __has_warning("-Wpadded")
-#pragma GCC diagnostic ignored "-Wpadded"
-#endif
-#include "../3rd/tinycthread/source/tinycthread.c"
-#pragma GCC diagnostic pop
-
-#else
-
-#include "../3rd/tinycthread/source/tinycthread.c"
-
-#endif // __GNUC__
-#undef DISABLE_TLS
-#undef DISABLE_CALL_ONCE
+#  define DISABLE_TLS
+#  define DISABLE_CALL_ONCE
+#  ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    if __has_warning("-Wreserved-identifier")
+#      pragma GCC diagnostic ignored "-Wreserved-identifier"
+#    endif
+#    if __has_warning("-Wreserved-id-macro")
+#      pragma GCC diagnostic ignored "-Wreserved-id-macro"
+#    endif
+#    if __has_warning("-Wpadded")
+#      pragma GCC diagnostic ignored "-Wpadded"
+#    endif
+#    include "../3rd/tinycthread/source/tinycthread.c"
+#    pragma GCC diagnostic pop
+#  else
+#    include "../3rd/tinycthread/source/tinycthread.c"
+#  endif // __GNUC__
+#  undef DISABLE_TLS
+#  undef DISABLE_CALL_ONCE
 
 #endif // __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
 
 #ifdef __GNUC__
-
-#pragma GCC diagnostic push
-#if __has_warning("-Wreserved-macro-identifier")
-#pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
-#endif
-#if __has_warning("-Wpadded")
-#pragma GCC diagnostic ignored "-Wpadded"
-#endif
-#if __has_warning("-Wcast-align")
-#pragma GCC diagnostic ignored "-Wcast-align"
-#endif
-#if __has_warning("-Wsign-conversion")
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#endif
-#if __has_warning("-Wextra-semi-stmt")
-#pragma GCC diagnostic ignored "-Wextra-semi-stmt"
-#endif
-#if __has_warning("-Wimplicit-fallthrough")
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#endif
-#include "../3rd/hashmap.c/hashmap.c"
-#pragma GCC diagnostic pop
-
+#  pragma GCC diagnostic push
+#  if __has_warning("-Wreserved-macro-identifier")
+#    pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
+#  endif
+#  if __has_warning("-Wpadded")
+#    pragma GCC diagnostic ignored "-Wpadded"
+#  endif
+#  if __has_warning("-Wcast-align")
+#    pragma GCC diagnostic ignored "-Wcast-align"
+#  endif
+#  if __has_warning("-Wsign-conversion")
+#    pragma GCC diagnostic ignored "-Wsign-conversion"
+#  endif
+#  if __has_warning("-Wextra-semi-stmt")
+#    pragma GCC diagnostic ignored "-Wextra-semi-stmt"
+#  endif
+#  if __has_warning("-Wimplicit-fallthrough")
+#    pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#  endif
+#  include "../3rd/hashmap.c/hashmap.c"
+#  pragma GCC diagnostic pop
 #else
-
-#include "../3rd/hashmap.c/hashmap.c"
-
+#  include "../3rd/hashmap.c/hashmap.c"
 #endif // __GNUC__
 
 #ifndef __FILE_NAME__
@@ -245,11 +230,11 @@ static bool report_leaks_iterate(void const *const item, void *const udata) {
   ++*n;
   struct allocated_at const *const aa = item;
   NATIVE_CHAR buf[1024] = {0};
-#ifdef _WIN32
+#  ifdef _WIN32
   wsprintfW(buf, NSTR("Leak #%u: %hs:%ld %hs()") NEWLINE, *n, aa->filepos.file, aa->filepos.line, aa->filepos.func);
-#else
+#  else
   sprintf(buf, NSTR("Leak #%zu: %s:%ld %s()") NEWLINE, *n, aa->filepos.file, aa->filepos.line, aa->filepos.func);
-#endif
+#  endif
   ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(buf)),
              &native_unmanaged(NSTR("memory leak found")));
   return true;
@@ -277,11 +262,11 @@ static void report_allocated_count(void) {
     return;
   }
   NATIVE_CHAR buf[64] = {0};
-#ifdef _WIN32
+#  ifdef _WIN32
   wsprintfW(buf, NSTR("Not freed memory blocks: %ld") NEWLINE, n);
-#else
+#  else
   sprintf(buf, NSTR("Not freed memory blocks: %ld") NEWLINE, n);
-#endif
+#  endif
   ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(buf)),
              &native_unmanaged(NSTR("memory leak found")));
 }

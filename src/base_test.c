@@ -360,9 +360,9 @@ static void test_wstr_const(void) {
 #endif // USE_WSTR
 
 #ifdef _WIN32
-#define STR_PH "%hs"
+#  define STR_PH "%hs"
 #else
-#define STR_PH "%s"
+#  define STR_PH "%s"
 #endif
 
 #ifdef USE_STR

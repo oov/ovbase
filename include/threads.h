@@ -1,49 +1,40 @@
 #pragma once
 
 #if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
-#include <threads.h>
+#  include <threads.h>
 #else
-
-#ifdef __GNUC__
-
-#ifndef __has_warning
-#define __has_warning(x) 0
-#endif
-
-#pragma GCC diagnostic push
-#if __has_warning("-Wreserved-identifier")
-#pragma GCC diagnostic ignored "-Wreserved-identifier"
-#endif
-#if __has_warning("-Wreserved-id-macro")
-#pragma GCC diagnostic ignored "-Wreserved-id-macro"
-#endif
-#if __has_warning("-Wpadded")
-#pragma GCC diagnostic ignored "-Wpadded"
-#endif
-#if __has_warning("-Wdocumentation")
-#pragma GCC diagnostic ignored "-Wdocumentation"
-#endif
-
-#endif // __GNUC__
-
-#include <time.h>
-
-#if !defined(TIME_UTC) && defined(_WIN32)
-#define IMPLEMENT_BASE_TIMESPEC_WIN32
-#define TIME_UTC (1)
+#  ifdef __GNUC__
+#    ifndef __has_warning
+#      define __has_warning(x) 0
+#    endif
+#    pragma GCC diagnostic push
+#    if __has_warning("-Wreserved-identifier")
+#      pragma GCC diagnostic ignored "-Wreserved-identifier"
+#    endif
+#    if __has_warning("-Wreserved-id-macro")
+#      pragma GCC diagnostic ignored "-Wreserved-id-macro"
+#    endif
+#    if __has_warning("-Wpadded")
+#      pragma GCC diagnostic ignored "-Wpadded"
+#    endif
+#    if __has_warning("-Wdocumentation")
+#      pragma GCC diagnostic ignored "-Wdocumentation"
+#    endif
+#  endif // __GNUC__
+#  include <time.h>
+#  if !defined(TIME_UTC) && defined(_WIN32)
+#    define IMPLEMENT_BASE_TIMESPEC_WIN32
+#    define TIME_UTC (1)
 int timespec_get(struct timespec *ts, int base);
-#endif
-
-#define DISABLE_TLS
-#define DISABLE_CALL_ONCE
-#include "../3rd/tinycthread/source/tinycthread.h"
-#undef DISABLE_TLS
-#undef DISABLE_CALL_ONCE
-
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif // __GNUC__
-
+#  endif
+#  define DISABLE_TLS
+#  define DISABLE_CALL_ONCE
+#  include "../3rd/tinycthread/source/tinycthread.h"
+#  undef DISABLE_TLS
+#  undef DISABLE_CALL_ONCE
+#  ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#  endif // __GNUC__
 #endif // __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
 
 struct cndvar {

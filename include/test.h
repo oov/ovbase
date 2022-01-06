@@ -7,10 +7,10 @@
 
 #ifdef __GNUC__
 
-#pragma GCC diagnostic push
-#if __has_warning("-Wused-but-marked-unused")
-#pragma GCC diagnostic ignored "-Wused-but-marked-unused"
-#endif
+#  pragma GCC diagnostic push
+#  if __has_warning("-Wused-but-marked-unused")
+#    pragma GCC diagnostic ignored "-Wused-but-marked-unused"
+#  endif
 
 #endif // __GNUC__
 
@@ -41,25 +41,25 @@ static inline void test_fini_(void) {
 
 #ifdef __GNUC__
 
-#pragma GCC diagnostic push
-#if __has_warning("-Wpadded")
-#pragma GCC diagnostic ignored "-Wpadded"
-#endif
-#if __has_warning("-Wsign-conversion")
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#endif
-#if __has_warning("-Wmissing-prototypes")
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
-#endif
-#if __has_warning("-Wimplicit-int-float-conversion")
-#pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
-#endif
-#include "../3rd/acutest/include/acutest.h"
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic push
+#  if __has_warning("-Wpadded")
+#    pragma GCC diagnostic ignored "-Wpadded"
+#  endif
+#  if __has_warning("-Wsign-conversion")
+#    pragma GCC diagnostic ignored "-Wsign-conversion"
+#  endif
+#  if __has_warning("-Wmissing-prototypes")
+#    pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#  endif
+#  if __has_warning("-Wimplicit-int-float-conversion")
+#    pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
+#  endif
+#  include "../3rd/acutest/include/acutest.h"
+#  pragma GCC diagnostic pop
 
 #else
 
-#include "../3rd/acutest/include/acutest.h"
+#  include "../3rd/acutest/include/acutest.h"
 
 #endif // __GNUC__
 
@@ -126,5 +126,5 @@ static inline bool test_eis_f(error err,
 #define TEST_SUCCEEDED_F(err) (test_eis_f((err), 0, 0, __FILE__, __LINE__, "TEST_SUCCEEDED_F(%s)", #err, NULL, NULL))
 
 #ifdef __GNUC__
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif // __GNUC__
