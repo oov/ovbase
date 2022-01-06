@@ -130,17 +130,12 @@ NODISCARD static error win32_error_message_mapper(uint_least32_t const code, str
                                 0,
                                 NULL);
   if (!msglen) {
-    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-    if (hr != HRESULT_FROM_WIN32(ERROR_MR_MID_NOT_FOUND)) {
-      err = errhr(hr);
-      goto cleanup;
-    }
-    err = scpy(dest, L"");
+    ereport(errhr(HRESULT_FROM_WIN32(GetLastError())));
+    err = scpy(dest, L"error messages is not available.");
     if (efailed(err)) {
       err = ethru(err);
       goto cleanup;
     }
-
     goto cleanup;
   }
 
@@ -306,16 +301,11 @@ error error_to_string_short(error e, struct NATIVE_STR *const dest) {
   }
   err = em->get(e->code, &tmp);
   if (efailed(err)) {
-    err = ethru(err);
+    ereport(err);
     goto cleanup;
   }
   if (e->msg.len) {
-    err = scat(&tmp, NEWLINE);
-    if (efailed(err)) {
-      err = ethru(err);
-      goto cleanup;
-    }
-    err = scpy(&tmp, e->msg.ptr);
+    err = scatm(&tmp, NEWLINE, e->msg.ptr);
     if (efailed(err)) {
       err = ethru(err);
       goto cleanup;
