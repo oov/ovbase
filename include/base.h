@@ -282,6 +282,12 @@ static inline size_t array_cap_(struct array const *const p) { return p ? p->cap
 // str
 
 #ifdef USE_STR
+NODISCARD static inline error str_free_(struct str *const s MEM_FILEPOS_PARAMS) {
+  return array_free_((struct array *)s MEM_FILEPOS_VALUES_PASSTHRU);
+}
+NODISCARD static inline error str_grow_(struct str *const s, size_t const cap MEM_FILEPOS_PARAMS) {
+  return array_grow_((struct array *)s, sizeof(*s->ptr), cap MEM_FILEPOS_VALUES_PASSTHRU);
+}
 NODISCARD error str_cpy_(struct str *const s, char const *const s2 MEM_FILEPOS_PARAMS);
 NODISCARD error str_cpy_m_(struct str *const s, char const *const *const s2 MEM_FILEPOS_PARAMS);
 NODISCARD error str_ncpy_(struct str *const s, char const *const s2, size_t s2len MEM_FILEPOS_PARAMS);
@@ -297,6 +303,12 @@ NODISCARD error str_replace_all_(struct str *const s,
 // wstr
 
 #ifdef USE_WSTR
+NODISCARD static inline error wstr_free_(struct wstr *const ws MEM_FILEPOS_PARAMS) {
+  return array_free_((struct array *)ws MEM_FILEPOS_VALUES_PASSTHRU);
+}
+NODISCARD static inline error wstr_grow_(struct wstr *const ws, size_t const cap MEM_FILEPOS_PARAMS) {
+  return array_grow_((struct array *)ws, sizeof(*ws->ptr), cap MEM_FILEPOS_VALUES_PASSTHRU);
+}
 NODISCARD error wstr_cpy_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARAMS);
 NODISCARD error wstr_cpy_m_(struct wstr *const ws, wchar_t const *const *const ws2 MEM_FILEPOS_PARAMS);
 NODISCARD error wstr_ncpy_(struct wstr *const ws, wchar_t const *const ws2, size_t ws2len MEM_FILEPOS_PARAMS);
@@ -309,14 +321,23 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
                                   wchar_t const *const replacement MEM_FILEPOS_PARAMS);
 #endif
 
-#define sfree(struct_str_ptr) afree((struct_str_ptr))
-#define sgrow(struct_str_ptr, cap) agrow((struct_str_ptr), (cap))
-
 #define BASE_GENERIC_CASE(typ, fn)                                                                                     \
   typ:                                                                                                                 \
   fn
 
 #if defined(USE_STR) && defined(USE_WSTR)
+#define sfree(struct_str_ptr)                                                                                          \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct wstr *, wstr_free_),                                                               \
+           BASE_GENERIC_CASE(struct wstr *const, wstr_free_),                                                          \
+           BASE_GENERIC_CASE(struct str *, str_free_),                                                                 \
+           BASE_GENERIC_CASE(struct str *const, str_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
+#define sgrow(struct_str_ptr, cap)                                                                                     \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct wstr *, wstr_grow_),                                                               \
+           BASE_GENERIC_CASE(struct wstr *const, wstr_grow_),                                                          \
+           BASE_GENERIC_CASE(struct str *, str_grow_),                                                                 \
+           BASE_GENERIC_CASE(struct str *const, str_grow_))((struct_str_ptr), (cap)MEM_FILEPOS_VALUES)
 #define scpy(struct_str_ptr, char_ptr)                                                                                 \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_cpy_),                                                                \
@@ -373,6 +394,14 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
            BASE_GENERIC_CASE(struct str *const, str_replace_all_))(                                                    \
       (struct_str_ptr), (char_ptr_find), (char_ptr_replacement)MEM_FILEPOS_VALUES)
 #elif defined(USE_STR)
+#define sfree(struct_str_ptr)                                                                                          \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct str *, str_free_),                                                                 \
+           BASE_GENERIC_CASE(struct str *const, str_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
+#define sgrow(struct_str_ptr, cap)                                                                                     \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct str *, str_grow_),                                                                 \
+           BASE_GENERIC_CASE(struct str *const, str_grow_))((struct_str_ptr), (cap)MEM_FILEPOS_VALUES)
 #define scpy(struct_str_ptr, char_ptr)                                                                                 \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct str *, str_cpy_),                                                                  \
@@ -411,6 +440,14 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
            BASE_GENERIC_CASE(struct str *const, str_replace_all_))(                                                    \
       (struct_str_ptr), (char_ptr_find), (char_ptr_replacement)MEM_FILEPOS_VALUES)
 #elif defined(USE_WSTR)
+#define sfree(struct_str_ptr)                                                                                          \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct wstr *, wstr_free_),                                                               \
+           BASE_GENERIC_CASE(struct wstr *const, wstr_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
+#define sgrow(struct_str_ptr, cap)                                                                                     \
+  _Generic((struct_str_ptr),                                                                                           \
+           BASE_GENERIC_CASE(struct wstr *, wstr_grow_),                                                               \
+           BASE_GENERIC_CASE(struct wstr *const, wstr_grow_))((struct_str_ptr), (cap)MEM_FILEPOS_VALUES)
 #define scpy(struct_str_ptr, char_ptr)                                                                                 \
   _Generic((struct_str_ptr),                                                                                           \
            BASE_GENERIC_CASE(struct wstr *, wstr_cpy_),                                                                \
