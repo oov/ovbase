@@ -35,7 +35,7 @@ int timespec_get(struct timespec *ts, int base);
 #  ifdef __GNUC__
 #    pragma GCC diagnostic pop
 #  endif // __GNUC__
-#endif // __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+#endif   // __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
 
 struct cndvar {
   cnd_t cnd;
