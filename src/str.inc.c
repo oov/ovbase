@@ -106,6 +106,10 @@ error str_str_(struct str const *const s, char const *const s2, ptrdiff_t *const
   if (!pos) {
     return errg(err_null_pointer);
   }
+  if (!s->ptr || !s->len) {
+    *pos = -1;
+    return eok();
+  }
   char const *const found = strstr(s->ptr, s2);
   if (!found) {
     *pos = -1;
@@ -118,6 +122,9 @@ error str_str_(struct str const *const s, char const *const s2, ptrdiff_t *const
 error str_replace_all_(struct str *const s, char const *const find, char const *const replacement MEM_FILEPOS_PARAMS) {
   if (!s || !find || !replacement) {
     return errg(err_invalid_arugment);
+  }
+  if (!s->ptr || !s->len) {
+    return eok();
   }
   ptrdiff_t const findlen = (ptrdiff_t)strlen(find);
   if (findlen == 0) {

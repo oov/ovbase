@@ -106,6 +106,10 @@ error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, ptrdiff_t
   if (!pos) {
     return errg(err_null_pointer);
   }
+  if (!ws->ptr || !ws->len) {
+    *pos = -1;
+    return eok();
+  }
   wchar_t const *const found = wcsstr(ws->ptr, ws2);
   if (!found) {
     *pos = -1;
@@ -120,6 +124,9 @@ error wstr_replace_all_(struct wstr *const ws,
                         wchar_t const *const replacement MEM_FILEPOS_PARAMS) {
   if (!ws || !find || !replacement) {
     return errg(err_invalid_arugment);
+  }
+  if (!ws->ptr || !ws->len) {
+    return eok();
   }
   ptrdiff_t const findlen = (ptrdiff_t)wcslen(find);
   if (findlen == 0) {
