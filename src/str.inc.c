@@ -115,7 +115,7 @@ error str_str_(struct str const *const s, char const *const s2, ptrdiff_t *const
     *pos = -1;
     return eok();
   }
-  *pos = (int)(found - s->ptr);
+  *pos = found - s->ptr;
   return eok();
 }
 
