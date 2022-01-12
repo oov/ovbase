@@ -1,14 +1,14 @@
-#include "../include/base.h"
+#include "ovbase.h"
 
 struct hmap_udata {
   struct hmap *hm;
-  struct base_filepos const *filepos;
+  struct ovbase_filepos const *filepos;
 };
 
 static void *hm_malloc(size_t const s, void *const udata) {
 #ifdef ALLOCATE_LOGGER
   struct hmap_udata const *const ud = udata;
-  struct base_filepos const *const filepos = ud->filepos;
+  struct ovbase_filepos const *const filepos = ud->filepos;
 #else
   (void)udata;
 #endif
@@ -22,7 +22,7 @@ static void *hm_malloc(size_t const s, void *const udata) {
 static void hm_free(void *p, void *const udata) {
 #ifdef ALLOCATE_LOGGER
   struct hmap_udata const *const ud = udata;
-  struct base_filepos const *const filepos = ud->filepos;
+  struct ovbase_filepos const *const filepos = ud->filepos;
 #else
   (void)udata;
 #endif
@@ -73,10 +73,10 @@ error hmap_new_static(struct hmap *const hm,
       .filepos = filepos,
 #endif
   };
-  uint64_t hash = base_splitmix64_next(get_global_hint());
-  uint64_t const s0 = base_splitmix64(hash);
-  hash = base_splitmix64_next(hash);
-  uint64_t const s1 = base_splitmix64(hash);
+  uint64_t hash = ovbase_splitmix64_next(get_global_hint());
+  uint64_t const s0 = ovbase_splitmix64(hash);
+  hash = ovbase_splitmix64_next(hash);
+  uint64_t const s1 = ovbase_splitmix64(hash);
   struct hashmap *const h = hashmap_new_with_allocator(
       hm_malloc, hm_free, item_size, cap, s0, s1, hm_hash_static, hm_compare_static, NULL, &ud);
   if (!h) {
@@ -100,10 +100,10 @@ error hmap_new_dynamic(struct hmap *const hm,
       .filepos = filepos,
 #endif
   };
-  uint64_t hash = base_splitmix64_next(get_global_hint());
-  uint64_t const s0 = base_splitmix64(hash);
-  hash = base_splitmix64_next(hash);
-  uint64_t const s1 = base_splitmix64(hash);
+  uint64_t hash = ovbase_splitmix64_next(get_global_hint());
+  uint64_t const s0 = ovbase_splitmix64(hash);
+  hash = ovbase_splitmix64_next(hash);
+  uint64_t const s1 = ovbase_splitmix64(hash);
   struct hashmap *const h = hashmap_new_with_allocator(
       hm_malloc, hm_free, item_size, cap, s0, s1, hm_hash_dynamic, hm_compare_dynamic, NULL, &ud);
   if (!h) {

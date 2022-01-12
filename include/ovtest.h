@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "base.h"
+#include "ovbase.h"
 
 #ifdef __GNUC__
 
@@ -15,7 +15,7 @@
 #endif // __GNUC__
 
 static inline void test_init_(void) {
-  if (!base_init()) {
+  if (!ovbase_init()) {
     printf("!! INITIALIZATION FAILED !!\n");
     abort();
   }
@@ -28,7 +28,7 @@ static inline void test_fini_(void) {
 #ifdef TEST_MY_FINI
   TEST_MY_FINI;
 #endif
-  base_exit();
+  ovbase_exit();
 #ifdef LEAK_DETECTOR
   if (mem_get_allocated_count()) {
     printf("!! MEMORY LEAKED !!\n");

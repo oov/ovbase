@@ -1,4 +1,4 @@
-#include "../include/base.h"
+#include "ovbase.h"
 
 #ifdef USE_WSTR
 

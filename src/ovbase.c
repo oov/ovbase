@@ -1,4 +1,4 @@
-#include "../include/base.h"
+#include "ovbase.h"
 
 #include <stdarg.h>
 #include <stdlib.h> // realloc, free
@@ -17,7 +17,7 @@
 #include <stdatomic.h>
 static _Atomic uint64_t g_global_hint = 0;
 
-#include "../include/threads.h"
+#include "ovthreads.h"
 
 #if __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
 #  if defined(IMPLEMENT_BASE_TIMESPEC_WIN32)
@@ -94,7 +94,7 @@ int timespec_get(struct timespec *ts, int base) {
 #endif // __GNUC__
 
 #ifndef __FILE_NAME__
-char const *base_find_file_name(char const *s) {
+char const *ovbase_find_file_name(char const *s) {
   char const *found = s;
   for (; *s != '\0'; ++s) {
     if (*s == '/' || *s == '\\') {
@@ -122,7 +122,7 @@ static void global_hint_init(void) {
 }
 
 uint64_t get_global_hint(void) {
-  return base_splitmix64(atomic_fetch_add_explicit(&g_global_hint, 0x9e3779b97f4a7c15, memory_order_relaxed));
+  return ovbase_splitmix64(atomic_fetch_add_explicit(&g_global_hint, 0x9e3779b97f4a7c15, memory_order_relaxed));
 }
 
 static void write_stderr(NATIVE_CHAR const *const str) {
@@ -156,11 +156,11 @@ static void write_stderr(NATIVE_CHAR const *const str) {
 #endif
 }
 
-static void *base_hm_malloc(size_t const s, void *const udata) {
+static void *ovbase_hm_malloc(size_t const s, void *const udata) {
   (void)udata;
   return REALLOC(NULL, s);
 }
-static void base_hm_free(void *const p, void *const udata) {
+static void ovbase_hm_free(void *const p, void *const udata) {
   (void)udata;
   FREE(p);
 }
@@ -172,7 +172,7 @@ static mtx_t g_mem_mtx = {0};
 static struct hashmap *g_allocated = NULL;
 struct allocated_at {
   void const *const p;
-  struct base_filepos const filepos;
+  struct ovbase_filepos const filepos;
 };
 
 static uint64_t am_hash(void const *const item, uint64_t const seed0, uint64_t const seed1, void *const udata) {
@@ -189,12 +189,12 @@ static int am_compare(void const *const a, void const *const b, void *udata) {
 
 static void allocate_logger_init(void) {
   mtx_init(&g_mem_mtx, mtx_recursive);
-  uint64_t hash = base_splitmix64_next(get_global_hint());
-  uint64_t const s0 = base_splitmix64(hash);
-  hash = base_splitmix64_next(hash);
-  uint64_t const s1 = base_splitmix64(hash);
+  uint64_t hash = ovbase_splitmix64_next(get_global_hint());
+  uint64_t const s0 = ovbase_splitmix64(hash);
+  hash = ovbase_splitmix64_next(hash);
+  uint64_t const s1 = ovbase_splitmix64(hash);
   g_allocated = hashmap_new_with_allocator(
-      base_hm_malloc, base_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+      ovbase_hm_malloc, ovbase_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!g_allocated) {
     abort();
   }
@@ -338,7 +338,7 @@ error mem_free_(void *const pp MEM_FILEPOS_PARAMS) {
 #include "str.inc.c"
 #include "wstr.inc.c"
 
-bool base_init(void) {
+bool ovbase_init(void) {
   global_hint_init();
   if (!error_init()) {
     return false;
@@ -349,7 +349,7 @@ bool base_init(void) {
   return error_register_default_mapper();
 }
 
-void base_exit(void) {
+void ovbase_exit(void) {
 #ifdef ALLOCATE_LOGGER
   report_leaks();
 #endif

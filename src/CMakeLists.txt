@@ -42,14 +42,17 @@ add_link_options(
   $<$<BOOL:${WIN32}>:-no-pthread>
   -static
 )
+include_directories(
+  "${PROJECT_SOURCE_DIR}/include"
+)
 link_libraries(
   $<$<NOT:$<BOOL:${WIN32}>>:pthread>
 )
 
-add_library(base STATIC base.c)
+add_library(ovbase STATIC ovbase.c)
 
-add_executable(test_base base_test.c)
-list(APPEND tests test_base)
+add_executable(test_ovbase ovbase_test.c)
+list(APPEND tests test_ovbase)
 
 foreach(target ${tests})
   add_test(NAME ${target} COMMAND ${target})

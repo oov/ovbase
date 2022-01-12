@@ -1,10 +1,10 @@
-# base.c
+# ovbase
 
 This is my personal library.
 
 ## Credits
 
-base.c is made possible by the following open source softwares.
+ovbase is made possible by the following open source softwares.
 
 ### Acutest
 
