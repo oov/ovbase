@@ -277,7 +277,6 @@ static bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
     if (*(void **)pp == NULL) {
       return false;
     }
-    FREE(*(void **)pp);
 #ifdef LEAK_DETECTOR
     freed();
 #endif
@@ -286,6 +285,7 @@ static bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
     allocated_remove(*(void **)pp);
     mtx_unlock(&g_mem_mtx);
 #endif
+    FREE(*(void **)pp);
     *(void **)pp = NULL;
     return true;
   }

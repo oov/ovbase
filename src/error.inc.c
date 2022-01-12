@@ -2,6 +2,11 @@
 
 #include "ovthreads.h"
 
+#ifdef _WIN32
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+#endif
+
 static void *ovbase_hm_malloc(size_t const s, void *const udata);
 static void ovbase_hm_free(void *const p, void *const udata);
 

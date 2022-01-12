@@ -4,12 +4,6 @@ option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
 option(USE_COMPILER_RT "use compiler-rt runtime" ON)
 
-file(GLOB sources "*.c" "../include/*.h")
-find_program(CLANG_FORMAT_EXE clang-format)
-add_custom_target(${PROJECT_NAME}-format ALL
-  COMMAND ${CLANG_FORMAT_EXE} -style=file -i ${sources}
-)
-
 add_compile_definitions(
   $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
   $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0502>
@@ -51,7 +45,7 @@ link_libraries(
 
 add_library(ovbase STATIC ovbase.c)
 
-add_executable(test_ovbase ovbase_test.c)
+add_executable(test_ovbase EXCLUDE_FROM_ALL ovbase_test.c)
 list(APPEND tests test_ovbase)
 
 foreach(target ${tests})

@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.0)
-if ("${CMAKE_C_COMPILER}" STREQUAL "")
-  set(CMAKE_C_COMPILER clang)
-endif()
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
 project(ovbase C)
+
+file(GLOB sources "${PROJECT_SOURCE_DIR}/src/*.c" "${PROJECT_SOURCE_DIR}/include/*.h")
+find_program(CLANG_FORMAT_EXE clang-format)
+add_custom_target(${PROJECT_NAME}-format ALL
+  COMMAND ${CLANG_FORMAT_EXE} -style=file -i ${sources}
+)
+
 enable_testing()
 add_subdirectory(src)
