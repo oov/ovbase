@@ -3,6 +3,7 @@ option(USE_WSTR "use struct wstr" ON)
 option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
 option(USE_COMPILER_RT "use compiler-rt runtime" ON)
+option(SKIP_OVTHREADS_TEST "skip ovthreads tests" ON)
 
 add_compile_definitions(
   $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
@@ -45,8 +46,13 @@ link_libraries(
 
 add_library(ovbase STATIC ovbase.c)
 
-add_executable(test_ovbase EXCLUDE_FROM_ALL ovbase_test.c)
+add_executable(test_ovbase ovbase_test.c)
 list(APPEND tests test_ovbase)
+
+if(NOT SKIP_OVTHREADS_TEST)
+  add_executable(test_ovthteads ovthreads_test.c)
+  list(APPEND tests test_ovthteads)
+endif()
 
 foreach(target ${tests})
   add_test(NAME ${target} COMMAND ${target})
