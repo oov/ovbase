@@ -28,9 +28,10 @@ jobs:
             mingw-w64-${{ matrix.arch }}-ninja
             mingw-w64-${{ matrix.arch }}-clang
             mingw-w64-${{ matrix.arch }}-compiler-rt
+            mingw-w64-${{ matrix.arch }}-lld
       - name: Run ninja
         shell: msys2 {0}
         run: |
           mkdir build
           cd build
-          rm -rf CmakeCache.txt && cmake -GNinja -DCMAKE_C_COMPILER=clang -DCMAKE_C_STANDARD=11 -DCMAKE_C_STANDARD_REQUIRED=ON -DCMAKE_C_EXTENSIONS=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DSKIP_OVTHREADS_TEST=OFF .. && ninja && ctest --output-junit testlog.xml
+          rm -rf CmakeCache.txt && cmake -GNinja -DCMAKE_C_COMPILER=clang -DCMAKE_C_STANDARD=11 -DCMAKE_C_STANDARD_REQUIRED=ON -DCMAKE_C_EXTENSIONS=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DSKIP_OVTHREADS_TEST=OFF .. && ninja -v && ctest --output-junit testlog.xml

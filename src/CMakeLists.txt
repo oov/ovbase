@@ -57,6 +57,7 @@ foreach(target ${targets})
     $<$<BOOL:${WIN32}>:-no-pthread>
   )
   target_link_options(${target} PRIVATE
+    -fuse-ld=lld
     -Wl,--gc-sections
     # -Wl,--print-gc-sections
     -static
