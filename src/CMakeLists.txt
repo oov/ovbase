@@ -51,6 +51,7 @@ foreach(target ${targets})
     -fdata-sections
     $<$<CONFIG:Debug>:-O0>
     $<$<CONFIG:Release>:-O2>
+    -flto
   )
   target_link_options(${target} PUBLIC
     $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
