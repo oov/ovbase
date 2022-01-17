@@ -11,11 +11,33 @@ add_library(ovbase STATIC
   error_en.c
   error_jp.c
   hashmap.c
-  hmap.c
+  hmap/clear.c
+  hmap/count.c
+  hmap/delete.c
+  hmap/free.c
+  hmap/get.c
+  hmap/new_dynamic.c
+  hmap/new_static.c
+  hmap/scan.c
+  hmap/set.c
   ovbase.c
   ovthreads.c
-  str.c
-  wstr.c
+  str/cat_.c
+  str/cat_m_.c
+  str/cpy_.c
+  str/cpy_m_.c
+  str/ncat_.c
+  str/ncpy_.c
+  str/replace_all_.c
+  str/str_.c
+  wstr/cat_.c
+  wstr/cat_m_.c
+  wstr/cpy_.c
+  wstr/cpy_m_.c
+  wstr/ncat_.c
+  wstr/ncpy_.c
+  wstr/replace_all_.c
+  wstr/str_.c
 )
 list(APPEND targets ovbase)
 
@@ -23,11 +45,11 @@ add_executable(test_array array_test.c)
 list(APPEND targets test_array)
 add_executable(test_ovbase ovbase_test.c)
 list(APPEND targets test_ovbase)
-add_executable(test_hmap hmap_test.c)
+add_executable(test_hmap hmap/test.c)
 list(APPEND targets test_hmap)
-add_executable(test_str str_test.c)
+add_executable(test_str str/test.c)
 list(APPEND targets test_str)
-add_executable(test_wstr wstr_test.c)
+add_executable(test_wstr wstr/test.c)
 list(APPEND targets test_wstr)
 
 if(NOT SKIP_OVTHREADS_TEST)

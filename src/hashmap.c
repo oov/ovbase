@@ -1,4 +1,6 @@
-#include "ovbase.h"
+#include "hmap/hmap.h"
+
+#include "mem.h"
 
 #ifdef __GNUC__
 #  pragma GCC diagnostic push
@@ -25,3 +27,27 @@
 #else
 #  include "../3rd/hashmap.c/hashmap.c"
 #endif // __GNUC__
+
+void *hm_malloc(size_t const s, void *const udata) {
+#ifdef ALLOCATE_LOGGER
+  struct hmap_udata const *const ud = udata;
+  struct ovbase_filepos const *const filepos = ud->filepos;
+#else
+  (void)udata;
+#endif
+  void *r = NULL;
+  if (!mem_core_(&r, s MEM_FILEPOS_VALUES_PASSTHRU)) {
+    return NULL;
+  }
+  return r;
+}
+
+void hm_free(void *p, void *const udata) {
+#ifdef ALLOCATE_LOGGER
+  struct hmap_udata const *const ud = udata;
+  struct ovbase_filepos const *const filepos = ud->filepos;
+#else
+  (void)udata;
+#endif
+  mem_core_(&p, 0 MEM_FILEPOS_VALUES_PASSTHRU);
+}
