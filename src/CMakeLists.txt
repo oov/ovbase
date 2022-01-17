@@ -5,11 +5,30 @@ option(ALLOCATE_LOGGER "use allocate logger" ON)
 option(USE_COMPILER_RT "use compiler-rt runtime" ON)
 option(SKIP_OVTHREADS_TEST "skip ovthreads tests" ON)
 
-add_library(ovbase STATIC ovbase.c)
+add_library(ovbase STATIC
+  array.c
+  error.c
+  error_en.c
+  error_jp.c
+  hashmap.c
+  hmap.c
+  ovbase.c
+  ovthreads.c
+  str.c
+  wstr.c
+)
 list(APPEND targets ovbase)
 
+add_executable(test_array array_test.c)
+list(APPEND targets test_array)
 add_executable(test_ovbase ovbase_test.c)
 list(APPEND targets test_ovbase)
+add_executable(test_hmap hmap_test.c)
+list(APPEND targets test_hmap)
+add_executable(test_str str_test.c)
+list(APPEND targets test_str)
+add_executable(test_wstr wstr_test.c)
+list(APPEND targets test_wstr)
 
 if(NOT SKIP_OVTHREADS_TEST)
   add_executable(test_ovthteads ovthreads_test.c)
@@ -65,5 +84,6 @@ foreach(target ${targets})
   )
   target_link_libraries(${target} PRIVATE
     $<$<NOT:$<BOOL:${WIN32}>>:pthread>
+    $<$<NOT:$<STREQUAL:${target},ovbase>>:ovbase>
   )
 endforeach(target)

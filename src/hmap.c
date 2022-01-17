@@ -1,5 +1,9 @@
 #include "ovbase.h"
 
+#include "mem.h"
+
+#include "../3rd/hashmap.c/hashmap.h"
+
 struct hmap_udata {
   struct hmap *hm;
   struct ovbase_filepos const *filepos;

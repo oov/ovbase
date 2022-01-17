@@ -9,7 +9,7 @@
 #  define REALLOC(ptr, size) (realloc(ptr, size))
 #  define FREE(ptr) (free(ptr))
 #else
-#  include <stdio.h> // fprintf
+#  include <stdio.h> // sprintf
 #  define REALLOC(ptr, size) (realloc(ptr, size))
 #  define FREE(ptr) (free(ptr))
 #endif
@@ -17,81 +17,9 @@
 #include <stdatomic.h>
 static _Atomic uint64_t g_global_hint = 0;
 
+#include "../3rd/hashmap.c/hashmap.h"
+#include "mem.h"
 #include "ovthreads.h"
-
-#if __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
-#  if defined(IMPLEMENT_BASE_TIMESPEC_WIN32)
-int timespec_get(struct timespec *ts, int base) {
-  if (!ts)
-    return 0;
-  if (base == TIME_UTC) {
-    ts->tv_sec = time(NULL);
-    ts->tv_nsec = 0;
-    FILETIME ft1601 = {0};
-    GetSystemTimeAsFileTime(&ft1601);
-    uint64_t const t =
-        (ULARGE_INTEGER){
-            .LowPart = ft1601.dwLowDateTime,
-            .HighPart = ft1601.dwHighDateTime,
-        }
-            .QuadPart -
-        UINT64_C(0x019DB1DED53E8000); // 1601-01-01 to 1970-01-01
-    ts->tv_sec = (time_t)(t / 10000000);
-    ts->tv_nsec = (long)((t % 10000000) * 100);
-    return base;
-  }
-  return 0;
-}
-#  endif
-
-#  define DISABLE_TLS
-#  define DISABLE_CALL_ONCE
-#  ifdef __GNUC__
-#    pragma GCC diagnostic push
-#    if __has_warning("-Wreserved-identifier")
-#      pragma GCC diagnostic ignored "-Wreserved-identifier"
-#    endif
-#    if __has_warning("-Wreserved-id-macro")
-#      pragma GCC diagnostic ignored "-Wreserved-id-macro"
-#    endif
-#    if __has_warning("-Wpadded")
-#      pragma GCC diagnostic ignored "-Wpadded"
-#    endif
-#    include "../3rd/tinycthread/source/tinycthread.c"
-#    pragma GCC diagnostic pop
-#  else
-#    include "../3rd/tinycthread/source/tinycthread.c"
-#  endif // __GNUC__
-#  undef DISABLE_TLS
-#  undef DISABLE_CALL_ONCE
-
-#endif // __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
-
-#ifdef __GNUC__
-#  pragma GCC diagnostic push
-#  if __has_warning("-Wreserved-macro-identifier")
-#    pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
-#  endif
-#  if __has_warning("-Wpadded")
-#    pragma GCC diagnostic ignored "-Wpadded"
-#  endif
-#  if __has_warning("-Wcast-align")
-#    pragma GCC diagnostic ignored "-Wcast-align"
-#  endif
-#  if __has_warning("-Wsign-conversion")
-#    pragma GCC diagnostic ignored "-Wsign-conversion"
-#  endif
-#  if __has_warning("-Wextra-semi-stmt")
-#    pragma GCC diagnostic ignored "-Wextra-semi-stmt"
-#  endif
-#  if __has_warning("-Wimplicit-fallthrough")
-#    pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#  endif
-#  include "../3rd/hashmap.c/hashmap.c"
-#  pragma GCC diagnostic pop
-#else
-#  include "../3rd/hashmap.c/hashmap.c"
-#endif // __GNUC__
 
 #ifndef __FILE_NAME__
 char const *ovbase_find_file_name(char const *s) {
@@ -125,42 +53,11 @@ uint64_t get_global_hint(void) {
   return ovbase_splitmix64(atomic_fetch_add_explicit(&g_global_hint, 0x9e3779b97f4a7c15, memory_order_relaxed));
 }
 
-static void write_stderr(NATIVE_CHAR const *const str) {
-#ifdef _WIN32
-  // https://docs.microsoft.com/en-us/windows/console/writeconsole
-  // WriteConsole fails if it is used with a standard handle that is redirected
-  // to a file. If an application processes multilingual output that can be
-  // redirected, determine whether the output handle is a console handle (one
-  // method is to call the GetConsoleMode function and check whether it
-  // succeeds). If the handle is a console handle, call WriteConsole. If the
-  // handle is not a console handle, the output is redirected and you should
-  // call WriteFile to perform the I/O. Be sure to prefix a Unicode plain text
-  // file with a byte order mark. For more information, see Using Byte Order
-  // Marks.
-  HANDLE const h = GetStdHandle(STD_ERROR_HANDLE);
-  DWORD const len = (DWORD)wcslen(str);
-  if (GetConsoleMode(h, &(DWORD){0})) {
-    WriteConsoleW(h, str, len, NULL, NULL);
-  } else {
-    DWORD const plen = (DWORD)WideCharToMultiByte(CP_UTF8, 0, str, (int)len, NULL, 0, NULL, NULL);
-    if (plen) {
-      void *const p = malloc(plen);
-      if (WideCharToMultiByte(CP_UTF8, 0, str, (int)len, p, (int)plen, NULL, NULL)) {
-        WriteFile(h, p, plen, NULL, NULL);
-      }
-      free(p);
-    }
-  }
-#else
-  fprintf(stderr, NSTR("%s") NEWLINE, str);
-#endif
-}
-
-static void *ovbase_hm_malloc(size_t const s, void *const udata) {
+void *ovbase_hm_malloc(size_t const s, void *const udata) {
   (void)udata;
   return REALLOC(NULL, s);
 }
-static void ovbase_hm_free(void *const p, void *const udata) {
+void ovbase_hm_free(void *const p, void *const udata) {
   (void)udata;
   FREE(p);
 }
@@ -272,7 +169,7 @@ static void report_allocated_count(void) {
 }
 #endif
 
-static bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
+bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
   if (sz == 0) {
     if (*(void **)pp == NULL) {
       return false;
@@ -332,13 +229,9 @@ error mem_free_(void *const pp MEM_FILEPOS_PARAMS) {
   return eok();
 }
 
-#include "array.inc.c"
-#include "error.inc.c"
-#include "hmap.inc.c"
-#include "str.inc.c"
-#include "wstr.inc.c"
+#include "error.h"
 
-bool ovbase_init(void) {
+bool ovbase_init(error_message_mapper generic_error_message_mapper) {
   global_hint_init();
   if (!error_init()) {
     return false;
@@ -346,7 +239,7 @@ bool ovbase_init(void) {
 #ifdef ALLOCATE_LOGGER
   allocate_logger_init();
 #endif
-  return error_register_default_mapper();
+  return error_register_default_mapper(generic_error_message_mapper);
 }
 
 void ovbase_exit(void) {

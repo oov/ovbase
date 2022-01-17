@@ -43,9 +43,6 @@ struct ovbase_filepos {
   size_t line;
 };
 
-NODISCARD bool ovbase_init(void);
-void ovbase_exit(void);
-
 #define ERR_FILEPOS_PARAMS , struct ovbase_filepos const *const filepos
 #define ERR_FILEPOS_VALUES                                                                                             \
   , (&(const struct ovbase_filepos){.file = SOURCE_CODE_FILE_NAME, .func = __func__, .line = __LINE__})
@@ -547,3 +544,6 @@ static inline uint32_t ovbase_splitmix32(uint32_t x) {
 }
 
 static inline uint32_t ovbase_splitmix32_next(uint32_t const x) { return x + 0x9e3779b9; }
+
+NODISCARD bool ovbase_init(error_message_mapper generic_error_message_mapper);
+void ovbase_exit(void);

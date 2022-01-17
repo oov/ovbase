@@ -1,14 +1,46 @@
-#include "ovbase.h"
+#include "error.h"
 
+#include "../3rd/hashmap.c/hashmap.h"
+#include "mem.h"
 #include "ovthreads.h"
 
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
+#else
+#  include <stdio.h> // fprintf
 #endif
 
-static void *ovbase_hm_malloc(size_t const s, void *const udata);
-static void ovbase_hm_free(void *const p, void *const udata);
+static void write_stderr(NATIVE_CHAR const *const str) {
+#ifdef _WIN32
+  // https://docs.microsoft.com/en-us/windows/console/writeconsole
+  // WriteConsole fails if it is used with a standard handle that is redirected
+  // to a file. If an application processes multilingual output that can be
+  // redirected, determine whether the output handle is a console handle (one
+  // method is to call the GetConsoleMode function and check whether it
+  // succeeds). If the handle is a console handle, call WriteConsole. If the
+  // handle is not a console handle, the output is redirected and you should
+  // call WriteFile to perform the I/O. Be sure to prefix a Unicode plain text
+  // file with a byte order mark. For more information, see Using Byte Order
+  // Marks.
+  HANDLE const h = GetStdHandle(STD_ERROR_HANDLE);
+  DWORD const len = (DWORD)wcslen(str);
+  if (GetConsoleMode(h, &(DWORD){0})) {
+    WriteConsoleW(h, str, len, NULL, NULL);
+  } else {
+    DWORD const plen = (DWORD)WideCharToMultiByte(CP_UTF8, 0, str, (int)len, NULL, 0, NULL, NULL);
+    if (plen) {
+      void *const p = malloc(plen);
+      if (WideCharToMultiByte(CP_UTF8, 0, str, (int)len, p, (int)plen, NULL, NULL)) {
+        WriteFile(h, p, plen, NULL, NULL);
+      }
+      free(p);
+    }
+  }
+#else
+  fprintf(stderr, NSTR("%s") NEWLINE, str);
+#endif
+}
 
 void error_default_reporter(error const e,
                             struct NATIVE_STR const *const message,
@@ -71,54 +103,6 @@ static int emm_compare(void const *a, void const *b, void *const udata) {
   return (int)(*(size_t const *)a - *(size_t const *)b);
 }
 
-NODISCARD error generic_error_message_mapper_en(uint_least32_t const code, struct NATIVE_STR *const message) {
-  switch (code) {
-  case err_fail:
-    return scpy(message, NSTR("failed."));
-  case err_unexpected:
-    return scpy(message, NSTR("unexpected."));
-  case err_invalid_arugment:
-    return scpy(message, NSTR("invalid argument."));
-  case err_null_pointer:
-    return scpy(message, NSTR("null pointer."));
-  case err_out_of_memory:
-    return scpy(message, NSTR("out of memory."));
-  case err_not_sufficient_buffer:
-    return scpy(message, NSTR("not sufficient buffer."));
-  case err_not_found:
-    return scpy(message, NSTR("not found."));
-  case err_abort:
-    return scpy(message, NSTR("aborted."));
-  case err_not_implemented_yet:
-    return scpy(message, NSTR("not implemented yet."));
-  }
-  return scpy(message, NSTR("unknown error code."));
-}
-
-NODISCARD error generic_error_message_mapper_jp(uint_least32_t const code, struct NATIVE_STR *const message) {
-  switch (code) {
-  case err_fail:
-    return scpy(message, NSTR("処理に失敗しました。"));
-  case err_unexpected:
-    return scpy(message, NSTR("予期しないエラーです。"));
-  case err_invalid_arugment:
-    return scpy(message, NSTR("引数が間違っています。"));
-  case err_null_pointer:
-    return scpy(message, NSTR("ポインターが割り当てられていません。"));
-  case err_out_of_memory:
-    return scpy(message, NSTR("メモリーが確保できません。"));
-  case err_not_sufficient_buffer:
-    return scpy(message, NSTR("バッファが小さすぎます。"));
-  case err_not_found:
-    return scpy(message, NSTR("対象が見つかりませんでした。"));
-  case err_abort:
-    return scpy(message, NSTR("中断されました。"));
-  case err_not_implemented_yet:
-    return scpy(message, NSTR("実装されていません。"));
-  }
-  return scpy(message, NSTR("未知のエラーコードです。"));
-}
-
 #ifdef _WIN32
 NODISCARD static error win32_error_message_mapper(uint_least32_t const code, struct NATIVE_STR *const dest) {
   if (!dest) {
@@ -166,7 +150,7 @@ cleanup:
 }
 #endif
 
-static bool error_init(void) {
+bool error_init(void) {
   mtx_init(&g_error_mtx, mtx_plain);
   uint64_t hash = ovbase_splitmix64_next(get_global_hint());
   uint64_t const s0 = ovbase_splitmix64(hash);
@@ -196,8 +180,8 @@ failed:
   return false;
 }
 
-static bool error_register_default_mapper(void) {
-  error err = error_register_message_mapper(err_type_generic, generic_error_message_mapper_en);
+bool error_register_default_mapper(error_message_mapper generic_error_message_mapper) {
+  error err = error_register_message_mapper(err_type_generic, generic_error_message_mapper);
   if (efailed(err)) {
     goto failed;
   }
@@ -214,7 +198,7 @@ failed:
   return false;
 }
 
-static void error_exit(void) {
+void error_exit(void) {
   if (g_error_message_mapper) {
     hashmap_free(g_error_message_mapper);
     g_error_message_mapper = NULL;

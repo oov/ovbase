@@ -15,7 +15,7 @@
 #endif // __GNUC__
 
 static inline void test_init_(void) {
-  if (!ovbase_init()) {
+  if (!ovbase_init(generic_error_message_mapper_en)) {
     printf("!! INITIALIZATION FAILED !!\n");
     abort();
   }

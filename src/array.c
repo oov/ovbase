@@ -1,5 +1,7 @@
 #include "ovbase.h"
 
+#include "mem.h"
+
 bool array_grow_core_(struct array *const p, size_t const elem_size, size_t const least_size MEM_FILEPOS_PARAMS) {
   if (p->cap >= least_size) {
     return true;
