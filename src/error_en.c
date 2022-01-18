@@ -1,6 +1,6 @@
 #include "ovbase.h"
 
-NODISCARD error generic_error_message_mapper_en(uint_least32_t const code, struct NATIVE_STR *const message) {
+NODISCARD error generic_error_message_mapper_en(int const code, struct NATIVE_STR *const message) {
   switch (code) {
   case err_fail:
     return scpy(message, NSTR("failed."));

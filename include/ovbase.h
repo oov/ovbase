@@ -1,5 +1,6 @@
 #pragma once
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -119,7 +120,7 @@ struct wstr {
 
 struct error {
   int type;
-  uint_least32_t code;
+  int code;
   struct NATIVE_STR msg;
   struct ovbase_filepos filepos;
 
@@ -146,10 +147,10 @@ enum err_generic {
   err_not_implemented_yet = 9,
 };
 
-typedef error (*error_message_mapper)(uint_least32_t const code, struct NATIVE_STR *const message);
+typedef error (*error_message_mapper)(int const code, struct NATIVE_STR *const message);
 NODISCARD error error_register_message_mapper(int const type, error_message_mapper fn);
-NODISCARD error generic_error_message_mapper_en(uint_least32_t const code, struct NATIVE_STR *const message);
-NODISCARD error generic_error_message_mapper_jp(uint_least32_t const code, struct NATIVE_STR *const message);
+NODISCARD error generic_error_message_mapper_en(int const code, struct NATIVE_STR *const message);
+NODISCARD error generic_error_message_mapper_jp(int const code, struct NATIVE_STR *const message);
 typedef void (*error_message_reporter)(error err,
                                        struct NATIVE_STR const *const msg,
                                        struct ovbase_filepos const *const filepos);
@@ -160,10 +161,10 @@ void error_register_reporter(error_message_reporter fn);
 
 NODISCARD error error_add_(error const parent,
                            int const type,
-                           uint_least32_t const code,
+                           int const code,
                            struct NATIVE_STR const *const msg ERR_FILEPOS_PARAMS);
 bool error_free_(error *const e MEM_FILEPOS_PARAMS);
-NODISCARD static inline bool error_is_(error const err, int const type, uint_least32_t const code) {
+NODISCARD static inline bool error_is_(error const err, int const type, int const code) {
   return err != NULL && err->type == type && err->code == code;
 }
 NODISCARD error error_to_string_short(error const e, struct NATIVE_STR *const dest);
@@ -180,12 +181,8 @@ bool error_report_free_(error e, struct NATIVE_STR const *const message ERR_FILE
 NODISCARD static inline error eok() { return NULL; }
 NODISCARD static inline bool esucceeded(error const err) { return err == NULL; }
 NODISCARD static inline bool efailed(error const err) { return err != NULL; }
-NODISCARD static inline bool eis(error const err, int const type, uint_least32_t const code) {
-  return error_is_(err, type, code);
-}
-NODISCARD static inline bool eisg(error const err, uint_least32_t const code) {
-  return eis(err, err_type_generic, code);
-}
+NODISCARD static inline bool eis(error const err, int const type, int const code) { return error_is_(err, type, code); }
+NODISCARD static inline bool eisg(error const err, int const code) { return eis(err, err_type_generic, code); }
 #define ereportmsg(err, struct_native_str_ptr) (error_report_free_((err), (struct_native_str_ptr)ERR_FILEPOS_VALUES))
 #define ereport(err) (error_report_free_((err), &native_unmanaged(NSTR("Error occurred.")) ERR_FILEPOS_VALUES))
 
@@ -198,6 +195,12 @@ static inline bool eignore(error err) {
   }
   return true;
 }
+
+enum {
+  err_type_errno = 1,
+};
+#define errerrno(n) (error_add_(NULL, err_type_errno, n, NULL ERR_FILEPOS_VALUES))
+static inline bool eis_errno(error err, int n) { return error_is_(err, err_type_errno, n); }
 
 #ifdef _WIN32
 #  ifndef _HRESULT_DEFINED
@@ -214,10 +217,10 @@ static inline bool eignore(error err) {
 typedef long HRESULT;
 #  endif // _HRESULT_DEFINED
 enum {
-  err_type_hresult = 1,
+  err_type_hresult = 2,
 };
-#  define errhr(hr) (error_add_(NULL, err_type_hresult, (uint_least32_t)(hr), NULL ERR_FILEPOS_VALUES))
-static inline bool eis_hr(error err, HRESULT hr) { return error_is_(err, err_type_hresult, (uint_least32_t)hr); }
+#  define errhr(hr) (error_add_(NULL, err_type_hresult, (int)(hr), NULL ERR_FILEPOS_VALUES))
+static inline bool eis_hr(error err, HRESULT hr) { return error_is_(err, err_type_hresult, (int)hr); }
 #endif // _WIN32
 
 // mem

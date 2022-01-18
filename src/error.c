@@ -103,8 +103,26 @@ static int emm_compare(void const *a, void const *b, void *const udata) {
   return (int)(*(size_t const *)a - *(size_t const *)b);
 }
 
+NODISCARD static error errno_error_message_mapper(int const code, struct NATIVE_STR *const dest) {
+  if (!dest) {
+    return errg(err_invalid_arugment);
+  }
+  NATIVE_CHAR buf[64] = {0};
 #ifdef _WIN32
-NODISCARD static error win32_error_message_mapper(uint_least32_t const code, struct NATIVE_STR *const dest) {
+  wsprintfW(buf, NSTR("errno = %d"), code);
+#else
+  sprintf(buf, NSTR("errno = %d"), code);
+#endif
+  error err = scpy(dest, buf);
+  if (efailed(err)) {
+    err = ethru(err);
+    return err;
+  }
+  return eok();
+}
+
+#ifdef _WIN32
+NODISCARD static error win32_error_message_mapper(int const code, struct NATIVE_STR *const dest) {
   if (!dest) {
     return errg(err_invalid_arugment);
   }
@@ -185,6 +203,10 @@ bool error_register_default_mapper(error_message_mapper generic_error_message_ma
   if (efailed(err)) {
     goto failed;
   }
+  err = error_register_message_mapper(err_type_errno, errno_error_message_mapper);
+  if (efailed(err)) {
+    goto failed;
+  }
 #ifdef _WIN32
   err = error_register_message_mapper(err_type_hresult, win32_error_message_mapper);
   if (efailed(err)) {
@@ -248,7 +270,7 @@ NODISCARD static error error_get_registered_message_mapper(int const type, struc
 
 error error_add_(error const parent,
                  int const type,
-                 uint_least32_t const code,
+                 int const code,
                  struct NATIVE_STR const *const msg ERR_FILEPOS_PARAMS) {
   error new_error = eok();
   error err = mem_(&new_error, 1, sizeof(struct error) MEM_FILEPOS_VALUES_PASSTHRU);

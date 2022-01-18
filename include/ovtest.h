@@ -65,7 +65,7 @@ static inline void test_fini_(void) {
 
 static int test_eis(error err,
                     int const type,
-                    uint_least32_t const code,
+                    int const code,
                     char const *const file,
                     int const line,
                     char const *const fmt,
@@ -108,7 +108,7 @@ static int test_eis(error err,
 
 static inline bool test_eis_f(error err,
                               int const type,
-                              uint_least32_t const code,
+                              int const code,
                               char const *const file,
                               int const line,
                               char const *const fmt,
