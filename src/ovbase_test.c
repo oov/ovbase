@@ -1,7 +1,5 @@
 #include "ovtest.h"
 
-#include <inttypes.h>
-
 static size_t err_count(error e) {
   size_t n = 0;
   while (e != NULL) {
