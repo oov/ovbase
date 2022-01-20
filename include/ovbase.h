@@ -230,6 +230,15 @@ NODISCARD error mem_free_(void *const pp MEM_FILEPOS_PARAMS);
 #define mem(pp, n, item_size) (mem_((pp), (n), (item_size)MEM_FILEPOS_VALUES))
 #define mem_free(pp) (mem_free_((pp)MEM_FILEPOS_VALUES))
 
+NODISCARD error mem_aligned_alloc_(void *const pp,
+                                   size_t const n,
+                                   size_t const item_size,
+                                   size_t const align MEM_FILEPOS_PARAMS);
+NODISCARD error mem_aligned_free_(void *const pp MEM_FILEPOS_PARAMS);
+#define mem_aligned_alloc(pp, n, item_size, align)                                                                     \
+  (mem_aligned_alloc_((pp), (n), (item_size), (align)MEM_FILEPOS_VALUES))
+#define mem_aligned_free(pp) (mem_aligned_free_((pp)MEM_FILEPOS_VALUES))
+
 #ifdef LEAK_DETECTOR
 long mem_get_allocated_count(void);
 #endif

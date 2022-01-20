@@ -20,6 +20,8 @@ add_library(ovbase STATIC
   hmap/new_static.c
   hmap/scan.c
   hmap/set.c
+  mem.c
+  mem_aligned.c
   ovbase.c
   ovthreads.c
   str/cat_.c
