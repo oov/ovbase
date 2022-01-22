@@ -257,8 +257,8 @@ void array_free_core_(struct array *const p MEM_FILEPOS_PARAMS);
 NODISCARD error array_free_(struct array *const p MEM_FILEPOS_PARAMS);
 static inline size_t array_len_(struct array const *const p) { return p ? p->len : 0; }
 static inline size_t array_cap_(struct array const *const p) { return p ? p->cap : 0; }
-#define alen(array_ptr) (array_len_((struct array *)(array_ptr)))
-#define acap(array_ptr) (array_cap_((struct array *)(array_ptr)))
+#define alen(array_ptr) (array_len_((struct array const *)(array_ptr)))
+#define acap(array_ptr) (array_cap_((struct array const *)(array_ptr)))
 #define afree(array_ptr) (array_free_((struct array *)(array_ptr)MEM_FILEPOS_VALUES))
 #define agrow(array_ptr, least_size)                                                                                   \
   (array_grow_((struct array *)(array_ptr), sizeof(*(array_ptr)->ptr), (size_t)(least_size)MEM_FILEPOS_VALUES))
