@@ -296,6 +296,12 @@ NODISCARD error str_str_(struct str const *const s, char const *const s2, ptrdif
 NODISCARD error str_replace_all_(struct str *const s,
                                  char const *const find,
                                  char const *const replacement MEM_FILEPOS_PARAMS);
+
+NODISCARD error str_atoi64_(struct str const *const s, int64_t *const dest);
+NODISCARD error str_atou64_(struct str const *const s, uint64_t *const dest);
+NODISCARD error str_itoa64_(int64_t v, struct str *const dest MEM_FILEPOS_PARAMS);
+NODISCARD error str_utoa64_(uint64_t v, struct str *const dest MEM_FILEPOS_PARAMS);
+
 #endif
 
 // wstr
@@ -317,6 +323,12 @@ NODISCARD error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2,
 NODISCARD error wstr_replace_all_(struct wstr *const ws,
                                   wchar_t const *const find,
                                   wchar_t const *const replacement MEM_FILEPOS_PARAMS);
+
+NODISCARD error wstr_atoi64_(struct wstr const *const s, int64_t *const dest);
+NODISCARD error wstr_atou64_(struct wstr const *const s, uint64_t *const dest);
+NODISCARD error wstr_itoa64_(int64_t v, struct wstr *const dest MEM_FILEPOS_PARAMS);
+NODISCARD error wstr_utoa64_(uint64_t v, struct wstr *const dest MEM_FILEPOS_PARAMS);
+
 #endif
 
 #define OVBASE_GENERIC_CASE(typ, fn)                                                                                   \
@@ -393,6 +405,38 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
              OVBASE_GENERIC_CASE(struct str *, str_replace_all_),                                                      \
              OVBASE_GENERIC_CASE(struct str *const, str_replace_all_))(                                                \
         (struct_str_ptr), (char_ptr_find), (char_ptr_replacement)MEM_FILEPOS_VALUES)
+#  define atoi64(struct_str_ptr, int64_t_ptr)                                                                          \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *, wstr_atoi64_),                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *const, wstr_atoi64_),                                                    \
+             OVBASE_GENERIC_CASE(struct wstr const *, wstr_atoi64_),                                                   \
+             OVBASE_GENERIC_CASE(struct wstr const *const, wstr_atoi64_),                                              \
+             OVBASE_GENERIC_CASE(struct str *, str_atoi64_),                                                           \
+             OVBASE_GENERIC_CASE(struct str *const, str_atoi64_),                                                      \
+             OVBASE_GENERIC_CASE(struct str const *, str_atoi64_),                                                     \
+             OVBASE_GENERIC_CASE(struct str const *const, str_atoi64_))((struct_str_ptr), (int64_t_ptr))
+#  define atou64(struct_str_ptr, uint64_t_ptr)                                                                         \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *, wstr_atou64_),                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *const, wstr_atou64_),                                                    \
+             OVBASE_GENERIC_CASE(struct wstr const *, wstr_atou64_),                                                   \
+             OVBASE_GENERIC_CASE(struct wstr const *const, wstr_atou64_),                                              \
+             OVBASE_GENERIC_CASE(struct str *, str_atou64_),                                                           \
+             OVBASE_GENERIC_CASE(struct str *const, str_atou64_),                                                      \
+             OVBASE_GENERIC_CASE(struct str const *, str_atou64_),                                                     \
+             OVBASE_GENERIC_CASE(struct str const *const, str_atou64_))((struct_str_ptr), (uint64_t_ptr))
+#  define itoa64(int64_t, struct_str_ptr)                                                                              \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *, wstr_itoa64_),                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *const, wstr_itoa64_),                                                    \
+             OVBASE_GENERIC_CASE(struct str *, str_itoa64_),                                                           \
+             OVBASE_GENERIC_CASE(struct str *const, str_itoa64_))((int64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+#  define utoa64(uint64_t, struct_str_ptr)                                                                             \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *, wstr_utoa64_),                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *const, wstr_utoa64_),                                                    \
+             OVBASE_GENERIC_CASE(struct str *, str_utoa64_),                                                           \
+             OVBASE_GENERIC_CASE(struct str *const, str_utoa64_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
 #elif defined(USE_STR)
 #  define sfree(struct_str_ptr)                                                                                        \
     _Generic((struct_str_ptr),                                                                                         \
@@ -441,6 +485,26 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
              OVBASE_GENERIC_CASE(struct str *, str_replace_all_),                                                      \
              OVBASE_GENERIC_CASE(struct str *const, str_replace_all_))(                                                \
         (struct_str_ptr), (char_ptr_find), (char_ptr_replacement)MEM_FILEPOS_VALUES)
+#  define atoi64(struct_str_ptr, int64_t_ptr)                                                                          \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct str *, str_atoi64_),                                                           \
+             OVBASE_GENERIC_CASE(struct str *const, str_atoi64_),                                                      \
+             OVBASE_GENERIC_CASE(struct str const *, str_atoi64_),                                                     \
+             OVBASE_GENERIC_CASE(struct str const *const, str_atoi64_))((struct_str_ptr), (int64_t_ptr))
+#  define atou64(struct_str_ptr, uint64_t_ptr)                                                                         \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct str *, str_atou64_),                                                           \
+             OVBASE_GENERIC_CASE(struct str *const, str_atou64_),                                                      \
+             OVBASE_GENERIC_CASE(struct str const *, str_atou64_),                                                     \
+             OVBASE_GENERIC_CASE(struct str const *const, str_atou64_))((struct_str_ptr), (uint64_t_ptr))
+#  define itoa64(int64_t, struct_str_ptr)                                                                              \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct str *, str_itoa64_),                                                           \
+             OVBASE_GENERIC_CASE(struct str *const, str_itoa64_))((int64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+#  define utoa64(uint64_t, struct_str_ptr)                                                                             \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct str *, str_utoa64_),                                                           \
+             OVBASE_GENERIC_CASE(struct str *const, str_utoa64_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
 #elif defined(USE_WSTR)
 #  define sfree(struct_str_ptr)                                                                                        \
     _Generic((struct_str_ptr),                                                                                         \
@@ -489,6 +553,26 @@ NODISCARD error wstr_replace_all_(struct wstr *const ws,
              OVBASE_GENERIC_CASE(struct wstr *, wstr_replace_all_),                                                    \
              OVBASE_GENERIC_CASE(struct wstr *const, wstr_replace_all_))(                                              \
         (struct_str_ptr), (char_ptr_find), (char_ptr_replacement)MEM_FILEPOS_VALUES)
+#  define atoi64(struct_str_ptr, int64_t_ptr)                                                                          \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *, wstr_atoi64_),                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *const, wstr_atoi64_),                                                    \
+             OVBASE_GENERIC_CASE(struct wstr const *, wstr_atoi64_),                                                   \
+             OVBASE_GENERIC_CASE(struct wstr const *const, wstr_atoi64_))((struct_str_ptr), (int64_t_ptr))
+#  define atou64(struct_str_ptr, uint64_t_ptr)                                                                         \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *, wstr_atou64_),                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *const, wstr_atou64_),                                                    \
+             OVBASE_GENERIC_CASE(struct wstr const *, wstr_atou64_),                                                   \
+             OVBASE_GENERIC_CASE(struct wstr const *const, wstr_atou64_))((struct_str_ptr), (uint64_t_ptr))
+#  define itoa64(int64_t, struct_str_ptr)                                                                              \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *, wstr_itoa64_),                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *const, wstr_itoa64_))((int64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+#  define utoa64(uint64_t, struct_str_ptr)                                                                             \
+    _Generic((struct_str_ptr),                                                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *, wstr_utoa64_),                                                         \
+             OVBASE_GENERIC_CASE(struct wstr *const, wstr_utoa64_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
 #endif
 
 // hash map

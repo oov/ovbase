@@ -24,22 +24,30 @@ add_library(ovbase STATIC
   mem_aligned.c
   ovbase.c
   ovthreads.c
+  str/atoi64_.c
+  str/atou64_.c
   str/cat_.c
   str/cat_m_.c
   str/cpy_.c
   str/cpy_m_.c
+  str/itoa64_.c
   str/ncat_.c
   str/ncpy_.c
   str/replace_all_.c
   str/str_.c
+  str/utoa64_.c
+  wstr/atoi64_.c
+  wstr/atou64_.c
   wstr/cat_.c
   wstr/cat_m_.c
   wstr/cpy_.c
   wstr/cpy_m_.c
+  wstr/itoa64_.c
   wstr/ncat_.c
   wstr/ncpy_.c
   wstr/replace_all_.c
   wstr/str_.c
+  wstr/utoa64_.c
 )
 list(APPEND targets ovbase)
 

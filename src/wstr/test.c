@@ -4,8 +4,16 @@
 
 #ifdef USE_WSTR
 
+#  define STR_PH "ls"
+
+#  ifdef __GNUC__
+#    if __has_warning("-Wpadded")
+#      pragma GCC diagnostic ignored "-Wpadded"
+#    endif
+#  endif // __GNUC__
+
 static void test_wstr_cpy_free(void) {
-  static wchar_t const *const test_str = L"hello";
+  static wchar_t const test_str[] = L"hello";
   struct wstr ws = {0};
   if (TEST_SUCCEEDED_F(scpy(&ws, test_str))) {
     if (TEST_CHECK(ws.ptr != NULL)) {
@@ -15,7 +23,7 @@ static void test_wstr_cpy_free(void) {
     TEST_CHECK(ws.cap > wcslen(test_str));
   }
 
-  static wchar_t const *const test_str2 = L"good bye world";
+  static wchar_t const test_str2[] = L"good bye world";
   if (TEST_SUCCEEDED_F(scpy(&ws, test_str2))) {
     if (TEST_CHECK(ws.ptr != NULL)) {
       TEST_CHECK(wcscmp(ws.ptr, test_str2) == 0);
@@ -24,7 +32,7 @@ static void test_wstr_cpy_free(void) {
     TEST_CHECK(ws.cap > wcslen(test_str2));
   }
 
-  static wchar_t const *const test_str3 = L"";
+  static wchar_t const test_str3[] = L"";
   if (TEST_SUCCEEDED_F(scpy(&ws, test_str3))) {
     if (TEST_CHECK(ws.ptr != NULL)) {
       TEST_CHECK(wcscmp(ws.ptr, test_str3) == 0);
@@ -43,25 +51,25 @@ static void test_wstr_cpy_free(void) {
 }
 
 static void test_wstr_cpym(void) {
-  static wchar_t const *const ws1 = L"hello";
-  static wchar_t const *const ws2 = L"world";
-  static wchar_t const *const expected = L"helloworld";
+  static wchar_t const ws1[] = L"hello";
+  static wchar_t const ws2[] = L"world";
+  static wchar_t const expected[] = L"helloworld";
   struct wstr ws = {0};
   if (TEST_SUCCEEDED_F(scpym(&ws, ws1, ws2))) {
     TEST_CHECK(wcscmp(ws.ptr, expected) == 0);
-    TEST_MSG("expected %ls", expected);
-    TEST_MSG("got %ls", ws.ptr);
+    TEST_MSG("expected %" STR_PH, expected);
+    TEST_MSG("got %" STR_PH, ws.ptr);
   }
   if (TEST_SUCCEEDED_F(scpym(&ws, ws1, ws2))) {
     TEST_CHECK(wcscmp(ws.ptr, expected) == 0);
-    TEST_MSG("expected %ls", expected);
-    TEST_MSG("got %ls", ws.ptr);
+    TEST_MSG("expected %" STR_PH, expected);
+    TEST_MSG("got %" STR_PH, ws.ptr);
   }
   TEST_SUCCEEDED_F(sfree(&ws));
 }
 
 static void test_wstr_ncpy(void) {
-  static wchar_t const *const test_str = L"hello";
+  static wchar_t const test_str[] = L"hello";
   struct wstr ws = {0};
   if (TEST_SUCCEEDED_F(sncpy(&ws, test_str, 2))) {
     TEST_CHECK(ws.ptr != NULL);
@@ -89,12 +97,12 @@ static void test_wstr_ncpy(void) {
 }
 
 static void test_wstr_cat_free(void) {
-  static wchar_t const *const test_str = L"hello";
+  static wchar_t const test_str[] = L"hello";
   struct wstr ws = {0};
   TEST_SUCCEEDED_F(scpy(&ws, test_str));
-  static wchar_t const *const test_str2 = L"world";
+  static wchar_t const test_str2[] = L"world";
   if (TEST_SUCCEEDED_F(scat(&ws, test_str2))) {
-    static wchar_t const *const expected_str = L"helloworld";
+    static wchar_t const expected_str[] = L"helloworld";
     if (TEST_CHECK(ws.ptr != NULL)) {
       TEST_CHECK(wcscmp(ws.ptr, expected_str) == 0);
     }
@@ -102,9 +110,9 @@ static void test_wstr_cat_free(void) {
     TEST_CHECK(ws.cap > wcslen(expected_str));
   }
 
-  static wchar_t const *const test_str3 = L"";
+  static wchar_t const test_str3[] = L"";
   if (TEST_SUCCEEDED_F(scat(&ws, test_str3))) {
-    static wchar_t const *const expected_str = L"helloworld";
+    static wchar_t const expected_str[] = L"helloworld";
     if (TEST_CHECK(ws.ptr != NULL)) {
       TEST_CHECK(wcscmp(ws.ptr, expected_str) == 0);
     }
@@ -130,27 +138,27 @@ static void test_wstr_cat_free(void) {
 }
 
 static void test_wstr_catm(void) {
-  static wchar_t const *const ws1 = L"hello";
-  static wchar_t const *const ws2 = L"world";
-  static wchar_t const *const expected1 = L"helloworld";
-  static wchar_t const *const expected2 = L"helloworldhelloworld";
+  static wchar_t const ws1[] = L"hello";
+  static wchar_t const ws2[] = L"world";
+  static wchar_t const expected1[] = L"helloworld";
+  static wchar_t const expected2[] = L"helloworldhelloworld";
   struct wstr ws = {0};
   if (TEST_SUCCEEDED_F(scatm(&ws, ws1, ws2))) {
     TEST_CHECK(wcscmp(ws.ptr, expected1) == 0);
-    TEST_MSG("expected %ls", expected1);
-    TEST_MSG("got %ls", ws.ptr);
+    TEST_MSG("expected %" STR_PH, expected1);
+    TEST_MSG("got %" STR_PH, ws.ptr);
   }
   if (TEST_SUCCEEDED_F(scatm(&ws, ws1, ws2))) {
     TEST_CHECK(wcscmp(ws.ptr, expected2) == 0);
-    TEST_MSG("expected %ls", expected2);
-    TEST_MSG("got %ls", ws.ptr);
+    TEST_MSG("expected %" STR_PH, expected2);
+    TEST_MSG("got %" STR_PH, ws.ptr);
   }
   TEST_SUCCEEDED_F(sfree(&ws));
 }
 
 static void test_wstr_ncat(void) {
-  static wchar_t const *const test_str = L"hello";
-  static wchar_t const *const test2_str = L"world";
+  static wchar_t const test_str[] = L"hello";
+  static wchar_t const test2_str[] = L"world";
   struct wstr ws = {0};
   if (TEST_SUCCEEDED_F(sncat(&ws, test_str, 2))) {
     TEST_CHECK(ws.ptr != NULL);
@@ -226,26 +234,26 @@ static void test_wstr_replace_all(void) {
   struct wstr ws = {0};
   if (TEST_SUCCEEDED_F(scpy(&ws, L"hello world"))) {
     if (TEST_SUCCEEDED_F(sreplace_all(&ws, L"o", L"xx"))) {
-      static wchar_t const *const expected = L"hellxx wxxrld";
+      static wchar_t const expected[] = L"hellxx wxxrld";
       TEST_CHECK(wcscmp(ws.ptr, expected) == 0);
-      TEST_MSG("expected %ls", expected);
-      TEST_MSG("got %ls", ws.ptr);
+      TEST_MSG("expected %" STR_PH, expected);
+      TEST_MSG("got %" STR_PH, ws.ptr);
     }
   }
   if (TEST_SUCCEEDED_F(scpy(&ws, L"hello world"))) {
     if (TEST_SUCCEEDED_F(sreplace_all(&ws, L"o", L""))) {
-      static wchar_t const *const expected = L"hell wrld";
+      static wchar_t const expected[] = L"hell wrld";
       TEST_CHECK(wcscmp(ws.ptr, expected) == 0);
-      TEST_MSG("expected %ls", expected);
-      TEST_MSG("got %ls", ws.ptr);
+      TEST_MSG("expected %" STR_PH, expected);
+      TEST_MSG("got %" STR_PH, ws.ptr);
     }
   }
   if (TEST_SUCCEEDED_F(scpy(&ws, L"hello world"))) {
     if (TEST_SUCCEEDED_F(sreplace_all(&ws, L"d", L"xx"))) {
-      static wchar_t const *const expected = L"hello worlxx";
+      static wchar_t const expected[] = L"hello worlxx";
       TEST_CHECK(wcscmp(ws.ptr, expected) == 0);
-      TEST_MSG("expected %ls", expected);
-      TEST_MSG("got %ls", ws.ptr);
+      TEST_MSG("expected %" STR_PH, expected);
+      TEST_MSG("got %" STR_PH, ws.ptr);
     }
   }
   if (TEST_SUCCEEDED_F(scpy(&ws, L"hello world"))) {
@@ -259,12 +267,189 @@ static void test_wstr_replace_all(void) {
 }
 
 static void test_wstr_const(void) {
-  static wchar_t const *const ws = L"hello";
+  static wchar_t const ws[] = L"hello";
   ptrdiff_t pos = 0;
   if (TEST_SUCCEEDED_F(sstr(&wstr_unmanaged_const(ws), L"o", &pos))) {
     TEST_CHECK(pos == 4);
   }
 }
+
+static void test_wstr_atoi64(void) {
+  static const struct test_data {
+    wchar_t const *input;
+    int code;
+    int64_t output;
+  } test_data[] = {
+      {
+          .input = L"0",
+          .output = INT64_C(0),
+          .code = 0,
+      },
+      {
+          .input = L"1",
+          .output = INT64_C(1),
+          .code = 0,
+      },
+      {
+          .input = L"-1",
+          .output = INT64_C(-1),
+          .code = 0,
+      },
+      {
+          .input = L"9223372036854775807",
+          .output = INT64_MAX,
+          .code = 0,
+      },
+      {
+          .input = L"9223372036854775808",
+          .code = err_fail,
+      },
+      {
+          .input = L"-9223372036854775808",
+          .output = INT64_MIN,
+          .code = 0,
+      },
+      {
+          .input = L"-9223372036854775809",
+          .code = err_fail,
+      },
+      {
+          .input = L"0x0",
+          .code = err_fail,
+      },
+      {
+          .input = L"hello",
+          .code = err_fail,
+      },
+  };
+
+  size_t n = sizeof(test_data) / sizeof(test_data[0]);
+  for (size_t i = 0; i < n; ++i) {
+    struct test_data const *const td = test_data + i;
+    TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->input);
+    int64_t r = 0;
+    if (TEST_EISG_F(atoi64(&wstr_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
+      TEST_CHECK(r == td->output);
+    }
+  }
+}
+
+static void test_wstr_atou64(void) {
+  static const struct test_data {
+    wchar_t const *input;
+    int code;
+    uint64_t output;
+  } test_data[] = {
+      {
+          .input = L"0",
+          .output = UINT64_C(0),
+          .code = 0,
+      },
+      {
+          .input = L"18446744073709551615",
+          .output = UINT64_MAX,
+          .code = 0,
+      },
+      {
+          .input = L"18446744073709551616",
+          .code = err_fail,
+      },
+      {
+          .input = L"-1",
+          .code = err_fail,
+      },
+      {
+          .input = L"0x0",
+          .code = err_fail,
+      },
+      {
+          .input = L"hello",
+          .code = err_fail,
+      },
+  };
+
+  size_t n = sizeof(test_data) / sizeof(test_data[0]);
+  for (size_t i = 0; i < n; ++i) {
+    struct test_data const *const td = test_data + i;
+    TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->input);
+    uint64_t r = 0;
+    if (TEST_EISG_F(atou64(&wstr_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
+      TEST_CHECK(r == td->output);
+    }
+  }
+}
+
+static void test_wstr_itoa64(void) {
+  static const struct test_data {
+    int64_t input;
+    wchar_t const *output;
+  } test_data[] = {
+      {
+          .input = INT64_C(0),
+          .output = L"0",
+      },
+      {
+          .input = INT64_C(1),
+          .output = L"1",
+      },
+      {
+          .input = INT64_MAX,
+          .output = L"9223372036854775807",
+      },
+      {
+          .input = INT64_C(-1),
+          .output = L"-1",
+      },
+      {
+          .input = INT64_MIN,
+          .output = L"-9223372036854775808",
+      },
+  };
+  struct wstr tmp = {0};
+  size_t n = sizeof(test_data) / sizeof(test_data[0]);
+  for (size_t i = 0; i < n; ++i) {
+    struct test_data const *const td = test_data + i;
+    TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->output);
+    if (TEST_SUCCEEDED_F(itoa64(td->input, &tmp))) {
+      TEST_CHECK(tmp.len > 0);
+      TEST_CHECK(wcscmp(tmp.ptr, td->output) == 0);
+      TEST_MSG("expected %" STR_PH, td->output);
+      TEST_MSG("got %" STR_PH, tmp.ptr);
+    }
+  }
+  ereport(sfree(&tmp));
+}
+
+static void test_wstr_utoa64(void) {
+  static const struct test_data {
+    uint64_t input;
+    wchar_t const *output;
+  } test_data[] = {
+      {
+          .input = UINT64_C(0),
+          .output = L"0",
+      },
+      {
+          .input = UINT64_MAX,
+          .output = L"18446744073709551615",
+      },
+  };
+
+  struct wstr tmp = {0};
+  size_t n = sizeof(test_data) / sizeof(test_data[0]);
+  for (size_t i = 0; i < n; ++i) {
+    struct test_data const *const td = test_data + i;
+    TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->output);
+    if (TEST_SUCCEEDED_F(utoa64(td->input, &tmp))) {
+      TEST_CHECK(tmp.len > 0);
+      TEST_CHECK(wcscmp(tmp.ptr, td->output) == 0);
+      TEST_MSG("expected %" STR_PH, td->output);
+      TEST_MSG("got %" STR_PH, tmp.ptr);
+    }
+  }
+  ereport(sfree(&tmp));
+}
+
 #endif // USE_WSTR
 
 TEST_LIST = {
@@ -279,6 +464,10 @@ TEST_LIST = {
     {"test_wstr_str", test_wstr_str},
     {"test_wstr_replace_all", test_wstr_replace_all},
     {"test_wstr_const", test_wstr_const},
+    {"test_wstr_atoi64", test_wstr_atoi64},
+    {"test_wstr_atou64", test_wstr_atou64},
+    {"test_wstr_itoa64", test_wstr_itoa64},
+    {"test_wstr_utoa64", test_wstr_utoa64},
 #endif // USE_WSTR
     {NULL, NULL},
 };
