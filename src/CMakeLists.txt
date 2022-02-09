@@ -63,8 +63,8 @@ add_executable(test_wstr wstr/test.c)
 list(APPEND targets test_wstr)
 
 if(NOT SKIP_OVTHREADS_TEST)
-  add_executable(test_ovthteads ovthreads_test.c)
-  list(APPEND targets test_ovthteads)
+  add_executable(test_ovthreads ovthreads_test.c)
+  list(APPEND targets test_ovthreads)
 endif()
 
 foreach(target ${targets})
