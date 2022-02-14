@@ -278,7 +278,7 @@ static void test_str_const(void) {
   }
 }
 
-static void test_str_atoi64(void) {
+static void test_str_atoi(void) {
   static const struct test_data {
     char const *input;
     int code;
@@ -332,13 +332,13 @@ static void test_str_atoi64(void) {
     struct test_data const *const td = test_data + i;
     TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->input);
     int64_t r = 0;
-    if (TEST_EISG_F(atoi64(&str_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
+    if (TEST_EISG_F(satoi(&str_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
       TEST_CHECK(r == td->output);
     }
   }
 }
 
-static void test_str_atou64(void) {
+static void test_str_atou(void) {
   static const struct test_data {
     char const *input;
     int code;
@@ -377,13 +377,13 @@ static void test_str_atou64(void) {
     struct test_data const *const td = test_data + i;
     TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->input);
     uint64_t r = 0;
-    if (TEST_EISG_F(atou64(&str_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
+    if (TEST_EISG_F(satou(&str_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
       TEST_CHECK(r == td->output);
     }
   }
 }
 
-static void test_str_itoa64(void) {
+static void test_str_itoa(void) {
   static const struct test_data {
     int64_t input;
     char const *output;
@@ -414,7 +414,7 @@ static void test_str_itoa64(void) {
   for (size_t i = 0; i < n; ++i) {
     struct test_data const *const td = test_data + i;
     TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->output);
-    if (TEST_SUCCEEDED_F(itoa64(td->input, &tmp))) {
+    if (TEST_SUCCEEDED_F(sitoa(td->input, &tmp))) {
       TEST_CHECK(tmp.len > 0);
       TEST_CHECK(strcmp(tmp.ptr, td->output) == 0);
       TEST_MSG("expected %" STR_PH, td->output);
@@ -424,7 +424,7 @@ static void test_str_itoa64(void) {
   ereport(sfree(&tmp));
 }
 
-static void test_str_utoa64(void) {
+static void test_str_utoa(void) {
   static const struct test_data {
     uint64_t input;
     char const *output;
@@ -444,7 +444,7 @@ static void test_str_utoa64(void) {
   for (size_t i = 0; i < n; ++i) {
     struct test_data const *const td = test_data + i;
     TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->output);
-    if (TEST_SUCCEEDED_F(utoa64(td->input, &tmp))) {
+    if (TEST_SUCCEEDED_F(sutoa(td->input, &tmp))) {
       TEST_CHECK(tmp.len > 0);
       TEST_CHECK(strcmp(tmp.ptr, td->output) == 0);
       TEST_MSG("expected %" STR_PH, td->output);
@@ -468,10 +468,10 @@ TEST_LIST = {
     {"test_str_str", test_str_str},
     {"test_str_replace_all", test_str_replace_all},
     {"test_str_const", test_str_const},
-    {"test_str_atoi64", test_str_atoi64},
-    {"test_str_atou64", test_str_atou64},
-    {"test_str_itoa64", test_str_itoa64},
-    {"test_str_utoa64", test_str_utoa64},
+    {"test_str_atoi", test_str_atoi},
+    {"test_str_atou", test_str_atou},
+    {"test_str_itoa", test_str_itoa},
+    {"test_str_utoa", test_str_utoa},
 #endif // USE_STR
     {NULL, NULL},
 };

@@ -274,7 +274,7 @@ static void test_wstr_const(void) {
   }
 }
 
-static void test_wstr_atoi64(void) {
+static void test_wstr_atoi(void) {
   static const struct test_data {
     wchar_t const *input;
     int code;
@@ -328,13 +328,13 @@ static void test_wstr_atoi64(void) {
     struct test_data const *const td = test_data + i;
     TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->input);
     int64_t r = 0;
-    if (TEST_EISG_F(atoi64(&wstr_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
+    if (TEST_EISG_F(satoi(&wstr_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
       TEST_CHECK(r == td->output);
     }
   }
 }
 
-static void test_wstr_atou64(void) {
+static void test_wstr_atou(void) {
   static const struct test_data {
     wchar_t const *input;
     int code;
@@ -373,13 +373,13 @@ static void test_wstr_atou64(void) {
     struct test_data const *const td = test_data + i;
     TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->input);
     uint64_t r = 0;
-    if (TEST_EISG_F(atou64(&wstr_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
+    if (TEST_EISG_F(satou(&wstr_unmanaged_const(td->input), &r), td->code) && td->code == 0) {
       TEST_CHECK(r == td->output);
     }
   }
 }
 
-static void test_wstr_itoa64(void) {
+static void test_wstr_itoa(void) {
   static const struct test_data {
     int64_t input;
     wchar_t const *output;
@@ -410,7 +410,7 @@ static void test_wstr_itoa64(void) {
   for (size_t i = 0; i < n; ++i) {
     struct test_data const *const td = test_data + i;
     TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->output);
-    if (TEST_SUCCEEDED_F(itoa64(td->input, &tmp))) {
+    if (TEST_SUCCEEDED_F(sitoa(td->input, &tmp))) {
       TEST_CHECK(tmp.len > 0);
       TEST_CHECK(wcscmp(tmp.ptr, td->output) == 0);
       TEST_MSG("expected %" STR_PH, td->output);
@@ -420,7 +420,7 @@ static void test_wstr_itoa64(void) {
   ereport(sfree(&tmp));
 }
 
-static void test_wstr_utoa64(void) {
+static void test_wstr_utoa(void) {
   static const struct test_data {
     uint64_t input;
     wchar_t const *output;
@@ -440,7 +440,7 @@ static void test_wstr_utoa64(void) {
   for (size_t i = 0; i < n; ++i) {
     struct test_data const *const td = test_data + i;
     TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->output);
-    if (TEST_SUCCEEDED_F(utoa64(td->input, &tmp))) {
+    if (TEST_SUCCEEDED_F(sutoa(td->input, &tmp))) {
       TEST_CHECK(tmp.len > 0);
       TEST_CHECK(wcscmp(tmp.ptr, td->output) == 0);
       TEST_MSG("expected %" STR_PH, td->output);
@@ -464,10 +464,10 @@ TEST_LIST = {
     {"test_wstr_str", test_wstr_str},
     {"test_wstr_replace_all", test_wstr_replace_all},
     {"test_wstr_const", test_wstr_const},
-    {"test_wstr_atoi64", test_wstr_atoi64},
-    {"test_wstr_atou64", test_wstr_atou64},
-    {"test_wstr_itoa64", test_wstr_itoa64},
-    {"test_wstr_utoa64", test_wstr_utoa64},
+    {"test_wstr_atoi", test_wstr_atoi},
+    {"test_wstr_atou", test_wstr_atou},
+    {"test_wstr_itoa", test_wstr_itoa},
+    {"test_wstr_utoa", test_wstr_utoa},
 #endif // USE_WSTR
     {NULL, NULL},
 };

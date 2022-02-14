@@ -22,32 +22,42 @@ add_library(ovbase STATIC
   hmap/set.c
   mem.c
   mem_aligned.c
+  num/char/atoi.c
+  num/char/atou.c
+  num/char/ftoa.c
+  num/char/itoa.c
+  num/char/utoa.c
+  num/wchar/atoi.c
+  num/wchar/atou.c
+  num/wchar/ftoa.c
+  num/wchar/itoa.c
+  num/wchar/utoa.c
   ovbase.c
   ovthreads.c
-  str/atoi64_.c
-  str/atou64_.c
+  str/atoi_.c
+  str/atou_.c
   str/cat_.c
   str/cat_m_.c
   str/cpy_.c
   str/cpy_m_.c
-  str/itoa64_.c
+  str/itoa_.c
   str/ncat_.c
   str/ncpy_.c
   str/replace_all_.c
   str/str_.c
-  str/utoa64_.c
-  wstr/atoi64_.c
-  wstr/atou64_.c
+  str/utoa_.c
+  wstr/atoi_.c
+  wstr/atou_.c
   wstr/cat_.c
   wstr/cat_m_.c
   wstr/cpy_.c
   wstr/cpy_m_.c
-  wstr/itoa64_.c
+  wstr/itoa_.c
   wstr/ncat_.c
   wstr/ncpy_.c
   wstr/replace_all_.c
   wstr/str_.c
-  wstr/utoa64_.c
+  wstr/utoa_.c
 )
 list(APPEND targets ovbase)
 
@@ -61,6 +71,10 @@ add_executable(test_str str/test.c)
 list(APPEND targets test_str)
 add_executable(test_wstr wstr/test.c)
 list(APPEND targets test_wstr)
+add_executable(test_num_wchar num/wchar/test.c)
+list(APPEND targets test_num_wchar)
+add_executable(test_num_char num/char/test.c)
+list(APPEND targets test_num_char)
 
 if(NOT SKIP_OVTHREADS_TEST)
   add_executable(test_ovthreads ovthreads_test.c)
@@ -117,5 +131,6 @@ foreach(target ${targets})
   target_link_libraries(${target} PRIVATE
     $<$<NOT:$<BOOL:${WIN32}>>:pthread>
     $<$<NOT:$<STREQUAL:${target},ovbase>>:ovbase>
+    m
   )
 endforeach(target)
