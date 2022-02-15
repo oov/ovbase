@@ -6,7 +6,7 @@
 
 struct hmap_udata {
   struct hmap *hm;
-  struct ovbase_filepos const *filepos;
+  struct ov_filepos const *filepos;
 };
 
 void *hm_malloc(size_t const s, void *const udata);

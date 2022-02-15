@@ -15,7 +15,7 @@
 #endif // __GNUC__
 
 static inline void test_init_(void) {
-  if (!ovbase_init(generic_error_message_mapper_en)) {
+  if (!ov_init(generic_error_message_mapper_en)) {
     printf("!! INITIALIZATION FAILED !!\n");
     abort();
   }
@@ -28,7 +28,7 @@ static inline void test_fini_(void) {
 #ifdef TEST_MY_FINI
   TEST_MY_FINI;
 #endif
-  ovbase_exit();
+  ov_exit();
 #ifdef LEAK_DETECTOR
   if (mem_get_allocated_count()) {
     printf("!! MEMORY LEAKED !!\n");

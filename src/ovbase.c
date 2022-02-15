@@ -22,7 +22,7 @@ static _Atomic uint64_t g_global_hint = 0;
 #include "ovthreads.h"
 
 #ifndef __FILE_NAME__
-char const *ovbase_find_file_name(char const *s) {
+char const *ov_find_file_name(char const *s) {
   char const *found = s;
   for (; *s != '\0'; ++s) {
     if (*s == '/' || *s == '\\') {
@@ -50,14 +50,14 @@ static void global_hint_init(void) {
 }
 
 uint64_t get_global_hint(void) {
-  return ovbase_splitmix64(atomic_fetch_add_explicit(&g_global_hint, 0x9e3779b97f4a7c15, memory_order_relaxed));
+  return ov_splitmix64(atomic_fetch_add_explicit(&g_global_hint, 0x9e3779b97f4a7c15, memory_order_relaxed));
 }
 
-void *ovbase_hm_malloc(size_t const s, void *const udata) {
+void *ov_hm_malloc(size_t const s, void *const udata) {
   (void)udata;
   return REALLOC(NULL, s);
 }
-void ovbase_hm_free(void *const p, void *const udata) {
+void ov_hm_free(void *const p, void *const udata) {
   (void)udata;
   FREE(p);
 }
@@ -69,7 +69,7 @@ static mtx_t g_mem_mtx = {0};
 static struct hashmap *g_allocated = NULL;
 struct allocated_at {
   void const *const p;
-  struct ovbase_filepos const filepos;
+  struct ov_filepos const filepos;
 };
 
 static uint64_t am_hash(void const *const item, uint64_t const seed0, uint64_t const seed1, void *const udata) {
@@ -86,12 +86,12 @@ static int am_compare(void const *const a, void const *const b, void *udata) {
 
 static void allocate_logger_init(void) {
   mtx_init(&g_mem_mtx, mtx_recursive);
-  uint64_t hash = ovbase_splitmix64_next(get_global_hint());
-  uint64_t const s0 = ovbase_splitmix64(hash);
-  hash = ovbase_splitmix64_next(hash);
-  uint64_t const s1 = ovbase_splitmix64(hash);
+  uint64_t hash = ov_splitmix64_next(get_global_hint());
+  uint64_t const s0 = ov_splitmix64(hash);
+  hash = ov_splitmix64_next(hash);
+  uint64_t const s1 = ov_splitmix64(hash);
   g_allocated = hashmap_new_with_allocator(
-      ovbase_hm_malloc, ovbase_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+      ov_hm_malloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!g_allocated) {
     abort();
   }
@@ -213,7 +213,7 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
 
 #include "error.h"
 
-bool ovbase_init(error_message_mapper generic_error_message_mapper) {
+bool ov_init(error_message_mapper generic_error_message_mapper) {
   global_hint_init();
   if (!error_init()) {
     return false;
@@ -224,7 +224,7 @@ bool ovbase_init(error_message_mapper generic_error_message_mapper) {
   return error_register_default_mapper(generic_error_message_mapper);
 }
 
-void ovbase_exit(void) {
+void ov_exit(void) {
 #ifdef ALLOCATE_LOGGER
   report_leaks();
 #endif

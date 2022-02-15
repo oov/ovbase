@@ -31,7 +31,7 @@
 void *hm_malloc(size_t const s, void *const udata) {
 #ifdef ALLOCATE_LOGGER
   struct hmap_udata const *const ud = udata;
-  struct ovbase_filepos const *const filepos = ud->filepos;
+  struct ov_filepos const *const filepos = ud->filepos;
 #else
   (void)udata;
 #endif
@@ -45,7 +45,7 @@ void *hm_malloc(size_t const s, void *const udata) {
 void hm_free(void *p, void *const udata) {
 #ifdef ALLOCATE_LOGGER
   struct hmap_udata const *const ud = udata;
-  struct ovbase_filepos const *const filepos = ud->filepos;
+  struct ov_filepos const *const filepos = ud->filepos;
 #else
   (void)udata;
 #endif

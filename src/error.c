@@ -44,7 +44,7 @@ static void write_stderr(NATIVE_CHAR const *const str) {
 
 void error_default_reporter(error const e,
                             struct NATIVE_STR const *const message,
-                            struct ovbase_filepos const *const filepos) {
+                            struct ov_filepos const *const filepos) {
   struct NATIVE_STR tmp = {0};
   struct NATIVE_STR msg = {0};
   error err = error_to_string(e, &tmp);
@@ -170,20 +170,12 @@ cleanup:
 
 bool error_init(void) {
   mtx_init(&g_error_mtx, mtx_plain);
-  uint64_t hash = ovbase_splitmix64_next(get_global_hint());
-  uint64_t const s0 = ovbase_splitmix64(hash);
-  hash = ovbase_splitmix64_next(hash);
-  uint64_t const s1 = ovbase_splitmix64(hash);
-  g_error_message_mapper = hashmap_new_with_allocator(ovbase_hm_malloc,
-                                                      ovbase_hm_free,
-                                                      sizeof(struct error_message_mapping),
-                                                      1,
-                                                      s0,
-                                                      s1,
-                                                      emm_hash,
-                                                      emm_compare,
-                                                      NULL,
-                                                      NULL);
+  uint64_t hash = ov_splitmix64_next(get_global_hint());
+  uint64_t const s0 = ov_splitmix64(hash);
+  hash = ov_splitmix64_next(hash);
+  uint64_t const s1 = ov_splitmix64(hash);
+  g_error_message_mapper = hashmap_new_with_allocator(
+      ov_hm_malloc, ov_hm_free, sizeof(struct error_message_mapping), 1, s0, s1, emm_hash, emm_compare, NULL, NULL);
   if (!g_error_message_mapper) {
     goto failed;
   }

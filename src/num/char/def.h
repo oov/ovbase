@@ -8,5 +8,5 @@
 #define UINT_TYPE uint64_t
 #define BUFFER_SIZE 32
 #define BUFFER_SIZE_FLOAT 64
-#define PREFIX ovbase_
+#define PREFIX ov_
 #define POSTFIX _char

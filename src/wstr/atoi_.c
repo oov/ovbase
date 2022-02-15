@@ -11,7 +11,7 @@ NODISCARD error wstr_atoi_(struct wstr const *const s, int64_t *const dest) {
   if (!dest) {
     return errg(err_null_pointer);
   }
-  if (!ovbase_atoi_wchar(s->ptr, dest, true)) {
+  if (!ov_atoi(s->ptr, dest, true)) {
     return errg(err_fail);
   }
   return eok();

@@ -34,10 +34,10 @@ error hmap_new_dynamic(struct hmap *const hm,
       .filepos = filepos,
 #endif
   };
-  uint64_t hash = ovbase_splitmix64_next(get_global_hint());
-  uint64_t const s0 = ovbase_splitmix64(hash);
-  hash = ovbase_splitmix64_next(hash);
-  uint64_t const s1 = ovbase_splitmix64(hash);
+  uint64_t hash = ov_splitmix64_next(get_global_hint());
+  uint64_t const s0 = ov_splitmix64(hash);
+  hash = ov_splitmix64_next(hash);
+  uint64_t const s1 = ov_splitmix64(hash);
   struct hashmap *const h = hashmap_new_with_allocator(
       hm_malloc, hm_free, item_size, cap, s0, s1, hm_hash_dynamic, hm_compare_dynamic, NULL, &ud);
   if (!h) {

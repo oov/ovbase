@@ -11,7 +11,7 @@ NODISCARD error str_atou_(struct str const *const s, uint64_t *const dest) {
   if (!dest) {
     return errg(err_null_pointer);
   }
-  if (!ovbase_atou_char(s->ptr, dest, true)) {
+  if (!ov_atou(s->ptr, dest, true)) {
     return errg(err_fail);
   }
   return eok();

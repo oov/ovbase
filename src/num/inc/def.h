@@ -33,7 +33,7 @@
 #endif
 
 #ifndef PREFIX
-#  define PREFIX ovbase_
+#  define PREFIX ov_
 #endif
 
 #ifndef POSTFIX
