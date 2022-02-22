@@ -635,4 +635,3 @@ static inline uint32_t ov_splitmix32_next(uint32_t const x) { return x + 0x9e377
 
 NODISCARD bool ov_init(error_message_mapper generic_error_message_mapper);
 void ov_exit(void);
-
