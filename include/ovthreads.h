@@ -63,6 +63,11 @@ static inline void cndvar_signal(struct cndvar *const cv, int const var) {
   cnd_signal(&cv->cnd);
 }
 
+static inline void cndvar_broadcast(struct cndvar *const cv, int const var) {
+  cv->var = var;
+  cnd_broadcast(&cv->cnd);
+}
+
 static inline int cndvar_wait_while(struct cndvar *cv, int var) {
   while (cv->var == var) {
     int const r = cnd_wait(&cv->cnd, &cv->mtx);
