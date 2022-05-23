@@ -14,9 +14,6 @@
 #    if __has_warning("-Wreserved-id-macro")
 #      pragma GCC diagnostic ignored "-Wreserved-id-macro"
 #    endif
-#    if __has_warning("-Wpadded")
-#      pragma GCC diagnostic ignored "-Wpadded"
-#    endif
 #    if __has_warning("-Wdocumentation")
 #      pragma GCC diagnostic ignored "-Wdocumentation"
 #    endif

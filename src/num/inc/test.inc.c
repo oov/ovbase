@@ -12,12 +12,6 @@
 #  define STRCMP wcscmp
 #endif
 
-#ifdef __GNUC__
-#  if __has_warning("-Wpadded")
-#    pragma GCC diagnostic ignored "-Wpadded"
-#  endif
-#endif // __GNUC__
-
 static void test_atoi_strict(void) {
   static const struct test_data {
     CHAR_TYPE const *input;

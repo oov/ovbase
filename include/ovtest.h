@@ -42,9 +42,6 @@ static inline void test_fini_(void) {
 #ifdef __GNUC__
 
 #  pragma GCC diagnostic push
-#  if __has_warning("-Wpadded")
-#    pragma GCC diagnostic ignored "-Wpadded"
-#  endif
 #  if __has_warning("-Wsign-conversion")
 #    pragma GCC diagnostic ignored "-Wsign-conversion"
 #  endif

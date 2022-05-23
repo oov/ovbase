@@ -6,12 +6,6 @@
 
 #  define STR_PH "ls"
 
-#  ifdef __GNUC__
-#    if __has_warning("-Wpadded")
-#      pragma GCC diagnostic ignored "-Wpadded"
-#    endif
-#  endif // __GNUC__
-
 static void test_wstr_cpy_free(void) {
   static wchar_t const test_str[] = L"hello";
   struct wstr ws = {0};

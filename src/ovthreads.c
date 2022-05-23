@@ -41,9 +41,6 @@ int timespec_get(struct timespec *ts, int base) {
 #    if __has_warning("-Wreserved-id-macro")
 #      pragma GCC diagnostic ignored "-Wreserved-id-macro"
 #    endif
-#    if __has_warning("-Wpadded")
-#      pragma GCC diagnostic ignored "-Wpadded"
-#    endif
 #    include "../3rd/tinycthread/source/tinycthread.c"
 #    pragma GCC diagnostic pop
 #  else

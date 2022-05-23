@@ -7,9 +7,6 @@
 #  if __has_warning("-Wreserved-macro-identifier")
 #    pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
 #  endif
-#  if __has_warning("-Wpadded")
-#    pragma GCC diagnostic ignored "-Wpadded"
-#  endif
 #  if __has_warning("-Wcast-align")
 #    pragma GCC diagnostic ignored "-Wcast-align"
 #  endif
