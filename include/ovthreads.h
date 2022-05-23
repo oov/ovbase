@@ -73,6 +73,16 @@ static inline int cndvar_wait_while(struct cndvar *cv, int var) {
   return thrd_success;
 }
 
+static inline int cndvar_wait_until(struct cndvar *cv, int var) {
+  while (cv->var != var) {
+    int const r = cnd_wait(&cv->cnd, &cv->mtx);
+    if (r != thrd_success) {
+      return r;
+    }
+  }
+  return thrd_success;
+}
+
 static inline int cndvar_timedwait_while(struct cndvar *cv, int var, const struct timespec *abs_time) {
   while (cv->var == var) {
     int const r = cnd_timedwait(&cv->cnd, &cv->mtx, abs_time);
