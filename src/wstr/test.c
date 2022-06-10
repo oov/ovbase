@@ -444,6 +444,19 @@ static void test_wstr_utoa(void) {
   ereport(sfree(&tmp));
 }
 
+static void test_wstr_sprintf(void) {
+  struct wstr tmp = {0};
+  if (!TEST_SUCCEEDED_F(ssprintf(&tmp, L"hello%04dworld%s", 20, L"."))) {
+    goto cleanup;
+  }
+  static wchar_t const expected[] = L"hello0020world.";
+  TEST_CHECK(wcscmp(tmp.ptr, expected) == 0);
+  TEST_MSG("expected %" STR_PH, expected);
+  TEST_MSG("got %" STR_PH, tmp.ptr);
+cleanup:
+  ereport(sfree(&tmp));
+}
+
 #endif // USE_WSTR
 
 TEST_LIST = {
@@ -462,6 +475,7 @@ TEST_LIST = {
     {"test_wstr_atou", test_wstr_atou},
     {"test_wstr_itoa", test_wstr_itoa},
     {"test_wstr_utoa", test_wstr_utoa},
+    {"test_wstr_sprintf", test_wstr_sprintf},
 #endif // USE_WSTR
     {NULL, NULL},
 };

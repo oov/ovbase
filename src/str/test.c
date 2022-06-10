@@ -448,6 +448,19 @@ static void test_str_utoa(void) {
   ereport(sfree(&tmp));
 }
 
+static void test_str_sprintf(void) {
+  struct str tmp = {0};
+  if (!TEST_SUCCEEDED_F(ssprintf(&tmp, "hello%04dworld%s", 20, "."))) {
+    goto cleanup;
+  }
+  static char const expected[] = "hello0020world.";
+  TEST_CHECK(strcmp(tmp.ptr, expected) == 0);
+  TEST_MSG("expected %" STR_PH, expected);
+  TEST_MSG("got %" STR_PH, tmp.ptr);
+cleanup:
+  ereport(sfree(&tmp));
+}
+
 #endif // USE_STR
 
 TEST_LIST = {
@@ -466,6 +479,7 @@ TEST_LIST = {
     {"test_str_atou", test_str_atou},
     {"test_str_itoa", test_str_itoa},
     {"test_str_utoa", test_str_utoa},
+    {"test_str_sprintf", test_str_sprintf},
 #endif // USE_STR
     {NULL, NULL},
 };

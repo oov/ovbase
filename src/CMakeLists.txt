@@ -34,6 +34,8 @@ add_library(ovbase STATIC
   num/wchar/utoa.c
   ovbase.c
   ovthreads.c
+  printf/char.c
+  printf/wchar.c
   str/atoi_.c
   str/atou_.c
   str/cat_.c
@@ -44,6 +46,7 @@ add_library(ovbase STATIC
   str/ncat_.c
   str/ncpy_.c
   str/replace_all_.c
+  str/sprintf_.c
   str/str_.c
   str/utoa_.c
   wstr/atoi_.c
@@ -56,6 +59,7 @@ add_library(ovbase STATIC
   wstr/ncat_.c
   wstr/ncpy_.c
   wstr/replace_all_.c
+  wstr/sprintf_.c
   wstr/str_.c
   wstr/utoa_.c
 )
@@ -75,6 +79,10 @@ add_executable(num_wchar_test num/wchar/test.c)
 list(APPEND targets num_wchar_test)
 add_executable(num_char_test num/char/test.c)
 list(APPEND targets num_char_test)
+add_executable(printf_char_test printf/char_test.c)
+list(APPEND targets printf_char_test)
+add_executable(printf_wchar_test printf/wchar_test.c)
+list(APPEND targets printf_wchar_test)
 
 if(NOT SKIP_OVTHREADS_TEST)
   add_executable(ovthreads_test ovthreads_test.c)

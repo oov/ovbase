@@ -279,6 +279,14 @@ static inline size_t array_cap_(struct array const *const p) { return p ? p->cap
 
 // str
 
+#ifndef OV_PRINTF_ATTR
+#  ifdef __GNUC__
+#    define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS) __attribute__((format(FUNC, FORMAT, VARGS)))
+#  else
+#    define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS)
+#  endif
+#endif
+
 #ifdef USE_STR
 NODISCARD static inline error str_free_(struct str *const s MEM_FILEPOS_PARAMS) {
   return array_free_((struct array *)s MEM_FILEPOS_VALUES_PASSTHRU);
@@ -301,6 +309,21 @@ NODISCARD error str_atoi_(struct str const *const s, int64_t *const dest);
 NODISCARD error str_atou_(struct str const *const s, uint64_t *const dest);
 NODISCARD error str_itoa_(int64_t v, struct str *const dest MEM_FILEPOS_PARAMS);
 NODISCARD error str_utoa_(uint64_t v, struct str *const dest MEM_FILEPOS_PARAMS);
+
+NODISCARD error str_sprintf_(struct str *const dest MEM_FILEPOS_PARAMS, char const *const format, ...)
+#  ifdef ALLOCATE_LOGGER
+    OV_PRINTF_ATTR(printf, 3, 4)
+#  else
+    OV_PRINTF_ATTR(printf, 2, 3)
+#  endif
+        ;
+NODISCARD error str_vsprintf_(struct str *const dest MEM_FILEPOS_PARAMS, char const *const format, va_list valist)
+#  ifdef ALLOCATE_LOGGER
+    OV_PRINTF_ATTR(printf, 3, 0)
+#  else
+    OV_PRINTF_ATTR(printf, 2, 0)
+#  endif
+        ;
 
 #endif
 
@@ -328,6 +351,22 @@ NODISCARD error wstr_atoi_(struct wstr const *const s, int64_t *const dest);
 NODISCARD error wstr_atou_(struct wstr const *const s, uint64_t *const dest);
 NODISCARD error wstr_itoa_(int64_t v, struct wstr *const dest MEM_FILEPOS_PARAMS);
 NODISCARD error wstr_utoa_(uint64_t v, struct wstr *const dest MEM_FILEPOS_PARAMS);
+
+// format annotation unavailable for wprintf
+NODISCARD error wstr_sprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS, wchar_t const *const format, ...)
+    // #  ifdef ALLOCATE_LOGGER
+    //     OV_PRINTF_ATTR(wprintf, 3, 4)
+    // #  else
+    //     OV_PRINTF_ATTR(wprintf, 2, 3)
+    // #  endif
+    ;
+NODISCARD error wstr_vsprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS, wchar_t const *const format, va_list valist)
+    // #  ifdef ALLOCATE_LOGGER
+    //     OV_PRINTF_ATTR(wprintf, 3, 0)
+    // #  else
+    //     OV_PRINTF_ATTR(wprintf, 2, 0)
+    // #  endif
+    ;
 
 #endif
 
@@ -435,6 +474,19 @@ NODISCARD error wstr_utoa_(uint64_t v, struct wstr *const dest MEM_FILEPOS_PARAM
              OV_GENERIC_CASE(struct wstr *const, wstr_utoa_),                                                          \
              OV_GENERIC_CASE(struct str *, str_utoa_),                                                                 \
              OV_GENERIC_CASE(struct str *const, str_utoa_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+#  define ssprintf(struct_str_ptr, format, ...)                                                                        \
+    _Generic((struct_str_ptr),                                                                                         \
+             OV_GENERIC_CASE(struct wstr *, wstr_sprintf_),                                                            \
+             OV_GENERIC_CASE(struct wstr *const, wstr_sprintf_),                                                       \
+             OV_GENERIC_CASE(struct str *, str_sprintf_),                                                              \
+             OV_GENERIC_CASE(struct str *const, str_sprintf_))(                                                        \
+        (struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
+#  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
+    _Generic((struct_str_ptr),                                                                                         \
+             OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_),                                                           \
+             OV_GENERIC_CASE(struct wstr *const, wstr_vsprintf_),                                                      \
+             OV_GENERIC_CASE(struct str *, str_vsprintf_),                                                             \
+             OV_GENERIC_CASE(struct str *const, str_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
 #elif defined(USE_STR)
 #  define sfree(struct_str_ptr)                                                                                        \
     _Generic((struct_str_ptr),                                                                                         \
@@ -497,6 +549,15 @@ NODISCARD error wstr_utoa_(uint64_t v, struct wstr *const dest MEM_FILEPOS_PARAM
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct str *, str_utoa_),                                                                 \
              OV_GENERIC_CASE(struct str *const, str_utoa_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+#  define ssprintf(struct_str_ptr, format, ...)                                                                        \
+    _Generic((struct_str_ptr),                                                                                         \
+             OV_GENERIC_CASE(struct str *, str_sprintf_),                                                              \
+             OV_GENERIC_CASE(struct str *const, str_sprintf_))(                                                        \
+        (struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
+#  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
+    _Generic((struct_str_ptr),                                                                                         \
+             OV_GENERIC_CASE(struct str *, str_vsprintf_),                                                             \
+             OV_GENERIC_CASE(struct str *const, str_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
 #elif defined(USE_WSTR)
 #  define sfree(struct_str_ptr)                                                                                        \
     _Generic((struct_str_ptr),                                                                                         \
@@ -565,6 +626,15 @@ NODISCARD error wstr_utoa_(uint64_t v, struct wstr *const dest MEM_FILEPOS_PARAM
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_utoa_),                                                               \
              OV_GENERIC_CASE(struct wstr *const, wstr_utoa_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+#  define ssprintf(struct_str_ptr, format, ...)                                                                        \
+    _Generic((struct_str_ptr),                                                                                         \
+             OV_GENERIC_CASE(struct wstr *, wstr_sprintf_),                                                            \
+             OV_GENERIC_CASE(struct wstr *const, wstr_sprintf_))(                                                      \
+        (struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
+#  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
+    _Generic((struct_str_ptr),                                                                                         \
+             OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_),                                                           \
+             OV_GENERIC_CASE(struct wstr *const, wstr_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
 #endif
 
 // hash map
