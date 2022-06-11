@@ -8,7 +8,7 @@
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
 #else
-#  include <stdio.h> // fprintf
+#  include <stdio.h> // fputs
 #endif
 
 static void write_stderr(NATIVE_CHAR const *const str) {
@@ -38,7 +38,8 @@ static void write_stderr(NATIVE_CHAR const *const str) {
     }
   }
 #else
-  fprintf(stderr, NSTR("%s") NEWLINE, str);
+  fputs(str, stderr);
+  fputs(NEWLINE, stderr);
 #endif
 }
 
