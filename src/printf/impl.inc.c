@@ -9,7 +9,7 @@
 #define NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS 1
 #define NANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS 0
 #define NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS 0
-#include NANOPRINTF_HEADER_FILE
+#include "nanoprintf.h"
 
 #ifndef FUNCNAME
 #  define FUNCNAME_3(prefix, funcname, postfix) prefix##funcname##postfix

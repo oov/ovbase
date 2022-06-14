@@ -9,6 +9,13 @@
 #  include <stdarg.h>
 #  include <stddef.h>
 
+#  ifdef NANOPRINTF_USE_WCHAR
+#    include <wchar.h>
+#    define NPF_CHAR_TYPE wchar_t
+#  else
+#    define NPF_CHAR_TYPE char
+#  endif
+
 // Define this to fully sandbox nanoprintf inside of a translation unit.
 #  ifdef NANOPRINTF_VISIBILITY_STATIC
 #    define NPF_VISIBILITY static
@@ -16,7 +23,7 @@
 #    define NPF_VISIBILITY extern
 #  endif
 
-#  if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
+#  if !defined(NANOPRINTF_USE_WCHAR) && (defined(__clang__) || defined(__GNUC__) || defined(__GNUG__))
 #    define NPF_PRINTF_ATTR(FORMAT_INDEX, VARGS_INDEX) __attribute__((format(printf, FORMAT_INDEX, VARGS_INDEX)))
 #  else
 #    define NPF_PRINTF_ATTR(FORMAT_INDEX, VARGS_INDEX)
@@ -28,14 +35,17 @@
 extern "C" {
 #  endif
 
-NPF_VISIBILITY int npf_snprintf(char *buffer, size_t bufsz, const char *format, ...) NPF_PRINTF_ATTR(3, 4);
+NPF_VISIBILITY int npf_snprintf(NPF_CHAR_TYPE *buffer, size_t bufsz, const NPF_CHAR_TYPE *format, ...)
+    NPF_PRINTF_ATTR(3, 4);
 
-NPF_VISIBILITY int npf_vsnprintf(char *buffer, size_t bufsz, char const *format, va_list vlist) NPF_PRINTF_ATTR(3, 0);
+NPF_VISIBILITY int npf_vsnprintf(NPF_CHAR_TYPE *buffer, size_t bufsz, NPF_CHAR_TYPE const *format, va_list vlist)
+    NPF_PRINTF_ATTR(3, 0);
 
 typedef void (*npf_putc)(int c, void *ctx);
-NPF_VISIBILITY int npf_pprintf(npf_putc pc, void *pc_ctx, char const *format, ...) NPF_PRINTF_ATTR(3, 4);
+NPF_VISIBILITY int npf_pprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, ...) NPF_PRINTF_ATTR(3, 4);
 
-NPF_VISIBILITY int npf_vpprintf(npf_putc pc, void *pc_ctx, char const *format, va_list vlist) NPF_PRINTF_ATTR(3, 0);
+NPF_VISIBILITY int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list vlist)
+    NPF_PRINTF_ATTR(3, 0);
 
 #  ifdef __cplusplus
 }
@@ -209,14 +219,14 @@ typedef enum {
 } npf_format_spec_conversion_t;
 
 typedef struct {
-  char prepend;  // ' ' or '+'
-  char alt_form; // '#'
+  NPF_CHAR_TYPE prepend;  // ' ' or '+'
+  NPF_CHAR_TYPE alt_form; // '#'
 
 #    if NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1
   npf_fmt_spec_opt_t field_width_opt;
   int field_width;
-  char left_justified;   // '-'
-  char leading_zero_pad; // '0'
+  NPF_CHAR_TYPE left_justified;   // '-'
+  NPF_CHAR_TYPE leading_zero_pad; // '0'
 #    endif
 
 #    if NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1
@@ -226,7 +236,7 @@ typedef struct {
 
   npf_format_spec_length_modifier_t length_modifier;
   npf_format_spec_conversion_t conv_spec;
-  char case_adjust;
+  NPF_CHAR_TYPE case_adjust;
 } npf_format_spec_t;
 
 #    if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 0
@@ -238,20 +248,20 @@ typedef uintmax_t npf_uint_t;
 #    endif
 
 typedef struct {
-  char *dst;
+  NPF_CHAR_TYPE *dst;
   size_t len;
   size_t cur;
 } npf_bufputc_ctx_t;
 
-static int npf_parse_format_spec(char const *format, npf_format_spec_t *out_spec);
+static int npf_parse_format_spec(NPF_CHAR_TYPE const *format, npf_format_spec_t *out_spec);
 static void npf_bufputc(int c, void *ctx);
 static void npf_bufputc_nop(int c, void *ctx);
-static int npf_itoa_rev(char *buf, npf_int_t i);
-static int npf_utoa_rev(char *buf, npf_uint_t i, unsigned base, unsigned case_adjust);
+static int npf_itoa_rev(NPF_CHAR_TYPE *buf, npf_int_t i);
+static int npf_utoa_rev(NPF_CHAR_TYPE *buf, npf_uint_t i, unsigned base, unsigned case_adjust);
 
 #    if NANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS == 1
 static int npf_fsplit_abs(float f, uint64_t *out_int_part, uint64_t *out_frac_part, int *out_frac_base10_neg_e);
-static int npf_ftoa_rev(char *buf, float f, char case_adj, int *out_frac_chars);
+static int npf_ftoa_rev(NPF_CHAR_TYPE *buf, float f, NPF_CHAR_TYPE case_adj, int *out_frac_chars);
 #    endif
 
 #    if NANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS == 1
@@ -274,8 +284,8 @@ typedef SSIZE_T ssize_t;
 static int npf_min(int x, int y) { return (x < y) ? x : y; }
 static int npf_max(int x, int y) { return (x > y) ? x : y; }
 
-int npf_parse_format_spec(char const *format, npf_format_spec_t *out_spec) {
-  char const *cur = format;
+int npf_parse_format_spec(NPF_CHAR_TYPE const *format, npf_format_spec_t *out_spec) {
+  NPF_CHAR_TYPE const *cur = format;
 
 #    if NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1
   out_spec->left_justified = 0;
@@ -469,22 +479,22 @@ int npf_parse_format_spec(char const *format, npf_format_spec_t *out_spec) {
   return (int)(cur - format);
 }
 
-int npf_itoa_rev(char *buf, npf_int_t i) {
+int npf_itoa_rev(NPF_CHAR_TYPE *buf, npf_int_t i) {
   int n = 0;
   int const sign = (i >= 0) ? 1 : -1;
   do {
-    *buf++ = (char)('0' + (sign * (i % 10)));
+    *buf++ = (NPF_CHAR_TYPE)('0' + (sign * (i % 10)));
     i /= 10;
     ++n;
   } while (i);
   return n;
 }
 
-int npf_utoa_rev(char *buf, npf_uint_t i, unsigned base, unsigned case_adj) {
+int npf_utoa_rev(NPF_CHAR_TYPE *buf, npf_uint_t i, unsigned base, unsigned case_adj) {
   int n = 0;
   do {
     unsigned const d = (unsigned)(i % base);
-    *buf++ = (char)((d < 10) ? ('0' + d) : ('A' + case_adj + (d - 10)));
+    *buf++ = (NPF_CHAR_TYPE)((d < 10) ? ('0' + d) : ('A' + case_adj + (d - 10)));
     i /= base;
     ++n;
   } while (i);
@@ -508,8 +518,8 @@ int npf_fsplit_abs(float f, uint64_t *out_int_part, uint64_t *out_frac_part, int
 
   uint32_t f_bits;
   { // union-cast is UB, let compiler optimize byte-copy loop.
-    char const *src = (char const *)&f;
-    char *dst = (char *)&f_bits;
+    NPF_CHAR_TYPE const *src = (NPF_CHAR_TYPE const *)&f;
+    NPF_CHAR_TYPE *dst = (NPF_CHAR_TYPE *)&f_bits;
     for (unsigned i = 0; i < sizeof(f_bits); ++i) {
       dst[i] = src[i];
     }
@@ -574,11 +584,11 @@ int npf_fsplit_abs(float f, uint64_t *out_int_part, uint64_t *out_frac_part, int
   return 1;
 }
 
-int npf_ftoa_rev(char *buf, float f, char case_adj, int *out_frac_chars) {
+int npf_ftoa_rev(NPF_CHAR_TYPE *buf, float f, NPF_CHAR_TYPE case_adj, int *out_frac_chars) {
   uint32_t f_bits;
   { // union-cast is UB, let compiler optimize byte-copy loop.
-    char const *src = (char const *)&f;
-    char *dst = (char *)&f_bits;
+    NPF_CHAR_TYPE const *src = (NPF_CHAR_TYPE const *)&f;
+    NPF_CHAR_TYPE *dst = (NPF_CHAR_TYPE *)&f_bits;
     for (unsigned i = 0; i < sizeof(f_bits); ++i) {
       dst[i] = src[i];
     }
@@ -587,11 +597,11 @@ int npf_ftoa_rev(char *buf, float f, char case_adj, int *out_frac_chars) {
   if ((uint8_t)(f_bits >> 23) == 0xFF) {
     if (f_bits & 0x7fffff) {
       for (int i = 0; i < 3; ++i) {
-        *buf++ = (char)("NAN"[i] + case_adj);
+        *buf++ = (NPF_CHAR_TYPE)("NAN"[i] + case_adj);
       }
     } else {
       for (int i = 0; i < 3; ++i) {
-        *buf++ = (char)("FNI"[i] + case_adj);
+        *buf++ = (NPF_CHAR_TYPE)("FNI"[i] + case_adj);
       }
     }
     return -3;
@@ -601,15 +611,15 @@ int npf_ftoa_rev(char *buf, float f, char case_adj, int *out_frac_chars) {
   int frac_base10_neg_exp;
   if (npf_fsplit_abs(f, &int_part, &frac_part, &frac_base10_neg_exp) == 0) {
     for (int i = 0; i < 3; ++i) {
-      *buf++ = (char)("ROO"[i] + case_adj);
+      *buf++ = (NPF_CHAR_TYPE)("ROO"[i] + case_adj);
     }
     return -3;
   }
 
-  char *dst = buf;
+  NPF_CHAR_TYPE *dst = buf;
 
   while (frac_part) { // write the fractional digits
-    *dst++ = (char)('0' + (frac_part % 10));
+    *dst++ = (NPF_CHAR_TYPE)('0' + (frac_part % 10));
     frac_part /= 10;
   }
 
@@ -622,7 +632,7 @@ int npf_ftoa_rev(char *buf, float f, char case_adj, int *out_frac_chars) {
 
   // write the integer digits
   do {
-    *dst++ = (char)('0' + (int_part % 10));
+    *dst++ = (NPF_CHAR_TYPE)('0' + (int_part % 10));
     int_part /= 10;
   } while (int_part);
   return (int)(dst - buf);
@@ -675,7 +685,7 @@ int npf_bin_len(npf_uint_t u) {
 void npf_bufputc(int c, void *ctx) {
   npf_bufputc_ctx_t *bpc = (npf_bufputc_ctx_t *)ctx;
   if (bpc->cur < bpc->len) {
-    bpc->dst[bpc->cur++] = (char)c;
+    bpc->dst[bpc->cur++] = (NPF_CHAR_TYPE)c;
   }
 }
 
@@ -711,9 +721,9 @@ static void npf_putc_cnt(int c, void *ctx) {
       *(va_arg(args, TYPE *)) = (TYPE)pc_cnt.n;                                                                        \
       break
 
-int npf_vpprintf(npf_putc pc, void *pc_ctx, char const *format, va_list args) {
+int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list args) {
   npf_format_spec_t fs;
-  char const *cur = format;
+  NPF_CHAR_TYPE const *cur = format;
   npf_cnt_putc_ctx_t pc_cnt;
   pc_cnt.pc = pc;
   pc_cnt.ctx = pc_ctx;
@@ -749,14 +759,14 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, char const *format, va_list args) {
 #    endif
 
     union {
-      char cbuf_mem[32];
+      NPF_CHAR_TYPE cbuf_mem[32];
       npf_uint_t binval;
     } u;
-    char *cbuf = u.cbuf_mem, sign_c = 0;
+    NPF_CHAR_TYPE *cbuf = u.cbuf_mem, sign_c = 0;
     int cbuf_len = 0, need_0x = 0;
 #    if NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1
     int field_pad = 0;
-    char pad_c = 0;
+    NPF_CHAR_TYPE pad_c = 0;
 #    endif
 #    if NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1
     int prec_pad = 0;
@@ -776,13 +786,13 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, char const *format, va_list args) {
       break;
 
     case NPF_FMT_SPEC_CONV_CHAR:
-      *cbuf = (char)va_arg(args, int);
+      *cbuf = (NPF_CHAR_TYPE)va_arg(args, int);
       ++cbuf_len;
       break;
 
     case NPF_FMT_SPEC_CONV_STRING: {
-      cbuf = va_arg(args, char *);
-      for (char const *s = cbuf; *s; ++s, ++cbuf_len)
+      cbuf = va_arg(args, NPF_CHAR_TYPE *);
+      for (NPF_CHAR_TYPE const *s = cbuf; *s; ++s, ++cbuf_len)
         ; // strlen
 #    if NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1
       if (fs.prec_opt == NPF_FMT_SPEC_OPT_LITERAL) {
@@ -903,7 +913,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, char const *format, va_list args) {
         NPF_WRITEBACK(SHORT, short);
         NPF_WRITEBACK(LONG, long);
         NPF_WRITEBACK(LONG_DOUBLE, double);
-        NPF_WRITEBACK(CHAR, signed char);
+        NPF_WRITEBACK(CHAR, char);
 #      if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
         NPF_WRITEBACK(LARGE_LONG_LONG, long long);
         NPF_WRITEBACK(LARGE_INTMAX, intmax_t);
@@ -1096,7 +1106,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, char const *format, va_list args) {
 #    undef NPF_EXTRACT
 #    undef NPF_WRITEBACK
 
-int npf_pprintf(npf_putc pc, void *pc_ctx, char const *format, ...) {
+int npf_pprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, ...) {
   va_list val;
   va_start(val, format);
   int const rv = npf_vpprintf(pc, pc_ctx, format, val);
@@ -1104,7 +1114,7 @@ int npf_pprintf(npf_putc pc, void *pc_ctx, char const *format, ...) {
   return rv;
 }
 
-int npf_snprintf(char *buffer, size_t bufsz, const char *format, ...) {
+int npf_snprintf(NPF_CHAR_TYPE *buffer, size_t bufsz, const NPF_CHAR_TYPE *format, ...) {
   va_list val;
   va_start(val, format);
   int const rv = npf_vsnprintf(buffer, bufsz, format, val);
@@ -1112,7 +1122,7 @@ int npf_snprintf(char *buffer, size_t bufsz, const char *format, ...) {
   return rv;
 }
 
-int npf_vsnprintf(char *buffer, size_t bufsz, char const *format, va_list vlist) {
+int npf_vsnprintf(NPF_CHAR_TYPE *buffer, size_t bufsz, NPF_CHAR_TYPE const *format, va_list vlist) {
   npf_bufputc_ctx_t bufputc_ctx;
   bufputc_ctx.dst = buffer;
   bufputc_ctx.len = bufsz;
