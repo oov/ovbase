@@ -26,20 +26,12 @@ int ov_vsnprintf_wchar(wchar_t *const dest, size_t destlen, wchar_t const *const
 #define ov_snprintf(char_ptr, destlen, format, ...)                                                                    \
   _Generic((format),                                                                                                   \
            OV_GENERIC_CASE(char const *, ov_snprintf_char),                                                            \
-           OV_GENERIC_CASE(char const *const, ov_snprintf_char),                                                       \
            OV_GENERIC_CASE(char *, ov_snprintf_char),                                                                  \
-           OV_GENERIC_CASE(char *const, ov_snprintf_char),                                                             \
            OV_GENERIC_CASE(wchar_t const *, ov_snprintf_wchar),                                                        \
-           OV_GENERIC_CASE(wchar_t const *const, ov_snprintf_wchar),                                                   \
-           OV_GENERIC_CASE(wchar_t *, ov_snprintf_wchar),                                                              \
-           OV_GENERIC_CASE(wchar_t *const, ov_snprintf_wchar))((char_ptr), (destlen), (format), __VA_ARGS__)
+           OV_GENERIC_CASE(wchar_t *, ov_snprintf_wchar))((char_ptr), (destlen), (format), __VA_ARGS__)
 #define ov_vsnprintf(char_ptr, destlen, format, valist)                                                                \
   _Generic((format),                                                                                                   \
            OV_GENERIC_CASE(char const *, ov_vsnprintf_char),                                                           \
-           OV_GENERIC_CASE(char const *const, ov_vsnprintf_char),                                                      \
            OV_GENERIC_CASE(char *, ov_vsnprintf_char),                                                                 \
-           OV_GENERIC_CASE(char *const, ov_vsnprintf_char),                                                            \
            OV_GENERIC_CASE(wchar_t const *, ov_vsnprintf_wchar),                                                       \
-           OV_GENERIC_CASE(wchar_t const *const, ov_vsnprintf_wchar),                                                  \
-           OV_GENERIC_CASE(wchar_t *, ov_vsnprintf_wchar),                                                             \
-           OV_GENERIC_CASE(wchar_t *const, ov_vsnprintf_wchar))((char_ptr), (destlen), (format), (valist))
+           OV_GENERIC_CASE(wchar_t *, ov_vsnprintf_wchar))((char_ptr), (destlen), (format), (valist))

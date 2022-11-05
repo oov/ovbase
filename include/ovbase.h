@@ -178,7 +178,7 @@ bool error_report_free_(error e, struct NATIVE_STR const *const message ERR_FILE
 #define emsg(type, code, struct_native_str_ptr)                                                                        \
   (error_add_(NULL, (type), (code), (struct_native_str_ptr)ERR_FILEPOS_VALUES))
 #define ethru(parent) (error_add_((parent), err_type_generic, err_pass_through, NULL ERR_FILEPOS_VALUES))
-NODISCARD static inline error eok() { return NULL; }
+NODISCARD static inline error eok(void) { return NULL; }
 NODISCARD static inline bool esucceeded(error const err) { return err == NULL; }
 NODISCARD static inline bool efailed(error const err) { return err != NULL; }
 NODISCARD static inline bool eis(error const err, int const type, int const code) { return error_is_(err, type, code); }
@@ -376,265 +376,164 @@ NODISCARD error wstr_vsprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS, wchar
 
 #if defined(USE_STR) && defined(USE_WSTR)
 #  define sfree(struct_str_ptr)                                                                                        \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_free_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_free_),                                                          \
-             OV_GENERIC_CASE(struct str *, str_free_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_free_), OV_GENERIC_CASE(struct str *, str_free_))(  \
+        (struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define sgrow(struct_str_ptr, cap)                                                                                   \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_grow_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_grow_),                                                          \
-             OV_GENERIC_CASE(struct str *, str_grow_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_grow_))((struct_str_ptr), (cap)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_grow_), OV_GENERIC_CASE(struct str *, str_grow_))(  \
+        (struct_str_ptr), (cap)MEM_FILEPOS_VALUES)
 #  define scpy(struct_str_ptr, char_ptr)                                                                               \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_cpy_),                                                                \
-             OV_GENERIC_CASE(struct wstr *const, wstr_cpy_),                                                           \
-             OV_GENERIC_CASE(struct str *, str_cpy_),                                                                  \
-             OV_GENERIC_CASE(struct str *const, str_cpy_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_cpy_), OV_GENERIC_CASE(struct str *, str_cpy_))(    \
+        (struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
 #  define scpym(struct_str_ptr, ...)                                                                                   \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_cpy_m_),                                                              \
-             OV_GENERIC_CASE(struct wstr *const, wstr_cpy_m_),                                                         \
-             OV_GENERIC_CASE(struct str *, str_cpy_m_),                                                                \
-             OV_GENERIC_CASE(struct str *const, str_cpy_m_))(                                                          \
+    _Generic(                                                                                                          \
+        (struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_cpy_m_), OV_GENERIC_CASE(struct str *, str_cpy_m_))(     \
         (struct_str_ptr), (void *)(void const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #  define sncpy(struct_str_ptr, char_ptr, size_t)                                                                      \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_ncpy_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_ncpy_),                                                          \
-             OV_GENERIC_CASE(struct str *, str_ncpy_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_ncpy_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_ncpy_), OV_GENERIC_CASE(struct str *, str_ncpy_))(  \
+        (struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
 #  define scat(struct_str_ptr, char_ptr)                                                                               \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_cat_),                                                                \
-             OV_GENERIC_CASE(struct wstr *const, wstr_cat_),                                                           \
-             OV_GENERIC_CASE(struct str *, str_cat_),                                                                  \
-             OV_GENERIC_CASE(struct str *const, str_cat_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_cat_), OV_GENERIC_CASE(struct str *, str_cat_))(    \
+        (struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
 #  define scatm(struct_str_ptr, ...)                                                                                   \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_cat_m_),                                                              \
-             OV_GENERIC_CASE(struct wstr *const, wstr_cat_m_),                                                         \
-             OV_GENERIC_CASE(struct str *, str_cat_m_),                                                                \
-             OV_GENERIC_CASE(struct str *const, str_cat_m_))(                                                          \
+    _Generic(                                                                                                          \
+        (struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_cat_m_), OV_GENERIC_CASE(struct str *, str_cat_m_))(     \
         (struct_str_ptr), (void *)(void const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #  define sncat(struct_str_ptr, char_ptr, size_t)                                                                      \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_ncat_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_ncat_),                                                          \
-             OV_GENERIC_CASE(struct str *, str_ncat_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_ncat_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_ncat_), OV_GENERIC_CASE(struct str *, str_ncat_))(  \
+        (struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
 #  define sstr(struct_str_ptr, char_ptr, ptrdiff_t_ptr)                                                                \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_str_),                                                                \
-             OV_GENERIC_CASE(struct wstr *const, wstr_str_),                                                           \
              OV_GENERIC_CASE(struct wstr const *, wstr_str_),                                                          \
-             OV_GENERIC_CASE(struct wstr const *const, wstr_str_),                                                     \
              OV_GENERIC_CASE(struct str *, str_str_),                                                                  \
-             OV_GENERIC_CASE(struct str *const, str_str_),                                                             \
-             OV_GENERIC_CASE(struct str const *, str_str_),                                                            \
-             OV_GENERIC_CASE(struct str const *const, str_str_))((struct_str_ptr), (char_ptr), (ptrdiff_t_ptr))
+             OV_GENERIC_CASE(struct str const *, str_str_))((struct_str_ptr), (char_ptr), (ptrdiff_t_ptr))
 #  define sreplace_all(struct_str_ptr, char_ptr_find, char_ptr_replacement)                                            \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_replace_all_),                                                        \
-             OV_GENERIC_CASE(struct wstr *const, wstr_replace_all_),                                                   \
-             OV_GENERIC_CASE(struct str *, str_replace_all_),                                                          \
-             OV_GENERIC_CASE(struct str *const, str_replace_all_))(                                                    \
+             OV_GENERIC_CASE(struct str *, str_replace_all_))(                                                         \
         (struct_str_ptr), (char_ptr_find), (char_ptr_replacement)MEM_FILEPOS_VALUES)
 #  define satoi(struct_str_ptr, int64_t_ptr)                                                                           \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_atoi_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_atoi_),                                                          \
              OV_GENERIC_CASE(struct wstr const *, wstr_atoi_),                                                         \
-             OV_GENERIC_CASE(struct wstr const *const, wstr_atoi_),                                                    \
              OV_GENERIC_CASE(struct str *, str_atoi_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_atoi_),                                                            \
-             OV_GENERIC_CASE(struct str const *, str_atoi_),                                                           \
-             OV_GENERIC_CASE(struct str const *const, str_atoi_))((struct_str_ptr), (int64_t_ptr))
+             OV_GENERIC_CASE(struct str const *, str_atoi_))((struct_str_ptr), (int64_t_ptr))
 #  define satou(struct_str_ptr, uint64_t_ptr)                                                                          \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_atou_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_atou_),                                                          \
              OV_GENERIC_CASE(struct wstr const *, wstr_atou_),                                                         \
-             OV_GENERIC_CASE(struct wstr const *const, wstr_atou_),                                                    \
              OV_GENERIC_CASE(struct str *, str_atou_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_atou_),                                                            \
-             OV_GENERIC_CASE(struct str const *, str_atou_),                                                           \
-             OV_GENERIC_CASE(struct str const *const, str_atou_))((struct_str_ptr), (uint64_t_ptr))
+             OV_GENERIC_CASE(struct str const *, str_atou_))((struct_str_ptr), (uint64_t_ptr))
 #  define sitoa(int64_t, struct_str_ptr)                                                                               \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_itoa_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_itoa_),                                                          \
-             OV_GENERIC_CASE(struct str *, str_itoa_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_itoa_))((int64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_itoa_), OV_GENERIC_CASE(struct str *, str_itoa_))(  \
+        (int64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define sutoa(uint64_t, struct_str_ptr)                                                                              \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_utoa_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_utoa_),                                                          \
-             OV_GENERIC_CASE(struct str *, str_utoa_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_utoa_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_utoa_), OV_GENERIC_CASE(struct str *, str_utoa_))(  \
+        (uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define ssprintf(struct_str_ptr, format, ...)                                                                        \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_sprintf_),                                                            \
-             OV_GENERIC_CASE(struct wstr *const, wstr_sprintf_),                                                       \
-             OV_GENERIC_CASE(struct str *, str_sprintf_),                                                              \
-             OV_GENERIC_CASE(struct str *const, str_sprintf_))(                                                        \
-        (struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
+             OV_GENERIC_CASE(struct str *, str_sprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
 #  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_),                                                           \
-             OV_GENERIC_CASE(struct wstr *const, wstr_vsprintf_),                                                      \
-             OV_GENERIC_CASE(struct str *, str_vsprintf_),                                                             \
-             OV_GENERIC_CASE(struct str *const, str_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
+             OV_GENERIC_CASE(struct str *, str_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
 #elif defined(USE_STR)
 #  define sfree(struct_str_ptr)                                                                                        \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct str *, str_free_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define sgrow(struct_str_ptr, cap)                                                                                   \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct str *, str_grow_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_grow_))((struct_str_ptr), (cap)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_grow_))((struct_str_ptr), (cap)MEM_FILEPOS_VALUES)
 #  define scpy(struct_str_ptr, char_ptr)                                                                               \
-    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_cpy_), OV_GENERIC_CASE(struct str *const, str_cpy_))( \
-        (struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_cpy_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
 #  define scpym(struct_str_ptr, ...)                                                                                   \
-    _Generic(                                                                                                          \
-        (struct_str_ptr), OV_GENERIC_CASE(struct str *, str_cpy_m_), OV_GENERIC_CASE(struct str *const, str_cpy_m_))(  \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_cpy_m_))(                                             \
         (struct_str_ptr), (char const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #  define sncpy(struct_str_ptr, char_ptr, size_t)                                                                      \
     _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct str *, str_ncpy_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_ncpy_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
+             OV_GENERIC_CASE(struct str *, str_ncpy_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
 #  define scat(struct_str_ptr, char_ptr)                                                                               \
-    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_cat_), OV_GENERIC_CASE(struct str *const, str_cat_))( \
-        (struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_cat_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
 #  define scatm(struct_str_ptr, ...)                                                                                   \
-    _Generic(                                                                                                          \
-        (struct_str_ptr), OV_GENERIC_CASE(struct str *, str_cat_m_), OV_GENERIC_CASE(struct str *const, str_cat_m_))(  \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_cat_m_))(                                             \
         (struct_str_ptr), (char const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #  define sncat(struct_str_ptr, char_ptr, size_t)                                                                      \
     _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct str *, str_ncat_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_ncat_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
+             OV_GENERIC_CASE(struct str *, str_ncat_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
 #  define sstr(struct_str_ptr, char_ptr, ptrdiff_t_ptr)                                                                \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct str const *, str_str_),                                                            \
-             OV_GENERIC_CASE(struct str const *const, str_str_),                                                       \
-             OV_GENERIC_CASE(struct str *, str_str_),                                                                  \
-             OV_GENERIC_CASE(struct str *const, str_str_))((struct_str_ptr), (char_ptr), (ptrdiff_t_ptr))
+             OV_GENERIC_CASE(struct str *, str_str_))((struct_str_ptr), (char_ptr), (ptrdiff_t_ptr))
 #  define sreplace_all(struct_str_ptr, char_ptr_find, char_ptr_replacement)                                            \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct str *, str_replace_all_),                                                          \
-             OV_GENERIC_CASE(struct str *const, str_replace_all_))(                                                    \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_replace_all_))(                                       \
         (struct_str_ptr), (char_ptr_find), (char_ptr_replacement)MEM_FILEPOS_VALUES)
 #  define satoi(struct_str_ptr, int64_t_ptr)                                                                           \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct str *, str_atoi_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_atoi_),                                                            \
-             OV_GENERIC_CASE(struct str const *, str_atoi_),                                                           \
-             OV_GENERIC_CASE(struct str const *const, str_atoi_))((struct_str_ptr), (int64_t_ptr))
+             OV_GENERIC_CASE(struct str const *, str_atoi_))((struct_str_ptr), (int64_t_ptr))
 #  define satou(struct_str_ptr, uint64_t_ptr)                                                                          \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct str *, str_atou_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_atou_),                                                            \
-             OV_GENERIC_CASE(struct str const *, str_atou_),                                                           \
-             OV_GENERIC_CASE(struct str const *const, str_atou_))((struct_str_ptr), (uint64_t_ptr))
+             OV_GENERIC_CASE(struct str const *, str_atou_))((struct_str_ptr), (uint64_t_ptr))
 #  define sitoa(int64_t, struct_str_ptr)                                                                               \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct str *, str_itoa_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_itoa_))((int64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_itoa_))((int64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define sutoa(uint64_t, struct_str_ptr)                                                                              \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct str *, str_utoa_),                                                                 \
-             OV_GENERIC_CASE(struct str *const, str_utoa_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_utoa_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define ssprintf(struct_str_ptr, format, ...)                                                                        \
     _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct str *, str_sprintf_),                                                              \
-             OV_GENERIC_CASE(struct str *const, str_sprintf_))(                                                        \
-        (struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
+             OV_GENERIC_CASE(struct str *, str_sprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
 #  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
     _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct str *, str_vsprintf_),                                                             \
-             OV_GENERIC_CASE(struct str *const, str_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
+             OV_GENERIC_CASE(struct str *, str_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
 #elif defined(USE_WSTR)
 #  define sfree(struct_str_ptr)                                                                                        \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_free_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define sgrow(struct_str_ptr, cap)                                                                                   \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_grow_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_grow_))((struct_str_ptr), (cap)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_grow_))((struct_str_ptr), (cap)MEM_FILEPOS_VALUES)
 #  define scpy(struct_str_ptr, char_ptr)                                                                               \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_cpy_),                                                                \
-             OV_GENERIC_CASE(struct wstr *const, wstr_cpy_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_cpy_))((struct_str_ptr),                            \
+                                                                          (char_ptr)MEM_FILEPOS_VALUES)
 #  define scpym(struct_str_ptr, ...)                                                                                   \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_cpy_m_),                                                              \
-             OV_GENERIC_CASE(struct wstr *const, wstr_cpy_m_))(                                                        \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_cpy_m_))(                                           \
         (struct_str_ptr), (wchar_t const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #  define sncpy(struct_str_ptr, char_ptr, size_t)                                                                      \
     _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_ncpy_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_ncpy_))(                                                         \
-        (struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
+             OV_GENERIC_CASE(struct wstr *, wstr_ncpy_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
 #  define scat(struct_str_ptr, char_ptr)                                                                               \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_cat_),                                                                \
-             OV_GENERIC_CASE(struct wstr *const, wstr_cat_))((struct_str_ptr), (char_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_cat_))((struct_str_ptr),                            \
+                                                                          (char_ptr)MEM_FILEPOS_VALUES)
 #  define scatm(struct_str_ptr, ...)                                                                                   \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_cat_m_),                                                              \
-             OV_GENERIC_CASE(struct wstr *const, wstr_cat_m_))(                                                        \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_cat_m_))(                                           \
         (struct_str_ptr), (wchar_t const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
 #  define sncat(struct_str_ptr, char_ptr, size_t)                                                                      \
     _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_ncat_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_ncat_))(                                                         \
-        (struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
+             OV_GENERIC_CASE(struct wstr *, wstr_ncat_))((struct_str_ptr), (char_ptr), (size_t)MEM_FILEPOS_VALUES)
 #  define sstr(struct_str_ptr, char_ptr, ptrdiff_t_ptr)                                                                \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr const *, wstr_str_),                                                          \
-             OV_GENERIC_CASE(struct wstr const *const, wstr_str_),                                                     \
-             OV_GENERIC_CASE(struct wstr *, wstr_str_),                                                                \
-             OV_GENERIC_CASE(struct wstr *const, wstr_str_))((struct_str_ptr), (char_ptr), (ptrdiff_t_ptr))
+             OV_GENERIC_CASE(struct wstr *, wstr_str_))((struct_str_ptr), (char_ptr), (ptrdiff_t_ptr))
 #  define sreplace_all(struct_str_ptr, char_ptr_find, char_ptr_replacement)                                            \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_replace_all_),                                                        \
-             OV_GENERIC_CASE(struct wstr *const, wstr_replace_all_))(                                                  \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_replace_all_))(                                     \
         (struct_str_ptr), (char_ptr_find), (char_ptr_replacement)MEM_FILEPOS_VALUES)
 #  define satoi(struct_str_ptr, int64_t_ptr)                                                                           \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_atoi_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_atoi_),                                                          \
-             OV_GENERIC_CASE(struct wstr const *, wstr_atoi_),                                                         \
-             OV_GENERIC_CASE(struct wstr const *const, wstr_atoi_))((struct_str_ptr), (int64_t_ptr))
+             OV_GENERIC_CASE(struct wstr const *, wstr_atoi_))((struct_str_ptr), (int64_t_ptr))
 #  define satou(struct_str_ptr, uint64_t_ptr)                                                                          \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_atou_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_atou_),                                                          \
-             OV_GENERIC_CASE(struct wstr const *, wstr_atou_),                                                         \
-             OV_GENERIC_CASE(struct wstr const *const, wstr_atou_))((struct_str_ptr), (uint64_t_ptr))
+             OV_GENERIC_CASE(struct wstr const *, wstr_atou_))((struct_str_ptr), (uint64_t_ptr))
 #  define sitoa(int64_t, struct_str_ptr)                                                                               \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_itoa_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_itoa_))((int64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_itoa_))((int64_t),                                  \
+                                                                           (struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define sutoa(uint64_t, struct_str_ptr)                                                                              \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_utoa_),                                                               \
-             OV_GENERIC_CASE(struct wstr *const, wstr_utoa_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_utoa_))((uint64_t),                                 \
+                                                                           (struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define ssprintf(struct_str_ptr, format, ...)                                                                        \
     _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_sprintf_),                                                            \
-             OV_GENERIC_CASE(struct wstr *const, wstr_sprintf_))(                                                      \
-        (struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
+             OV_GENERIC_CASE(struct wstr *, wstr_sprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
 #  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
     _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_),                                                           \
-             OV_GENERIC_CASE(struct wstr *const, wstr_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
+             OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
 #endif
 
 // hash map
