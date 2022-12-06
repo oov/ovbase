@@ -37,21 +37,18 @@ static void global_hint_init(void) {
 #ifdef _WIN32
   LARGE_INTEGER f = {0}, c = {0};
   if (QueryPerformanceFrequency(&f) != 0 && QueryPerformanceCounter(&c) != 0) {
-    atomic_store_explicit(&g_global_hint, (c.QuadPart * 1000000000) / f.QuadPart, memory_order_relaxed);
+    atomic_store(&g_global_hint, (c.QuadPart * 1000000000) / f.QuadPart);
   } else {
-    atomic_store_explicit(
-        &g_global_hint, GetTickCount() + GetCurrentProcessId() + GetCurrentThreadId(), memory_order_relaxed);
+    atomic_store(&g_global_hint, GetTickCount() + GetCurrentProcessId() + GetCurrentThreadId());
   }
 #else
   struct timespec v = {0};
   timespec_get(&v, TIME_UTC);
-  atomic_store_explicit(&g_global_hint, v.tv_sec * 1000000000 + v.tv_nsec, memory_order_relaxed);
+  atomic_store(&g_global_hint, v.tv_sec * 1000000000 + v.tv_nsec);
 #endif
 }
 
-uint64_t get_global_hint(void) {
-  return ov_splitmix64(atomic_fetch_add_explicit(&g_global_hint, 0x9e3779b97f4a7c15, memory_order_relaxed));
-}
+uint64_t get_global_hint(void) { return ov_splitmix64(atomic_fetch_add(&g_global_hint, 0x9e3779b97f4a7c15)); }
 
 void *ov_hm_malloc(size_t const s, void *const udata) {
   (void)udata;
@@ -150,9 +147,9 @@ static size_t report_leaks(void) {
 #ifdef LEAK_DETECTOR
 static atomic_long g_allocated_count = 0;
 
-long mem_get_allocated_count(void) { return atomic_load_explicit(&g_allocated_count, memory_order_relaxed); }
-static inline void allocated(void) { atomic_fetch_add_explicit(&g_allocated_count, 1, memory_order_relaxed); }
-static inline void freed(void) { atomic_fetch_sub_explicit(&g_allocated_count, 1, memory_order_relaxed); }
+long mem_get_allocated_count(void) { return atomic_load(&g_allocated_count); }
+static inline void allocated(void) { atomic_fetch_add(&g_allocated_count, 1); }
+static inline void freed(void) { atomic_fetch_sub(&g_allocated_count, 1); }
 static void report_allocated_count(void) {
   long const n = mem_get_allocated_count();
   if (!n) {
