@@ -69,13 +69,14 @@ NPF_VISIBILITY int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *
 #    if !defined(NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS) &&                                                      \
         !defined(NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS) && !defined(NANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS) &&    \
         !defined(NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS) && !defined(NANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS) &&       \
-        !defined(NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS)
+        !defined(NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS) && !defined(NANOPRINTF_USE_FMT_SPEC_OPT_STAR)
 #      define NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS 1
 #      define NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS 1
 #      define NANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS 1
 #      define NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS 0
 #      define NANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS 0
 #      define NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS 0
+#      define NANOPRINTF_USE_FMT_SPEC_OPT_STAR 1
 #    endif
 
 // If anything's been configured, everything must be configured.
@@ -96,6 +97,9 @@ NPF_VISIBILITY int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *
 #    endif
 #    ifndef NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS
 #      error NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS must be #defined to 0 or 1
+#    endif
+#    ifndef NANOPRINTF_USE_FMT_SPEC_OPT_STAR
+#      error NANOPRINTF_USE_FMT_SPEC_OPT_STAR must be #defined to 0 or 1
 #    endif
 
 // Ensure flags are compatible.
@@ -177,7 +181,9 @@ NPF_VISIBILITY int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *
 typedef enum {
   NPF_FMT_SPEC_OPT_NONE,
   NPF_FMT_SPEC_OPT_LITERAL,
+#      if NANOPRINTF_USE_FMT_SPEC_OPT_STAR == 1
   NPF_FMT_SPEC_OPT_STAR,
+#      endif
 } npf_fmt_spec_opt_t;
 #    endif
 
@@ -325,10 +331,13 @@ int npf_parse_format_spec(NPF_CHAR_TYPE const *format, npf_format_spec_t *out_sp
 
 #    if NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1
   out_spec->field_width_opt = NPF_FMT_SPEC_OPT_NONE;
+#      if NANOPRINTF_USE_FMT_SPEC_OPT_STAR == 1
   if (*cur == '*') {
     out_spec->field_width_opt = NPF_FMT_SPEC_OPT_STAR;
     ++cur;
-  } else {
+  } else
+#      endif
+  {
     out_spec->field_width = 0;
     while ((*cur >= '0') && (*cur <= '9')) {
       out_spec->field_width_opt = NPF_FMT_SPEC_OPT_LITERAL;
@@ -342,10 +351,13 @@ int npf_parse_format_spec(NPF_CHAR_TYPE const *format, npf_format_spec_t *out_sp
   out_spec->prec_opt = NPF_FMT_SPEC_OPT_NONE;
   if (*cur == '.') {
     ++cur;
+#      if NANOPRINTF_USE_FMT_SPEC_OPT_STAR == 1
     if (*cur == '*') {
       out_spec->prec_opt = NPF_FMT_SPEC_OPT_STAR;
       ++cur;
-    } else {
+    } else
+#      endif
+    {
       if (*cur == '-') {
         ++cur;
         out_spec->prec_opt = NPF_FMT_SPEC_OPT_NONE;
@@ -739,6 +751,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list
 
     // Extract star-args immediately
 #    if NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1
+#      if NANOPRINTF_USE_FMT_SPEC_OPT_STAR == 1
     if (fs.field_width_opt == NPF_FMT_SPEC_OPT_STAR) {
       fs.field_width_opt = NPF_FMT_SPEC_OPT_LITERAL;
       fs.field_width = va_arg(args, int);
@@ -747,8 +760,10 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list
         fs.left_justified = 1;
       }
     }
+#      endif
 #    endif
 #    if NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1
+#      if NANOPRINTF_USE_FMT_SPEC_OPT_STAR == 1
     if (fs.prec_opt == NPF_FMT_SPEC_OPT_STAR) {
       fs.prec_opt = NPF_FMT_SPEC_OPT_NONE;
       fs.prec = va_arg(args, int);
@@ -756,6 +771,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list
         fs.prec_opt = NPF_FMT_SPEC_OPT_LITERAL;
       }
     }
+#      endif
 #    endif
 
     union {
