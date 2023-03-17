@@ -17,6 +17,9 @@ int ov_vsnprintf_char(char *const dest, size_t destlen, char const *const format
 int ov_snprintf_wchar(wchar_t *const dest, size_t destlen, wchar_t const *const format, ...);
 int ov_vsnprintf_wchar(wchar_t *const dest, size_t destlen, wchar_t const *const format, va_list valist);
 
+int ov_printf_verify_format_char(char const *const ordered, char const *const format);
+int ov_printf_verify_format_wchar(wchar_t const *const ordered, wchar_t const *const format);
+
 #ifndef OV_GENERIC_CASE
 #  define OV_GENERIC_CASE(typ, fn)                                                                                     \
   typ:                                                                                                                 \
@@ -35,3 +38,9 @@ int ov_vsnprintf_wchar(wchar_t *const dest, size_t destlen, wchar_t const *const
            OV_GENERIC_CASE(char *, ov_vsnprintf_char),                                                                 \
            OV_GENERIC_CASE(wchar_t const *, ov_vsnprintf_wchar),                                                       \
            OV_GENERIC_CASE(wchar_t *, ov_vsnprintf_wchar))((char_ptr), (destlen), (format), (valist))
+#define ov_printf_verify_format(ordered, format)                                                                       \
+  _Generic((ordered),                                                                                                  \
+           OV_GENERIC_CASE(char const *, ov_printf_verify_format_char),                                                \
+           OV_GENERIC_CASE(char *, ov_printf_verify_format_char),                                                      \
+           OV_GENERIC_CASE(wchar_t const *, ov_printf_verify_format_wchar),                                            \
+           OV_GENERIC_CASE(wchar_t *, ov_printf_verify_format_wchar))((ordered), (format))

@@ -47,6 +47,8 @@ NPF_VISIBILITY int npf_pprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *f
 NPF_VISIBILITY int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list vlist)
     NPF_PRINTF_ATTR(3, 0);
 
+NPF_VISIBILITY int npf_verify_format(NPF_CHAR_TYPE const *ordered, NPF_CHAR_TYPE const *format);
+
 #  ifdef __cplusplus
 }
 #  endif
@@ -693,6 +695,60 @@ int npf_bin_len(npf_uint_t u) {
 #      endif
 }
 #    endif
+
+int npf_verify_format(NPF_CHAR_TYPE const *ordered, NPF_CHAR_TYPE const *format) {
+  npf_format_spec_t correct_fs[64] = {0};
+  int num_fs = 0;
+  NPF_CHAR_TYPE const *cur = ordered;
+  while (*cur) {
+    int const fs_len = (*cur != '%') ? 0 : npf_parse_format_spec(cur, &correct_fs[num_fs]);
+    if (!fs_len) {
+      cur++;
+      continue;
+    }
+    cur += fs_len;
+    if (++num_fs == 64) {
+      return 0; // too many
+    }
+  }
+  npf_format_spec_t fs;
+  int n = 0;
+  cur = format;
+  while (*cur) {
+    int const fs_len = (*cur != '%') ? 0 : npf_parse_format_spec(cur, &fs);
+    if (!fs_len) {
+      cur++;
+      continue;
+    }
+    if (n == 64) {
+      return 0; // too many
+    }
+    cur += fs_len;
+    npf_format_spec_t *tfs = &correct_fs[n];
+    if (fs.conv_spec != tfs->conv_spec || fs.length_modifier != tfs->length_modifier) {
+      return 0; // conv_spec or length_modifier incorrect
+    }
+#    if NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1
+#      if NANOPRINTF_USE_FMT_SPEC_OPT_STAR == 1
+    if ((fs.field_width_opt == NPF_FMT_SPEC_OPT_STAR && tfs->field_width_opt != NPF_FMT_SPEC_OPT_STAR) ||
+        (fs.field_width_opt != NPF_FMT_SPEC_OPT_STAR && tfs->field_width_opt == NPF_FMT_SPEC_OPT_STAR)) {
+      return 0; // field_width_opt incorrect
+    }
+#      endif
+#    endif
+#    if NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1
+#      if NANOPRINTF_USE_FMT_SPEC_OPT_STAR == 1
+    if ((fs.prec_opt == NPF_FMT_SPEC_OPT_STAR && tfs->prec_opt != NPF_FMT_SPEC_OPT_STAR) ||
+        (fs.prec_opt != NPF_FMT_SPEC_OPT_STAR && tfs->prec_opt == NPF_FMT_SPEC_OPT_STAR)) {
+      return 0; // prec_opt incorrect
+    }
+#      endif
+#    endif
+    ++n;
+  }
+
+  return -1;
+}
 
 void npf_bufputc(int c, void *ctx) {
   npf_bufputc_ctx_t *bpc = (npf_bufputc_ctx_t *)ctx;

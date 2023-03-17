@@ -29,3 +29,7 @@ int FUNCNAME(snprintf)(CHAR_TYPE *const dest, size_t destlen, CHAR_TYPE const *c
 int FUNCNAME(vsnprintf)(CHAR_TYPE *const dest, size_t destlen, CHAR_TYPE const *const format, va_list valist) {
   return npf_vsnprintf(dest, destlen, format, valist);
 }
+
+int FUNCNAME(printf_verify_format)(CHAR_TYPE const *const ordered, CHAR_TYPE const *const format) {
+  return npf_verify_format(ordered, format);
+}
