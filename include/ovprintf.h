@@ -4,8 +4,12 @@
 #include <stddef.h>
 
 #ifndef OV_PRINTF_ATTR
-#  ifdef __GNUC__
-#    define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS) __attribute__((format(FUNC, FORMAT, VARGS)))
+#  if 0
+#    ifdef __GNUC__
+#      define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS) __attribute__((format(FUNC, FORMAT, VARGS)))
+#    else
+#      define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS)
+#    endif
 #  else
 #    define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS)
 #  endif
