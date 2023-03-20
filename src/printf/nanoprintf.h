@@ -782,7 +782,7 @@ struct npf_arg_type {
   npf_format_spec_length_modifier_t length_modifier;
 };
 
-union npf_arg {
+union npf_arg_value {
   NPF_CHAR_TYPE *str;
   int i;
   long l;
@@ -914,126 +914,6 @@ static size_t npf_arg_sizeof(npf_format_spec_conversion_t const conv_spec,
   return 0;
 }
 
-static void npf_set_arg(struct npf_arg_type const *const typ, union npf_arg *const v, va_list *const args) {
-  switch (typ->conv_spec) {
-  case NPF_FMT_SPEC_CONV_PERCENT:
-    return;
-  case NPF_FMT_SPEC_CONV_CHAR:
-    v->i = va_arg(*args, int);
-    return;
-  case NPF_FMT_SPEC_CONV_STRING:
-    v->str = va_arg(*args, NPF_CHAR_TYPE *);
-    return;
-  case NPF_FMT_SPEC_CONV_SIGNED_INT:
-    switch (typ->length_modifier) {
-    case NPF_FMT_SPEC_LEN_MOD_NONE:
-    case NPF_FMT_SPEC_LEN_MOD_SHORT:
-    case NPF_FMT_SPEC_LEN_MOD_LONG_DOUBLE:
-    case NPF_FMT_SPEC_LEN_MOD_CHAR:
-      v->i = va_arg(*args, int);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LONG:
-      v->l = va_arg(*args, long);
-      return;
-#    if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_LONG_LONG:
-      v->ll = va_arg(*args, long long);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_INTMAX:
-      v->imx = va_arg(*args, intmax_t);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
-      v->ssz = va_arg(*args, ssize_t);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
-      v->ptrdiff = va_arg(*args, ptrdiff_t);
-      return;
-#    endif
-    default:
-      return;
-    }
-#    if NANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS == 1
-  case NPF_FMT_SPEC_CONV_BINARY:
-#    endif
-  case NPF_FMT_SPEC_CONV_OCTAL:
-  case NPF_FMT_SPEC_CONV_HEX_INT:
-  case NPF_FMT_SPEC_CONV_UNSIGNED_INT:
-    switch (typ->length_modifier) {
-    case NPF_FMT_SPEC_LEN_MOD_NONE:
-    case NPF_FMT_SPEC_LEN_MOD_SHORT:
-    case NPF_FMT_SPEC_LEN_MOD_LONG_DOUBLE:
-    case NPF_FMT_SPEC_LEN_MOD_CHAR:
-      v->u = va_arg(*args, unsigned);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LONG: // 'l'
-      v->ul = va_arg(*args, unsigned long);
-      return;
-#    if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_LONG_LONG:
-      v->ull = va_arg(*args, unsigned long long);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_INTMAX:
-      v->uimx = va_arg(*args, uintmax_t);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
-      v->sz = va_arg(*args, size_t);
-      return;
-#    endif
-    default:
-      return;
-    }
-  case NPF_FMT_SPEC_CONV_POINTER:
-    v->ptr = va_arg(*args, void *);
-    return;
-#    if NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS == 1
-  case NPF_FMT_SPEC_CONV_WRITEBACK:
-    switch (typ->length_modifier) {
-    case NPF_FMT_SPEC_LEN_MOD_NONE:
-      v->ip = va_arg(*args, int *);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_SHORT:
-      v->sp = va_arg(*args, short *);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LONG_DOUBLE:
-      v->dp = va_arg(*args, double *);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_CHAR:
-      v->cp = va_arg(*args, char *);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LONG:
-      v->lp = va_arg(*args, long *);
-      return;
-#      if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_LONG_LONG:
-      v->llp = va_arg(*args, long long *);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_INTMAX:
-      v->imxp = va_arg(*args, intmax_t *);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
-      v->sszp = va_arg(*args, ssize_t *);
-      return;
-    case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
-      v->ptrdiffp = va_arg(*args, ptrdiff_t *);
-      return;
-#      endif
-    default:
-      return;
-    }
-#    endif
-#    if NANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS == 1
-  case NPF_FMT_SPEC_CONV_FLOAT_DECIMAL:
-    if (typ->length_modifier == NPF_FMT_SPEC_LEN_MOD_LONG_DOUBLE) {
-      v->ld = va_arg(*args, long double);
-      return;
-    }
-    v->d = va_arg(*args, double);
-    return;
-#    endif
-  }
-}
-
 static int npf_is_int(struct npf_arg_type *a) {
   if (a->conv_spec != NPF_FMT_SPEC_CONV_SIGNED_INT) {
     return 0;
@@ -1063,7 +943,7 @@ static int npf_is_int(struct npf_arg_type *a) {
 
 static int npf_format_to_npf_arg_type(NPF_CHAR_TYPE const *const format,
                                       int const nargs,
-                                      struct npf_arg_type *const args,
+                                      struct npf_arg_type *const types,
                                       int const accept_new_param) {
   npf_format_spec_t fs;
   int n = 0, used_max = 0;
@@ -1087,7 +967,7 @@ static int npf_format_to_npf_arg_type(NPF_CHAR_TYPE const *const format,
         return -1;
       }
       used_max = npf_max(used_max, fs.field_width);
-      struct npf_arg_type *const a = &args[fs.field_width - 1];
+      struct npf_arg_type *const a = &types[fs.field_width - 1];
       if (accept_new_param && a->conv_spec == NPF_FMT_SPEC_CONV_PERCENT) {
         a->conv_spec = NPF_FMT_SPEC_CONV_SIGNED_INT;
         a->length_modifier = NPF_FMT_SPEC_LEN_MOD_NONE;
@@ -1106,7 +986,7 @@ static int npf_format_to_npf_arg_type(NPF_CHAR_TYPE const *const format,
         return -1;
       }
       used_max = npf_max(used_max, fs.prec);
-      struct npf_arg_type *const a = &args[fs.prec - 1];
+      struct npf_arg_type *const a = &types[fs.prec - 1];
       if (accept_new_param && a->conv_spec == NPF_FMT_SPEC_CONV_PERCENT) {
         a->conv_spec = NPF_FMT_SPEC_CONV_SIGNED_INT;
         a->length_modifier = NPF_FMT_SPEC_LEN_MOD_NONE;
@@ -1123,7 +1003,7 @@ static int npf_format_to_npf_arg_type(NPF_CHAR_TYPE const *const format,
       return -1;
     }
     used_max = npf_max(used_max, fs.order);
-    struct npf_arg_type *const a = &args[fs.order - 1];
+    struct npf_arg_type *const a = &types[fs.order - 1];
     if (accept_new_param && a->conv_spec == NPF_FMT_SPEC_CONV_PERCENT) {
       a->conv_spec = fs.conv_spec;
       a->length_modifier = fs.length_modifier;
@@ -1136,6 +1016,133 @@ static int npf_format_to_npf_arg_type(NPF_CHAR_TYPE const *const format,
     }
   }
   return used_max;
+}
+
+static int npf_verify_and_assign_values(int const args_max,
+                                        struct npf_arg_type const *const types,
+                                        union npf_arg_value *const values,
+                                        va_list args) {
+  for (int i = 1; i <= args_max; ++i) {
+    int const idx = i - 1;
+    switch (types[idx].conv_spec) {
+    case NPF_FMT_SPEC_CONV_PERCENT:
+      return 0;
+    case NPF_FMT_SPEC_CONV_CHAR:
+      values[idx].i = va_arg(args, int);
+      continue;
+    case NPF_FMT_SPEC_CONV_STRING:
+      values[idx].str = va_arg(args, NPF_CHAR_TYPE *);
+      continue;
+    case NPF_FMT_SPEC_CONV_SIGNED_INT:
+      switch (types[idx].length_modifier) {
+      case NPF_FMT_SPEC_LEN_MOD_NONE:
+      case NPF_FMT_SPEC_LEN_MOD_SHORT:
+      case NPF_FMT_SPEC_LEN_MOD_LONG_DOUBLE:
+      case NPF_FMT_SPEC_LEN_MOD_CHAR:
+        values[idx].i = va_arg(args, int);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LONG:
+        values[idx].l = va_arg(args, long);
+        continue;
+#    if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_LONG_LONG:
+        values[idx].ll = va_arg(args, long long);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_INTMAX:
+        values[idx].imx = va_arg(args, intmax_t);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
+        values[idx].ssz = va_arg(args, ssize_t);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
+        values[idx].ptrdiff = va_arg(args, ptrdiff_t);
+        continue;
+#    endif
+      default:
+        return 0;
+      }
+#    if NANOPRINTF_USE_BINARY_FORMAT_SPECIFIERS == 1
+    case NPF_FMT_SPEC_CONV_BINARY:
+#    endif
+    case NPF_FMT_SPEC_CONV_OCTAL:
+    case NPF_FMT_SPEC_CONV_HEX_INT:
+    case NPF_FMT_SPEC_CONV_UNSIGNED_INT:
+      switch (types[idx].length_modifier) {
+      case NPF_FMT_SPEC_LEN_MOD_NONE:
+      case NPF_FMT_SPEC_LEN_MOD_SHORT:
+      case NPF_FMT_SPEC_LEN_MOD_LONG_DOUBLE:
+      case NPF_FMT_SPEC_LEN_MOD_CHAR:
+        values[idx].u = va_arg(args, unsigned);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LONG: // 'l'
+        values[idx].ul = va_arg(args, unsigned long);
+        continue;
+#    if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_LONG_LONG:
+        values[idx].ull = va_arg(args, unsigned long long);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_INTMAX:
+        values[idx].uimx = va_arg(args, uintmax_t);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
+        values[idx].sz = va_arg(args, size_t);
+        continue;
+#    endif
+      default:
+        return 0;
+      }
+    case NPF_FMT_SPEC_CONV_POINTER:
+      values[idx].ptr = va_arg(args, void *);
+      continue;
+#    if NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS == 1
+    case NPF_FMT_SPEC_CONV_WRITEBACK:
+      switch (types[idx].length_modifier) {
+      case NPF_FMT_SPEC_LEN_MOD_NONE:
+        values[idx].ip = va_arg(args, int *);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_SHORT:
+        values[idx].sp = va_arg(args, short *);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LONG_DOUBLE:
+        values[idx].dp = va_arg(args, double *);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_CHAR:
+        values[idx].cp = va_arg(args, char *);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LONG:
+        values[idx].lp = va_arg(args, long *);
+        continue;
+#      if NANOPRINTF_USE_LARGE_FORMAT_SPECIFIERS == 1
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_LONG_LONG:
+        values[idx].llp = va_arg(args, long long *);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_INTMAX:
+        values[idx].imxp = va_arg(args, intmax_t *);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_SIZET:
+        values[idx].sszp = va_arg(args, ssize_t *);
+        continue;
+      case NPF_FMT_SPEC_LEN_MOD_LARGE_PTRDIFFT:
+        values[idx].ptrdiffp = va_arg(args, ptrdiff_t *);
+        continue;
+#      endif
+      default:
+        return 0;
+      }
+#    endif
+#    if NANOPRINTF_USE_FLOAT_FORMAT_SPECIFIERS == 1
+    case NPF_FMT_SPEC_CONV_FLOAT_DECIMAL:
+      if (types[idx].length_modifier == NPF_FMT_SPEC_LEN_MOD_LONG_DOUBLE) {
+        values[idx].ld = va_arg(args, long double);
+        continue;
+      }
+      values[idx].d = va_arg(args, double);
+      continue;
+#    endif
+    }
+  }
+  return 1;
 }
 
 int npf_verify_format(NPF_CHAR_TYPE const *reference, NPF_CHAR_TYPE const *format) {
@@ -1207,16 +1214,13 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list
     max_args = 64,
   };
   struct npf_arg_type arg_types[max_args] = {0};
-  union npf_arg arg_values[max_args] = {0};
+  union npf_arg_value arg_values[max_args] = {0};
   int const used_args = npf_format_to_npf_arg_type(format, max_args, arg_types, 1);
   if (used_args == -1) {
     return 0;
   }
-  for (int i = 1; i <= used_args; ++i) {
-    if (arg_types[i - 1].conv_spec == NPF_FMT_SPEC_CONV_PERCENT) {
-      return 0;
-    }
-    npf_set_arg(&arg_types[i - 1], &arg_values[i - 1], &args);
+  if (npf_verify_and_assign_values(used_args, arg_types, arg_values, args) == 0) {
+    return 0;
   }
 
   npf_format_spec_t fs;
