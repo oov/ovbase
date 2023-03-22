@@ -19,18 +19,23 @@
 #  define FUNCNAME(funcname) FUNCNAME_2(PREFIX, funcname, POSTFIX)
 #endif
 
-int FUNCNAME(snprintf)(CHAR_TYPE *const dest, size_t destlen, CHAR_TYPE const *const format, ...) {
+int FUNCNAME(snprintf)(
+    CHAR_TYPE *const dest, size_t destlen, CHAR_TYPE const *const reference, CHAR_TYPE const *const format, ...) {
   va_list valist;
   va_start(valist, format);
-  int r = npf_vsnprintf(dest, destlen, format, valist);
+  int r = npf_vsnprintf(dest, destlen, reference, format, valist);
   va_end(valist);
   return r;
 }
 
-int FUNCNAME(vsnprintf)(CHAR_TYPE *const dest, size_t destlen, CHAR_TYPE const *const format, va_list valist) {
-  return npf_vsnprintf(dest, destlen, format, valist);
+int FUNCNAME(vsnprintf)(CHAR_TYPE *const dest,
+                        size_t destlen,
+                        CHAR_TYPE const *const reference,
+                        CHAR_TYPE const *const format,
+                        va_list valist) {
+  return npf_vsnprintf(dest, destlen, reference, format, valist);
 }
 
-int FUNCNAME(printf_verify_format)(CHAR_TYPE const *const ordered, CHAR_TYPE const *const format) {
-  return npf_verify_format(ordered, format);
+int FUNCNAME(printf_verify_format)(CHAR_TYPE const *const reference, CHAR_TYPE const *const format) {
+  return npf_verify_format(reference, format);
 }

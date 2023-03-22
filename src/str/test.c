@@ -450,7 +450,7 @@ static void test_str_utoa(void) {
 
 static void test_str_sprintf(void) {
   struct str tmp = {0};
-  if (!TEST_SUCCEEDED_F(ssprintf(&tmp, "hello%04dworld%s", 20, "."))) {
+  if (!TEST_SUCCEEDED_F(ssprintf(&tmp, NULL, "hello%04dworld%s", 20, "."))) {
     goto cleanup;
   }
   static char const expected[] = "hello0020world.";

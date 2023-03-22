@@ -4,10 +4,13 @@
 
 #  include "ovprintf.h"
 
-NODISCARD error str_sprintf_(struct str *const dest MEM_FILEPOS_PARAMS, char const *const format, ...) {
+NODISCARD error str_sprintf_(struct str *const dest MEM_FILEPOS_PARAMS,
+                             char const *const reference,
+                             char const *const format,
+                             ...) {
   va_list valist;
   va_start(valist, format);
-  error err = str_vsprintf_(dest MEM_FILEPOS_VALUES_PASSTHRU, format, valist);
+  error err = str_vsprintf_(dest MEM_FILEPOS_VALUES_PASSTHRU, reference, format, valist);
   if (efailed(err)) {
     err = ethru(err);
   }
@@ -15,14 +18,17 @@ NODISCARD error str_sprintf_(struct str *const dest MEM_FILEPOS_PARAMS, char con
   return err;
 }
 
-NODISCARD error str_vsprintf_(struct str *const dest MEM_FILEPOS_PARAMS, char const *const format, va_list valist) {
+NODISCARD error str_vsprintf_(struct str *const dest MEM_FILEPOS_PARAMS,
+                              char const *const reference,
+                              char const *const format,
+                              va_list valist) {
   if (!dest || !format) {
     return errg(err_invalid_arugment);
   }
   error err = eok();
   va_list valist2;
   va_copy(valist2, valist);
-  int r = ov_vsnprintf(dest->ptr, dest->cap, format, valist2);
+  int r = ov_vsnprintf(dest->ptr, dest->cap, reference, format, valist2);
   va_end(valist2);
   if (r < 0) {
     err = errg(err_unexpected);
@@ -36,7 +42,7 @@ NODISCARD error str_vsprintf_(struct str *const dest MEM_FILEPOS_PARAMS, char co
     err = ethru(err);
     goto cleanup;
   }
-  r = ov_vsnprintf(dest->ptr, dest->cap, format, valist);
+  r = ov_vsnprintf(dest->ptr, dest->cap, reference, format, valist);
   if (r < 0) {
     err = errg(err_unexpected);
     goto cleanup;

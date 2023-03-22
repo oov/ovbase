@@ -446,7 +446,7 @@ static void test_wstr_utoa(void) {
 
 static void test_wstr_sprintf(void) {
   struct wstr tmp = {0};
-  if (!TEST_SUCCEEDED_F(ssprintf(&tmp, L"hello%04dworld%s", 20, L"."))) {
+  if (!TEST_SUCCEEDED_F(ssprintf(&tmp, NULL, L"hello%04dworld%s", 20, L"."))) {
     goto cleanup;
   }
   static wchar_t const expected[] = L"hello0020world.";

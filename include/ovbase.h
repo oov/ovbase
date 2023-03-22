@@ -280,8 +280,13 @@ static inline size_t array_cap_(struct array const *const p) { return p ? p->cap
 // str
 
 #ifndef OV_PRINTF_ATTR
-#  ifdef __GNUC__
-#    define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS) __attribute__((format(FUNC, FORMAT, VARGS)))
+#  if 0
+format annotation does not support '%1$s'
+#    ifdef __GNUC__
+#      define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS) __attribute__((format(FUNC, FORMAT, VARGS)))
+#    else
+#      define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS)
+#    endif
 #  else
 #    define OV_PRINTF_ATTR(FUNC, FORMAT, VARGS)
 #  endif
@@ -310,18 +315,22 @@ NODISCARD error str_atou_(struct str const *const s, uint64_t *const dest);
 NODISCARD error str_itoa_(int64_t v, struct str *const dest MEM_FILEPOS_PARAMS);
 NODISCARD error str_utoa_(uint64_t v, struct str *const dest MEM_FILEPOS_PARAMS);
 
-NODISCARD error str_sprintf_(struct str *const dest MEM_FILEPOS_PARAMS, char const *const format, ...)
+NODISCARD error
+str_sprintf_(struct str *const dest MEM_FILEPOS_PARAMS, char const *const reference, char const *const format, ...)
 #  ifdef ALLOCATE_LOGGER
-    OV_PRINTF_ATTR(printf, 3, 4)
+    OV_PRINTF_ATTR(printf, 4, 5)
 #  else
-    OV_PRINTF_ATTR(printf, 2, 3)
+    OV_PRINTF_ATTR(printf, 3, 4)
 #  endif
         ;
-NODISCARD error str_vsprintf_(struct str *const dest MEM_FILEPOS_PARAMS, char const *const format, va_list valist)
+NODISCARD error str_vsprintf_(struct str *const dest MEM_FILEPOS_PARAMS,
+                              char const *const reference,
+                              char const *const format,
+                              va_list valist)
 #  ifdef ALLOCATE_LOGGER
-    OV_PRINTF_ATTR(printf, 3, 0)
+    OV_PRINTF_ATTR(printf, 4, 0)
 #  else
-    OV_PRINTF_ATTR(printf, 2, 0)
+    OV_PRINTF_ATTR(printf, 3, 0)
 #  endif
         ;
 
@@ -353,18 +362,24 @@ NODISCARD error wstr_itoa_(int64_t v, struct wstr *const dest MEM_FILEPOS_PARAMS
 NODISCARD error wstr_utoa_(uint64_t v, struct wstr *const dest MEM_FILEPOS_PARAMS);
 
 // format annotation unavailable for wprintf
-NODISCARD error wstr_sprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS, wchar_t const *const format, ...)
+NODISCARD error wstr_sprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS,
+                              wchar_t const *const reference,
+                              wchar_t const *const format,
+                              ...)
     // #  ifdef ALLOCATE_LOGGER
-    //     OV_PRINTF_ATTR(wprintf, 3, 4)
+    //     OV_PRINTF_ATTR(wprintf, 4, 5)
     // #  else
-    //     OV_PRINTF_ATTR(wprintf, 2, 3)
+    //     OV_PRINTF_ATTR(wprintf, 3, 4)
     // #  endif
     ;
-NODISCARD error wstr_vsprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS, wchar_t const *const format, va_list valist)
+NODISCARD error wstr_vsprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS,
+                               wchar_t const *const reference,
+                               wchar_t const *const format,
+                               va_list valist)
     // #  ifdef ALLOCATE_LOGGER
-    //     OV_PRINTF_ATTR(wprintf, 3, 0)
+    //     OV_PRINTF_ATTR(wprintf, 4, 0)
     // #  else
-    //     OV_PRINTF_ATTR(wprintf, 2, 0)
+    //     OV_PRINTF_ATTR(wprintf, 3, 0)
     // #  endif
     ;
 
@@ -430,14 +445,15 @@ NODISCARD error wstr_vsprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS, wchar
 #  define sutoa(uint64_t, struct_str_ptr)                                                                              \
     _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_utoa_), OV_GENERIC_CASE(struct str *, str_utoa_))(  \
         (uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
-#  define ssprintf(struct_str_ptr, format, ...)                                                                        \
-    _Generic((struct_str_ptr),                                                                                         \
-             OV_GENERIC_CASE(struct wstr *, wstr_sprintf_),                                                            \
-             OV_GENERIC_CASE(struct str *, str_sprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
-#  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
+#  define ssprintf(struct_str_ptr, reference, format, ...)                                                             \
+    _Generic(                                                                                                          \
+        (struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_sprintf_), OV_GENERIC_CASE(struct str *, str_sprintf_))( \
+        (struct_str_ptr)MEM_FILEPOS_VALUES, (reference), (format), __VA_ARGS__)
+#  define svsprintf(struct_str_ptr, reference, format, va_list)                                                        \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_),                                                           \
-             OV_GENERIC_CASE(struct str *, str_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
+             OV_GENERIC_CASE(struct str *, str_vsprintf_))(                                                            \
+        (struct_str_ptr)MEM_FILEPOS_VALUES, (reference), (format), (va_list))
 #elif defined(USE_STR)
 #  define sfree(struct_str_ptr)                                                                                        \
     _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)

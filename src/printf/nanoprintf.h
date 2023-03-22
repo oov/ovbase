@@ -39,16 +39,23 @@
 extern "C" {
 #  endif
 
-NPF_VISIBILITY int npf_snprintf(NPF_CHAR_TYPE *buffer, size_t bufsz, const NPF_CHAR_TYPE *format, ...)
+NPF_VISIBILITY int
+npf_snprintf(NPF_CHAR_TYPE *buffer, size_t bufsz, NPF_CHAR_TYPE const *reference, const NPF_CHAR_TYPE *format, ...)
     NPF_PRINTF_ATTR(3, 4);
 
-NPF_VISIBILITY int npf_vsnprintf(NPF_CHAR_TYPE *buffer, size_t bufsz, NPF_CHAR_TYPE const *format, va_list vlist)
-    NPF_PRINTF_ATTR(3, 0);
+NPF_VISIBILITY int npf_vsnprintf(NPF_CHAR_TYPE *buffer,
+                                 size_t bufsz,
+                                 NPF_CHAR_TYPE const *reference,
+                                 NPF_CHAR_TYPE const *format,
+                                 va_list vlist) NPF_PRINTF_ATTR(3, 0);
 
 typedef void (*npf_putc)(int c, void *ctx);
-NPF_VISIBILITY int npf_pprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, ...) NPF_PRINTF_ATTR(3, 4);
+NPF_VISIBILITY int
+npf_pprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_CHAR_TYPE const *format, ...)
+    NPF_PRINTF_ATTR(3, 4);
 
-NPF_VISIBILITY int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list vlist)
+NPF_VISIBILITY int
+npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_CHAR_TYPE const *format, va_list vlist)
     NPF_PRINTF_ATTR(3, 0);
 
 NPF_VISIBILITY int npf_verify_format(NPF_CHAR_TYPE const *reference, NPF_CHAR_TYPE const *format);
@@ -1209,15 +1216,21 @@ static void npf_putc_cnt(int c, void *ctx) {
       *(va_arg(args, TYPE *)) = (TYPE)pc_cnt.n;                                                                        \
       break
 
-int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list args) {
+int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_CHAR_TYPE const *format, va_list args) {
   enum {
     max_args = 64,
   };
   struct npf_arg_type arg_types[max_args] = {0};
   union npf_arg_value arg_values[max_args] = {0};
-  int const used_args = npf_format_to_npf_arg_type(format, max_args, arg_types, 1);
+  int used_args = npf_format_to_npf_arg_type(reference ? reference : format, max_args, arg_types, 1);
   if (used_args == -1) {
     return 0;
+  }
+  if (reference != format) {
+    used_args = npf_format_to_npf_arg_type(format, used_args, arg_types, 0);
+    if (used_args == -1) {
+      return 0;
+    }
   }
   if (npf_verify_and_assign_values(used_args, arg_types, arg_values, args) == 0) {
     return 0;
@@ -1611,30 +1624,32 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, va_list
 #    undef NPF_EXTRACT
 #    undef NPF_WRITEBACK
 
-int npf_pprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *format, ...) {
+int npf_pprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_CHAR_TYPE const *format, ...) {
   va_list val;
   va_start(val, format);
-  int const rv = npf_vpprintf(pc, pc_ctx, format, val);
+  int const rv = npf_vpprintf(pc, pc_ctx, reference, format, val);
   va_end(val);
   return rv;
 }
 
-int npf_snprintf(NPF_CHAR_TYPE *buffer, size_t bufsz, const NPF_CHAR_TYPE *format, ...) {
+int npf_snprintf(
+    NPF_CHAR_TYPE *buffer, size_t bufsz, NPF_CHAR_TYPE const *reference, const NPF_CHAR_TYPE *format, ...) {
   va_list val;
   va_start(val, format);
-  int const rv = npf_vsnprintf(buffer, bufsz, format, val);
+  int const rv = npf_vsnprintf(buffer, bufsz, reference, format, val);
   va_end(val);
   return rv;
 }
 
-int npf_vsnprintf(NPF_CHAR_TYPE *buffer, size_t bufsz, NPF_CHAR_TYPE const *format, va_list vlist) {
+int npf_vsnprintf(
+    NPF_CHAR_TYPE *buffer, size_t bufsz, NPF_CHAR_TYPE const *reference, NPF_CHAR_TYPE const *format, va_list vlist) {
   npf_bufputc_ctx_t bufputc_ctx;
   bufputc_ctx.dst = buffer;
   bufputc_ctx.len = bufsz;
   bufputc_ctx.cur = 0;
 
   npf_putc const pc = buffer ? npf_bufputc : npf_bufputc_nop;
-  int const n = npf_vpprintf(pc, &bufputc_ctx, format, vlist);
+  int const n = npf_vpprintf(pc, &bufputc_ctx, reference, format, vlist);
   pc('\0', &bufputc_ctx);
 
 #    ifdef NANOPRINTF_SNPRINTF_SAFE_EMPTY_STRING_ON_OVERFLOW
