@@ -19,6 +19,23 @@
 #  define FUNCNAME(funcname) FUNCNAME_2(PREFIX, funcname, POSTFIX)
 #endif
 
+int FUNCNAME(vpprintf)(void (*putc)(int c, void *ctx),
+                       void *ctx,
+                       CHAR_TYPE const *const reference,
+                       CHAR_TYPE const *const format,
+                       va_list valist) {
+  return npf_vpprintf(putc, ctx, reference, format, valist);
+}
+
+int FUNCNAME(pprintf)(
+    void (*putc)(int c, void *ctx), void *ctx, CHAR_TYPE const *const reference, CHAR_TYPE const *const format, ...) {
+  va_list valist;
+  va_start(valist, format);
+  int const r = npf_vpprintf(putc, ctx, reference, format, valist);
+  va_end(valist);
+  return r;
+}
+
 int FUNCNAME(snprintf)(
     CHAR_TYPE *const dest, size_t destlen, CHAR_TYPE const *const reference, CHAR_TYPE const *const format, ...) {
   va_list valist;

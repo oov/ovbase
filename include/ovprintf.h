@@ -16,6 +16,16 @@ format annotation does not support '%1$s'
 #  endif
 #endif
 
+int ov_vpprintf_char(void (*putc)(int c, void *ctx),
+                     void *ctx,
+                     char const *const reference,
+                     char const *const format,
+                     va_list valist) OV_PRINTF_ATTR(printf, 4, 0);
+int ov_pprintf_char(void (*putc)(int c, void *ctx),
+                    void *ctx,
+                    char const *const reference,
+                    char const *const format,
+                    ...) OV_PRINTF_ATTR(printf, 4, 5);
 int ov_snprintf_char(char *const dest, size_t destlen, char const *const reference, char const *const format, ...)
     OV_PRINTF_ATTR(printf, 4, 5);
 int ov_vsnprintf_char(char *const dest,
@@ -23,6 +33,14 @@ int ov_vsnprintf_char(char *const dest,
                       char const *const reference,
                       char const *const format,
                       va_list valist) OV_PRINTF_ATTR(printf, 4, 0);
+
+int ov_vpprintf_wchar(void (*putc)(int c, void *ctx),
+                      void *ctx,
+                      wchar_t const *const reference,
+                      wchar_t const *const format,
+                      va_list valist);
+int ov_pprintf_wchar(
+    void (*putc)(int c, void *ctx), void *ctx, wchar_t const *const reference, wchar_t const *const format, ...);
 int ov_snprintf_wchar(
     wchar_t *const dest, size_t destlen, wchar_t const *const reference, wchar_t const *const format, ...);
 int ov_vsnprintf_wchar(
@@ -37,6 +55,18 @@ int ov_printf_verify_format_wchar(wchar_t const *const reference, wchar_t const 
     fn
 #endif
 
+#define ov_vpprintf(putc, ctx, reference, format, valist)                                                              \
+  _Generic((format),                                                                                                   \
+           OV_GENERIC_CASE(char const *, ov_vpprintf_char),                                                            \
+           OV_GENERIC_CASE(char *, ov_vpprintf_char),                                                                  \
+           OV_GENERIC_CASE(wchar_t const *, ov_vpprintf_wchar),                                                        \
+           OV_GENERIC_CASE(wchar_t *, ov_vpprintf_wchar))((putc), (ctx), (reference), (format), (valist))
+#define ov_pprintf(putc, ctx, reference, format, ...)                                                                  \
+  _Generic((format),                                                                                                   \
+           OV_GENERIC_CASE(char const *, ov_pprintf_char),                                                             \
+           OV_GENERIC_CASE(char *, ov_pprintf_char),                                                                   \
+           OV_GENERIC_CASE(wchar_t const *, ov_pprintf_wchar),                                                         \
+           OV_GENERIC_CASE(wchar_t *, ov_pprintf_wchar))((putc), (ctx), (reference), (format), __VA_ARGS__)
 #define ov_snprintf(char_ptr, destlen, reference, format, ...)                                                         \
   _Generic((format),                                                                                                   \
            OV_GENERIC_CASE(char const *, ov_snprintf_char),                                                            \
