@@ -2,6 +2,7 @@ option(USE_STR "use struct str" ON)
 option(USE_WSTR "use struct wstr" ON)
 option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
+option(USE_ADDREDS_SANITIZER "use address sanitizer" OFF)
 option(USE_COMPILER_RT "use compiler-rt runtime" ON)
 option(SKIP_OVTHREADS_TEST "skip ovthreads tests" ON)
 
@@ -124,6 +125,7 @@ foreach(target ${targets})
     -Wno-padded
     -ffunction-sections
     -fdata-sections
+    $<$<BOOL:${USE_ADDREDS_SANITIZER}>:-fsanitize=address>
     $<$<CONFIG:Debug>:-O0>
     $<$<CONFIG:Release>:-O2>
     -flto
@@ -131,6 +133,7 @@ foreach(target ${targets})
   target_link_options(${target} PUBLIC
     $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
     $<$<BOOL:${WIN32}>:-no-pthread>
+    $<$<BOOL:${USE_ADDREDS_SANITIZER}>:-fsanitize=address>
   )
   target_link_options(${target} PRIVATE
     -fuse-ld=lld
