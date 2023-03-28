@@ -1,0 +1,46 @@
+# Japanese translations for TestSoftware package.
+# Copyright (C) 2023 TestSoftware Developers
+# This file is distributed under the same license as the TestSoftware package.
+# Automatically generated, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: TestSoftware v0.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-03-24 21:28+0900\n"
+"PO-Revision-Date: 2023-03-24 20:26+0900\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: test.c
+#, c-format
+msgid "Hello world"
+msgstr "ハローワールド"
+
+#: test.c
+#, c-format
+msgctxt "Menu|File"
+msgid "Open"
+msgstr "ファイルを開く"
+
+#: test.c
+#, c-format
+msgctxt "Menu|Printer"
+msgid "Open"
+msgstr "プリンターを開く"
+
+#: test.c
+#, c-format
+msgid "an apple"
+msgid_plural "%d apples"
+msgstr[0] "%d個のりんご"
+
+#. trans: This dagger helps UTF-8 detection. You don't need to translate this.
+#: test.c
+msgid "†"
+msgstr "†"

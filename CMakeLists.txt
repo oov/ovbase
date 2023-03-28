@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(ovbase C)
+if(WIN32)
+  enable_language(RC)
+endif()
 enable_testing()
 
 file(GLOB sources

@@ -1,0 +1,45 @@
+#pragma once
+
+#include "ovbase.h"
+
+struct mo;
+
+NODISCARD error mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen);
+void mo_free(struct mo **const mpp);
+char const *mo_gettext(struct mo const *const mp, char const *const id);
+char const *mo_pgettext(struct mo const *const mp, char const *const ctxt, char const *const id);
+char const *
+mo_ngettext(struct mo const *const mp, char const *const id, char const *const id_plural, unsigned long int const n);
+
+void mo_set_default(struct mo *const mp);
+struct mo *mo_get_default(void);
+
+#ifdef _WIN32
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+
+NODISCARD error mo_parse_from_resource(struct mo **const mpp, HINSTANCE const hinst, uint16_t const lang_id);
+#endif
+
+#ifdef USE_STR
+int mo_sprintf_char(char *const buf, size_t const buflen, char const *const reference, char const *const format, ...);
+int mo_vsprintf_char(
+    char *const buf, size_t const buflen, char const *const reference, char const *const format, va_list valist);
+NODISCARD error mo_sprintf_str(struct str *const dest, char const *const reference, char const *const format, ...);
+NODISCARD error mo_vsprintf_str(struct str *const dest,
+                                char const *const reference,
+                                char const *const format,
+                                va_list valist);
+#endif
+
+#ifdef USE_WSTR
+int mo_sprintf_wchar(
+    wchar_t *const buf, size_t const buflen, wchar_t const *const reference, char const *const format, ...);
+int mo_vsprintf_wchar(
+    wchar_t *const buf, size_t const buflen, wchar_t const *const reference, char const *const format, va_list valist);
+NODISCARD error mo_sprintf_wstr(struct wstr *const dest, wchar_t const *const reference, char const *const format, ...);
+NODISCARD error mo_vsprintf_wstr(struct wstr *const dest,
+                                 wchar_t const *const reference,
+                                 char const *const format,
+                                 va_list valist);
+#endif

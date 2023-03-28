@@ -23,6 +23,10 @@ add_library(ovbase STATIC
   hmap/set.c
   mem.c
   mem_aligned.c
+  mo/mo.c
+  mo/str.c
+  mo/wstr.c
+  $<$<BOOL:${WIN32}>:mo/win32.c>
   num/char/atoi.c
   num/char/atou.c
   num/char/ftoa.c
@@ -77,6 +81,8 @@ add_executable(str_test str/test.c)
 list(APPEND targets str_test)
 add_executable(wstr_test wstr/test.c)
 list(APPEND targets wstr_test)
+add_executable(mo_test mo/test.c $<$<BOOL:${WIN32}>:mo/test_win32/test.rc>)
+list(APPEND targets mo_test)
 add_executable(num_wchar_test num/wchar/test.c)
 list(APPEND targets num_wchar_test)
 add_executable(num_char_test num/char/test.c)
@@ -96,6 +102,10 @@ endif()
 foreach(target ${targets})
   if(target MATCHES "_test$")
     add_test(NAME ${target} COMMAND ${target})
+    target_compile_definitions(${target} PRIVATE
+    	SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+    	SOURCE_DIR_WIDE=L"${CMAKE_CURRENT_SOURCE_DIR}"
+    )
   endif()
   target_include_directories(${target} PUBLIC
     "${PROJECT_SOURCE_DIR}/include"
