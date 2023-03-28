@@ -67,7 +67,7 @@ bool utf8_to_wchar(char const *const src,
                   ((int32_t)(u8[i + 2] & 0x3f) << 6) | (int32_t)(u8[i + 3] & 0x3f);
       break;
     }
-    if (codepoint < 0 || codepoint > 0x10ffff) {
+    if (codepoint < 0 || codepoint > 0x10ffff || (0xd800 <= codepoint && codepoint < 0xe000)) {
       return false;
     }
     if (sizeof(wchar_t) == 2 && codepoint > 0xffff) {

@@ -16,7 +16,13 @@ static void test_utf8_to_wchar(void) {
   TEST_CHECK(wcscmp(buf, golden) == 0);
 }
 
+static void test_kick_cesu8(void) {
+  static char const u8[] = "\xed\xa0\xbc\xed\xbc\x8d";
+  TEST_CHECK(!utf8_to_wchar_len(u8, strlen(u8), NULL));
+}
+
 TEST_LIST = {
     {"test_utf8_to_wchar", test_utf8_to_wchar},
+    {"test_kick_cesu8", test_kick_cesu8},
     {NULL, NULL},
 };
