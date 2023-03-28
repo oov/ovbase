@@ -21,10 +21,16 @@ struct mo *mo_get_default(void);
 NODISCARD error mo_parse_from_resource(struct mo **const mpp, HINSTANCE const hinst, uint16_t const lang_id);
 #endif
 
-#ifdef USE_STR
 int mo_sprintf_char(char *const buf, size_t const buflen, char const *const reference, char const *const format, ...);
+int mo_sprintf_wchar(
+    wchar_t *const buf, size_t const buflen, wchar_t const *const reference, char const *const format, ...);
+
 int mo_vsprintf_char(
     char *const buf, size_t const buflen, char const *const reference, char const *const format, va_list valist);
+int mo_vsprintf_wchar(
+    wchar_t *const buf, size_t const buflen, wchar_t const *const reference, char const *const format, va_list valist);
+
+#ifdef USE_STR
 NODISCARD error mo_sprintf_str(struct str *const dest, char const *const reference, char const *const format, ...);
 NODISCARD error mo_vsprintf_str(struct str *const dest,
                                 char const *const reference,
@@ -33,10 +39,6 @@ NODISCARD error mo_vsprintf_str(struct str *const dest,
 #endif
 
 #ifdef USE_WSTR
-int mo_sprintf_wchar(
-    wchar_t *const buf, size_t const buflen, wchar_t const *const reference, char const *const format, ...);
-int mo_vsprintf_wchar(
-    wchar_t *const buf, size_t const buflen, wchar_t const *const reference, char const *const format, va_list valist);
 NODISCARD error mo_sprintf_wstr(struct wstr *const dest, wchar_t const *const reference, char const *const format, ...);
 NODISCARD error mo_vsprintf_wstr(struct wstr *const dest,
                                  wchar_t const *const reference,
