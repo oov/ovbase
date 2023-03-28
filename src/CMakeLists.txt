@@ -9,6 +9,7 @@ option(SKIP_OVTHREADS_TEST "skip ovthreads tests" ON)
 add_library(ovbase STATIC
   array.c
   error.c
+  error_i18n.c
   error_en.c
   error_jp.c
   hashmap.c
@@ -53,6 +54,7 @@ add_library(ovbase STATIC
   str/replace_all_.c
   str/sprintf_.c
   str/str_.c
+  str/to_str_.c
   str/utoa_.c
   utf/u2w.c
   utf/w2u.c
@@ -68,6 +70,7 @@ add_library(ovbase STATIC
   wstr/replace_all_.c
   wstr/sprintf_.c
   wstr/str_.c
+  wstr/to_wstr_.c
   wstr/utoa_.c
 )
 list(APPEND targets ovbase)

@@ -163,6 +163,16 @@ NODISCARD error error_add_(error const parent,
                            int const type,
                            int const code,
                            struct NATIVE_STR const *const msg ERR_FILEPOS_PARAMS);
+NODISCARD error error_add_i18n_(error const parent,
+                                int const type,
+                                int const code,
+                                char const *const msg ERR_FILEPOS_PARAMS);
+NODISCARD error error_add_i18nf_(error const parent,
+                                 int const type,
+                                 int const code ERR_FILEPOS_PARAMS,
+                                 NATIVE_CHAR const *const reference,
+                                 char const *const format,
+                                 ...);
 bool error_free_(error *const e MEM_FILEPOS_PARAMS);
 NODISCARD static inline bool error_is_(error const err, int const type, int const code) {
   return err != NULL && err->type == type && err->code == code;
@@ -171,12 +181,20 @@ NODISCARD error error_to_string_short(error const e, struct NATIVE_STR *const de
 NODISCARD error error_to_string(error const e, struct NATIVE_STR *const dest);
 bool error_report_(error const e, struct NATIVE_STR const *const message ERR_FILEPOS_PARAMS);
 bool error_report_free_(error e, struct NATIVE_STR const *const message ERR_FILEPOS_PARAMS);
+bool error_report_free_i18n_(error e, char const *const msg ERR_FILEPOS_PARAMS);
+bool error_report_free_i18nf_(error e ERR_FILEPOS_PARAMS,
+                              NATIVE_CHAR const *const reference,
+                              char const *const format,
+                              ...);
 
 #define err(type, code) (error_add_(NULL, (type), (code), NULL ERR_FILEPOS_VALUES))
 #define errg(code) (err(err_type_generic, (code)))
 #define efree(err_ptr) (error_free_((err_ptr)MEM_FILEPOS_VALUES))
 #define emsg(type, code, struct_native_str_ptr)                                                                        \
   (error_add_(NULL, (type), (code), (struct_native_str_ptr)ERR_FILEPOS_VALUES))
+#define emsg_i18n(type, code, char_ptr) (error_add_i18n_(NULL, (type), (code), (char_ptr)ERR_FILEPOS_VALUES))
+#define emsg_i18nf(type, code, reference, format, ...)                                                                 \
+  (error_add_i18nf_(NULL, (type), (code)ERR_FILEPOS_VALUES, (reference), (format), __VA_ARGS__))
 #define ethru(parent) (error_add_((parent), err_type_generic, err_pass_through, NULL ERR_FILEPOS_VALUES))
 NODISCARD static inline error eok(void) { return NULL; }
 NODISCARD static inline bool esucceeded(error const err) { return err == NULL; }
@@ -184,6 +202,9 @@ NODISCARD static inline bool efailed(error const err) { return err != NULL; }
 NODISCARD static inline bool eis(error const err, int const type, int const code) { return error_is_(err, type, code); }
 NODISCARD static inline bool eisg(error const err, int const code) { return eis(err, err_type_generic, code); }
 #define ereportmsg(err, struct_native_str_ptr) (error_report_free_((err), (struct_native_str_ptr)ERR_FILEPOS_VALUES))
+#define ereportmsg_i18n(err, char_ptr) (error_report_free_i18n_((err), (char_ptr)ERR_FILEPOS_VALUES))
+#define ereportmsg_i18nf(err, reference, format, ...)                                                                  \
+  (error_report_free_i18nf_((err)ERR_FILEPOS_VALUES, (reference), (format), __VA_ARGS__))
 #define ereport(err) (error_report_free_((err), &native_unmanaged(NSTR("Error occurred.")) ERR_FILEPOS_VALUES))
 
 // Do not use eignore for normal use cases.
@@ -334,6 +355,8 @@ NODISCARD error str_vsprintf_(struct str *const dest MEM_FILEPOS_PARAMS,
 #  endif
         ;
 
+NODISCARD error to_str_(wchar_t const *const src, size_t const src_len, struct str *const dest MEM_FILEPOS_PARAMS);
+
 #endif
 
 // wstr
@@ -383,6 +406,17 @@ NODISCARD error wstr_vsprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS,
     // #  endif
     ;
 
+NODISCARD error to_wstr_(char const *const src, size_t const src_len, struct wstr *const dest MEM_FILEPOS_PARAMS);
+
+#endif
+
+#if defined(USE_STR) && defined(USE_WSTR)
+static inline NODISCARD error wstr_to_str_(struct wstr const *const src, struct str *const dest MEM_FILEPOS_PARAMS) {
+  return to_str_(src->ptr, src->len, dest MEM_FILEPOS_VALUES_PASSTHRU);
+}
+static inline NODISCARD error str_to_wstr_(struct str const *const src, struct wstr *const dest MEM_FILEPOS_PARAMS) {
+  return to_wstr_(src->ptr, src->len, dest MEM_FILEPOS_VALUES_PASSTHRU);
+}
 #endif
 
 #define OV_GENERIC_CASE(typ, fn)                                                                                       \
@@ -454,6 +488,21 @@ NODISCARD error wstr_vsprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS,
              OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_),                                                           \
              OV_GENERIC_CASE(struct str *, str_vsprintf_))(                                                            \
         (struct_str_ptr)MEM_FILEPOS_VALUES, (reference), (format), (va_list))
+
+#  define to_str(wchar_ptr_or_struct_wstr_ptr, ...)                                                                    \
+    _Generic((wchar_ptr_or_struct_wstr_ptr),                                                                           \
+             OV_GENERIC_CASE(struct wstr *, wstr_to_str_),                                                             \
+             OV_GENERIC_CASE(struct wstr const *, wstr_to_str_),                                                       \
+             OV_GENERIC_CASE(wchar_t *, to_str_),                                                                      \
+             OV_GENERIC_CASE(wchar_t const *, to_str_))((wchar_ptr_or_struct_wstr_ptr),                                \
+                                                        __VA_ARGS__ MEM_FILEPOS_VALUES)
+#  define to_wstr(char_ptr_or_struct_str_ptr, ...)                                                                     \
+    _Generic((char_ptr_or_struct_str_ptr),                                                                             \
+             OV_GENERIC_CASE(struct str *, str_to_wstr_),                                                              \
+             OV_GENERIC_CASE(struct str const *, str_to_wstr_),                                                        \
+             OV_GENERIC_CASE(char *, to_wstr_),                                                                        \
+             OV_GENERIC_CASE(char const *, to_wstr_))((char_ptr_or_struct_str_ptr), __VA_ARGS__ MEM_FILEPOS_VALUES)
+
 #elif defined(USE_STR)
 #  define sfree(struct_str_ptr)                                                                                        \
     _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
@@ -500,6 +549,11 @@ NODISCARD error wstr_vsprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS,
 #  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct str *, str_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
+
+#  define to_str(wchar_ptr, ...)                                                                                       \
+    _Generic((wchar_ptr), OV_GENERIC_CASE(wchar_t *, to_str_), OV_GENERIC_CASE(wchar_t const *, to_str_))(             \
+        (wchar_ptr), __VA_ARGS__ MEM_FILEPOS_VALUES)
+
 #elif defined(USE_WSTR)
 #  define sfree(struct_str_ptr)                                                                                        \
     _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_free_))((struct_str_ptr)MEM_FILEPOS_VALUES)
@@ -550,6 +604,11 @@ NODISCARD error wstr_vsprintf_(struct wstr *const dest MEM_FILEPOS_PARAMS,
 #  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
     _Generic((struct_str_ptr),                                                                                         \
              OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
+
+#  define to_wstr(char_ptr, ...)                                                                                       \
+    _Generic((char_ptr), OV_GENERIC_CASE(char *, to_wstr_), OV_GENERIC_CASE(char const *, to_wstr_))(                  \
+        (char_ptr), __VA_ARGS__ MEM_FILEPOS_VALUES)
+
 #endif
 
 // hash map

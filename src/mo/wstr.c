@@ -9,23 +9,14 @@ int mo_sprintf_wchar(
   if (!buf || !buflen || !format) {
     return 0;
   }
-  size_t format_len = strlen(format);
-  size_t sz = 0;
-  if (!utf8_to_wchar_len(format, format_len, &sz)) {
-    return 0;
-  }
-
   struct wstr ws = {0};
-  error err = sgrow(&ws, sz + 1);
+  error err = to_wstr(format, strlen(format), &ws);
   if (efailed(err)) {
     err = ethru(err);
     ereport(err);
     buf[0] = L'\0';
     return 0;
   }
-  utf8_to_wchar(format, format_len, ws.ptr, sz, NULL, NULL);
-  ws.ptr[sz] = L'\0';
-
   va_list valist;
   va_start(valist, format);
   int const r = ov_vsnprintf(buf, buflen, reference, ws.ptr, valist);
@@ -41,21 +32,12 @@ NODISCARD error mo_vsprintf_wstr(struct wstr *const dest,
   if (!dest || !format) {
     return errg(err_invalid_arugment);
   }
-  size_t format_len = strlen(format);
-  size_t sz = 0;
-  if (!utf8_to_wchar_len(format, format_len, &sz)) {
-    return 0;
-  }
-
   struct wstr ws = {0};
-  error err = sgrow(&ws, sz + 1);
+  error err = to_wstr(format, strlen(format), &ws);
   if (efailed(err)) {
     err = ethru(err);
     goto cleanup;
   }
-  utf8_to_wchar(format, format_len, ws.ptr, sz, NULL, NULL);
-  ws.ptr[sz] = L'\0';
-
   err = svsprintf(dest, reference, ws.ptr, valist);
   if (efailed(err)) {
     err = ethru(err);
