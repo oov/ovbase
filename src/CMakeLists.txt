@@ -50,6 +50,7 @@ add_library(ovbase STATIC
   str/sprintf_.c
   str/str_.c
   str/utoa_.c
+  utf/utf.c
   wstr/atoi_.c
   wstr/atou_.c
   wstr/cat_.c
@@ -84,6 +85,8 @@ add_executable(printf_char_test printf/char_test.c)
 list(APPEND targets printf_char_test)
 add_executable(printf_wchar_test printf/wchar_test.c)
 list(APPEND targets printf_wchar_test)
+add_executable(utf_test utf/test.c)
+list(APPEND targets utf_test)
 
 if(NOT SKIP_OVTHREADS_TEST)
   add_executable(ovthreads_test ovthreads_test.c)
