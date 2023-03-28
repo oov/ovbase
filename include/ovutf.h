@@ -12,3 +12,12 @@ bool utf8_to_wchar(char const *const src,
                    size_t *const written);
 
 bool utf8_to_wchar_len(char const *const src, size_t const src_len, size_t *const len);
+
+bool wchar_to_utf8(wchar_t const *const src,
+                   size_t const src_len,
+                   char *const dest,
+                   size_t const dest_len,
+                   size_t *const read,
+                   size_t *const written);
+
+bool wchar_to_utf8_len(wchar_t const *const src, size_t const src_len, size_t *const len);
