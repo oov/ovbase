@@ -54,7 +54,8 @@ add_library(ovbase STATIC
   str/sprintf_.c
   str/str_.c
   str/utoa_.c
-  utf/utf.c
+  utf/u2w.c
+  utf/w2u.c
   wstr/atoi_.c
   wstr/atou_.c
   wstr/cat_.c
