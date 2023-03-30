@@ -75,6 +75,7 @@ NPF_VISIBILITY int npf_verify_format(NPF_CHAR_TYPE const *reference, NPF_CHAR_TY
 #  ifndef NANOPRINTF_IMPLEMENTATION_INCLUDED
 #    define NANOPRINTF_IMPLEMENTATION_INCLUDED
 
+#    include "../../include/ovutf.h"
 #    include <inttypes.h>
 #    include <stdint.h>
 
@@ -790,7 +791,8 @@ struct npf_arg_type {
 };
 
 union npf_arg_value {
-  NPF_CHAR_TYPE *str;
+  char *hstr;
+  wchar_t *lstr;
   int i;
   long l;
   unsigned u;
@@ -832,7 +834,13 @@ static size_t npf_arg_sizeof(npf_format_spec_conversion_t const conv_spec,
   case NPF_FMT_SPEC_CONV_CHAR:
     return sizeof(int);
   case NPF_FMT_SPEC_CONV_STRING:
-    return sizeof(NPF_CHAR_TYPE *);
+    if (length_modifier == NPF_FMT_SPEC_LEN_MOD_NONE || length_modifier == NPF_FMT_SPEC_LEN_MOD_SHORT) {
+      return sizeof(char *);
+    }
+    if (length_modifier == NPF_FMT_SPEC_LEN_MOD_LONG) {
+      return sizeof(wchar_t *);
+    }
+    return 0;
   case NPF_FMT_SPEC_CONV_SIGNED_INT:
     switch (length_modifier) {
     case NPF_FMT_SPEC_LEN_MOD_NONE:
@@ -1038,7 +1046,14 @@ static int npf_verify_and_assign_values(int const args_max,
       values[idx].i = va_arg(args, int);
       continue;
     case NPF_FMT_SPEC_CONV_STRING:
-      values[idx].str = va_arg(args, NPF_CHAR_TYPE *);
+      if (types[idx].length_modifier == NPF_FMT_SPEC_LEN_MOD_NONE ||
+          types[idx].length_modifier == NPF_FMT_SPEC_LEN_MOD_SHORT) {
+        values[idx].hstr = va_arg(args, char *);
+      } else if (types[idx].length_modifier == NPF_FMT_SPEC_LEN_MOD_LONG) {
+        values[idx].lstr = va_arg(args, wchar_t *);
+      } else {
+        return 0;
+      }
       continue;
     case NPF_FMT_SPEC_CONV_SIGNED_INT:
       switch (types[idx].length_modifier) {
@@ -1201,6 +1216,44 @@ static void npf_putc_cnt(int c, void *ctx) {
   pc_cnt->pc(c, pc_cnt->ctx); // sibling-call optimization
 }
 
+struct ovutf_context {
+  npf_putc pc;
+  void *pc_ctx;
+};
+
+static enum ov_codepoint_fn_result write_codepoint(int_fast32_t codepoint, void *ctx) {
+  struct ovutf_context *const c = ctx;
+  if (sizeof(NPF_CHAR_TYPE) == sizeof(char)) {
+    if (sizeof(wchar_t) == 2 && codepoint > 0xffff) {
+      c->pc((int)((codepoint - 0x10000) / 0x400 + 0xd800), c->pc_ctx);
+      c->pc((int)((codepoint - 0x10000) % 0x400 + 0xdc00), c->pc_ctx);
+      return ov_codepoint_fn_result_continue;
+    }
+    c->pc((int)codepoint, c->pc_ctx);
+    return ov_codepoint_fn_result_continue;
+  }
+  if (codepoint < 0x80) {
+    c->pc((int)(codepoint & 0x7f), c->pc_ctx);
+    return ov_codepoint_fn_result_continue;
+  }
+  if (codepoint < 0x800) {
+    c->pc((int)(0xc0 | ((codepoint >> 6) & 0x1f)), c->pc_ctx);
+    c->pc((int)(0x80 | (codepoint & 0x3f)), c->pc_ctx);
+    return ov_codepoint_fn_result_continue;
+  }
+  if (codepoint < 0x10000) {
+    c->pc((int)(0xe0 | ((codepoint >> 12) & 0x0f)), c->pc_ctx);
+    c->pc((int)(0x80 | ((codepoint >> 6) & 0x3f)), c->pc_ctx);
+    c->pc((int)(0x80 | (codepoint & 0x3f)), c->pc_ctx);
+    return ov_codepoint_fn_result_continue;
+  }
+  c->pc((int)(0xf0 | ((codepoint >> 18) & 0x07)), c->pc_ctx);
+  c->pc((int)(0x80 | ((codepoint >> 12) & 0x3f)), c->pc_ctx);
+  c->pc((int)(0x80 | ((codepoint >> 6) & 0x3f)), c->pc_ctx);
+  c->pc((int)(0x80 | (codepoint & 0x3f)), c->pc_ctx);
+  return ov_codepoint_fn_result_continue;
+}
+
 #    define NPF_PUTC(VAL)                                                                                              \
       do {                                                                                                             \
         npf_putc_cnt((int)(VAL), &pc_cnt);                                                                             \
@@ -1309,9 +1362,29 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
       break;
 
     case NPF_FMT_SPEC_CONV_STRING: {
-      cbuf = arg_values[fs.order - 1].str;
-      for (NPF_CHAR_TYPE const *s = cbuf; *s; ++s, ++cbuf_len)
-        ; // strlen
+      if (fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_NONE || fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_SHORT) {
+        cbuf = (void *)arg_values[fs.order - 1].hstr;
+        for (char const *s = (void *)cbuf; *s; ++s, ++cbuf_len)
+          ; // strlen
+        if (sizeof(NPF_CHAR_TYPE) != sizeof(char)) {
+          cbuf_len = (int)ov_utf8_to_wchar_len((void *)cbuf, (size_t)cbuf_len);
+          if (!cbuf_len) {
+            return 0;
+          }
+        }
+      } else if (fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_LONG) {
+        cbuf = (void *)arg_values[fs.order - 1].lstr;
+        for (wchar_t const *s = (void *)cbuf; *s; ++s, ++cbuf_len)
+          ; // wcslen
+        if (sizeof(NPF_CHAR_TYPE) != sizeof(wchar_t)) {
+          cbuf_len = (int)ov_wchar_to_utf8_len((void *)cbuf, (size_t)cbuf_len);
+          if (!cbuf_len) {
+            return 0;
+          }
+        }
+      } else {
+        return 0;
+      }
 #    if NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1
       if (fs.prec_opt == NPF_FMT_SPEC_OPT_LITERAL) {
         cbuf_len = npf_min(fs.prec, cbuf_len); // prec truncates strings
@@ -1557,8 +1630,32 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
 
     // Write the converted payload
     if (fs.conv_spec == NPF_FMT_SPEC_CONV_STRING) {
-      for (int i = 0; i < cbuf_len; ++i) {
-        NPF_PUTC(cbuf[i]);
+      if (fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_NONE || fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_SHORT) {
+        if (sizeof(NPF_CHAR_TYPE) != sizeof(char)) {
+          if (!ov_utf8_to_codepoint(write_codepoint,
+                                    &(struct ovutf_context){.pc = npf_putc_cnt, .pc_ctx = &pc_cnt},
+                                    (void *)cbuf,
+                                    (size_t)cbuf_len)) {
+            return 0;
+          }
+        } else {
+          for (int i = 0; i < cbuf_len; ++i) {
+            NPF_PUTC(cbuf[i]);
+          }
+        }
+      } else if (fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_LONG) {
+        if (sizeof(NPF_CHAR_TYPE) != sizeof(wchar_t)) {
+          if (!ov_wchar_to_codepoint(write_codepoint,
+                                     &(struct ovutf_context){.pc = npf_putc_cnt, .pc_ctx = &pc_cnt},
+                                     (void *)cbuf,
+                                     (size_t)cbuf_len)) {
+            return 0;
+          }
+        } else {
+          for (int i = 0; i < cbuf_len; ++i) {
+            NPF_PUTC(cbuf[i]);
+          }
+        }
       }
     } else {
       if (sign_c) {
