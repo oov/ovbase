@@ -9,7 +9,7 @@ NODISCARD error to_str_(wchar_t const *const src, size_t const src_len, struct s
   if (!sz) {
     return errg(err_fail);
   }
-  error err = str_grow_(dest, sz + 1 ERR_FILEPOS_VALUES_PASSTHRU);
+  error err = str_grow_(dest, sz + 1 MEM_FILEPOS_VALUES_PASSTHRU);
   if (efailed(err)) {
     err = ethru(err);
     return err;

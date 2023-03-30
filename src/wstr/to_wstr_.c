@@ -12,7 +12,7 @@ NODISCARD error to_wstr_(char const *const src, size_t const src_len, struct wst
   if (!r) {
     return errg(err_fail);
   }
-  error err = wstr_grow_(dest, r + 1 ERR_FILEPOS_VALUES_PASSTHRU);
+  error err = wstr_grow_(dest, r + 1 MEM_FILEPOS_VALUES_PASSTHRU);
   if (efailed(err)) {
     err = ethru(err);
     return err;
