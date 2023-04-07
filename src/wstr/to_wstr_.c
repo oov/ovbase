@@ -17,7 +17,7 @@ NODISCARD error to_wstr_(char const *const src, size_t const src_len, struct wst
     err = ethru(err);
     return err;
   }
-  r = ov_utf8_to_wchar(src, src_len, dest->ptr, r, NULL);
+  r = ov_utf8_to_wchar(src, src_len, dest->ptr, r + 1, NULL);
   if (!r) {
     return errg(err_fail);
   }
