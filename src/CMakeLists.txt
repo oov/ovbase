@@ -3,7 +3,7 @@ option(USE_WSTR "use struct wstr" ON)
 option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
 option(USE_ADDRESS_SANITIZER "use address sanitizer" OFF)
-option(USE_COMPILER_RT "use compiler-rt runtime" ON)
+option(USE_COMPILER_RT "use compiler-rt runtime" OFF)
 option(SKIP_OVTHREADS_TEST "skip ovthreads tests" ON)
 
 add_library(ovbase STATIC
@@ -103,6 +103,8 @@ if(NOT SKIP_OVTHREADS_TEST)
   list(APPEND targets ovthreads_test)
 endif()
 
+set(is_clang "$<C_COMPILER_ID:Clang>")
+set(v16_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,16>")
 foreach(target ${targets})
   if(target MATCHES "_test$")
     add_test(NAME ${target} COMMAND ${target})
@@ -140,6 +142,7 @@ foreach(target ${targets})
     -pedantic-errors
     -Wno-declaration-after-statement
     -Wno-padded
+    $<$<AND:${is_clang},${v16_or_later}>:-Wno-unsafe-buffer-usage>
     -ffunction-sections
     -fdata-sections
     $<$<BOOL:${USE_ADDRESS_SANITIZER}>:-fsanitize=address>
