@@ -149,7 +149,6 @@ enum err_generic {
 };
 
 typedef error (*error_message_mapper)(int const type, int const code, struct NATIVE_STR *const message);
-void error_set_message_mapper(error_message_mapper fn);
 NODISCARD error error_generic_message_mapper(int const type, int const code, struct NATIVE_STR *const dest);
 NODISCARD error error_errno_message_mapper(int const type, int const code, struct NATIVE_STR *const dest);
 #ifdef _WIN32
@@ -164,7 +163,8 @@ typedef void (*error_message_reporter)(error const err,
 void error_default_reporter(error const e,
                             struct NATIVE_STR const *const message,
                             struct ov_filepos const *const filepos);
-void error_register_reporter(error_message_reporter fn);
+void error_set_message_mapper(error_message_mapper fn);
+void error_set_reporter(error_message_reporter fn);
 
 NODISCARD error error_add_(error const parent,
                            int const type,

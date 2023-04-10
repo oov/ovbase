@@ -200,6 +200,9 @@ cleanup:
 
 static error_message_reporter g_error_reporter = error_default_reporter;
 
+void error_set_message_mapper(error_message_mapper fn) { g_error_message_mapper = fn; }
+void error_set_reporter(error_message_reporter fn) { g_error_reporter = fn; }
+
 static error find_last_error(error e) {
   if (!e) {
     return NULL;
