@@ -10,8 +10,6 @@ add_library(ovbase STATIC
   array.c
   error.c
   error_i18n.c
-  error_en.c
-  error_jp.c
   hashmap.c
   hmap/clear.c
   hmap/count.c

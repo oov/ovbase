@@ -15,10 +15,7 @@
 #endif // __GNUC__
 
 static inline void test_init_(void) {
-  if (!ov_init(generic_error_message_mapper_en)) {
-    printf("!! INITIALIZATION FAILED !!\n");
-    abort();
-  }
+  ov_init();
 #ifdef TEST_MY_INIT
   TEST_MY_INIT;
 #endif

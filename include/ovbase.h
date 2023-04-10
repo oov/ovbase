@@ -148,11 +148,17 @@ enum err_generic {
   err_not_implemented_yet = 9,
 };
 
-typedef error (*error_message_mapper)(int const code, struct NATIVE_STR *const message);
-NODISCARD error error_register_message_mapper(int const type, error_message_mapper fn);
-NODISCARD error generic_error_message_mapper_en(int const code, struct NATIVE_STR *const message);
-NODISCARD error generic_error_message_mapper_jp(int const code, struct NATIVE_STR *const message);
-typedef void (*error_message_reporter)(error err,
+typedef error (*error_message_mapper)(int const type, int const code, struct NATIVE_STR *const message);
+void error_set_message_mapper(error_message_mapper fn);
+NODISCARD error error_generic_message_mapper(int const type, int const code, struct NATIVE_STR *const dest);
+NODISCARD error error_errno_message_mapper(int const type, int const code, struct NATIVE_STR *const dest);
+#ifdef _WIN32
+NODISCARD error error_win32_message_mapper(int const type,
+                                           int const code,
+                                           uint16_t langid,
+                                           struct NATIVE_STR *const dest);
+#endif
+typedef void (*error_message_reporter)(error const err,
                                        struct NATIVE_STR const *const msg,
                                        struct ov_filepos const *const filepos);
 void error_default_reporter(error const e,
@@ -680,5 +686,5 @@ static inline uint32_t ov_splitmix32(uint32_t x) {
 
 static inline uint32_t ov_splitmix32_next(uint32_t const x) { return x + 0x9e3779b9; }
 
-NODISCARD bool ov_init(error_message_mapper generic_error_message_mapper);
+void ov_init(void);
 void ov_exit(void);

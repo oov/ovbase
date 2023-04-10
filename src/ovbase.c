@@ -1,6 +1,5 @@
 #include "ovbase.h"
 
-#include <stdarg.h>
 #include <stdlib.h> // realloc, free
 
 #ifdef _WIN32
@@ -9,7 +8,6 @@
 #  define REALLOC(ptr, size) (realloc(ptr, size))
 #  define FREE(ptr) (free(ptr))
 #else
-#  include <stdio.h> // sprintf
 #  define REALLOC(ptr, size) (realloc(ptr, size))
 #  define FREE(ptr) (free(ptr))
 #endif
@@ -107,15 +105,14 @@ static void allocated_put(void const *const p MEM_FILEPOS_PARAMS) {
                   .filepos = *filepos,
               });
   if (hashmap_oom(g_allocated)) {
-    ereportmsg(errg(err_unexpected), &native_unmanaged(NSTR("failed to record allocated memory.")));
+    ereport(emsg_i18nf(err_type_generic, err_unexpected, NULL, "%s", "failed to record allocated memory."));
   }
 }
 
 static void allocated_remove(void const *const p) {
   struct allocated_at *const aa = hashmap_delete(g_allocated, &(struct allocated_at){.p = p});
   if (aa == NULL) {
-    ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(NSTR("double free detected."))),
-               &native_unmanaged(NSTR("allocate logger report")));
+    ereport(emsg_i18nf(err_type_generic, err_unexpected, NULL, "%s", "double free detected."));
   }
 }
 
@@ -123,14 +120,14 @@ static bool report_leaks_iterate(void const *const item, void *const udata) {
   size_t *const n = udata;
   ++*n;
   struct allocated_at const *const aa = item;
-  NATIVE_CHAR buf[1024] = {0};
-#  ifdef _WIN32
-  wsprintfW(buf, NSTR("Leak #%u: %hs:%ld %hs()") NEWLINE, *n, aa->filepos.file, aa->filepos.line, aa->filepos.func);
-#  else
-  sprintf(buf, NSTR("Leak #%zu: %s:%ld %s()") NEWLINE, *n, aa->filepos.file, aa->filepos.line, aa->filepos.func);
-#  endif
-  ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(buf)),
-             &native_unmanaged(NSTR("memory leak found")));
+  ereport(emsg_i18nf(err_type_generic,
+                     err_unexpected,
+                     NULL,
+                     "Leak found #%zu: %s:%ld %s()",
+                     *n,
+                     aa->filepos.file,
+                     aa->filepos.line,
+                     aa->filepos.func));
   return true;
 }
 
@@ -155,14 +152,7 @@ static void report_allocated_count(void) {
   if (!n) {
     return;
   }
-  NATIVE_CHAR buf[64] = {0};
-#  ifdef _WIN32
-  wsprintfW(buf, NSTR("Not freed memory blocks: %ld") NEWLINE, n);
-#  else
-  sprintf(buf, NSTR("Not freed memory blocks: %ld") NEWLINE, n);
-#  endif
-  ereportmsg(emsg(err_type_generic, err_unexpected, &native_unmanaged(buf)),
-             &native_unmanaged(NSTR("memory leak found")));
+  ereport(emsg_i18nf(err_type_generic, err_unexpected, NULL, "Not freed memory blocks: %ld", n));
 }
 #endif
 
@@ -210,15 +200,11 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
 
 #include "error.h"
 
-bool ov_init(error_message_mapper generic_error_message_mapper) {
+void ov_init(void) {
   global_hint_init();
-  if (!error_init()) {
-    return false;
-  }
 #ifdef ALLOCATE_LOGGER
   allocate_logger_init();
 #endif
-  return error_register_default_mapper(generic_error_message_mapper);
 }
 
 void ov_exit(void) {
@@ -231,5 +217,4 @@ void ov_exit(void) {
 #ifdef ALLOCATE_LOGGER
   allocate_logger_exit();
 #endif
-  error_exit();
 }
