@@ -144,7 +144,7 @@ static NODISCARD error error_default_message_mapper(int const type, int const co
   }
 #ifdef _WIN32
   if (type == err_type_hresult) {
-    return error_win32_message_mapper(type, code, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), dest);
+    return error_win32_message_mapper(type, code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), dest);
   }
 #endif
   if (type == err_type_errno) {
