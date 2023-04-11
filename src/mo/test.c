@@ -2,6 +2,9 @@
 #include "ovtest.h"
 
 #include <stdio.h>
+#ifndef _WIN32
+#  include <locale.h>
+#endif
 
 static struct mo *open_mo(uint8_t *mobuf) {
   FILE *f = fopen(SOURCE_DIR "/mo/test/en_US.mo", "rb");
@@ -88,11 +91,61 @@ static void test_mo(void) {
   mo_free(&mp);
 }
 
+static void test_mo_get_preferred_ui_languages(void) {
+  struct NATIVE_STR str = {0};
+#ifndef _WIN32
+  char const *const old_locale = setlocale(LC_MESSAGES, NULL);
+  if (!TEST_CHECK(setlocale(LC_ALL, "") != NULL)) {
+    goto cleanup;
+  }
+#endif
+  if (!TEST_SUCCEEDED_F(mo_get_preferred_ui_languages(&str))) {
+    goto cleanup;
+  }
+#ifndef _WIN32
+  if (!TEST_CHECK(setlocale(LC_ALL, old_locale) != NULL)) {
+    goto cleanup;
+  }
+#endif
+  size_t n = 0;
+  size_t pos = 0;
+  while (str.ptr[pos] != NSTR('\0')) {
 #ifdef _WIN32
+#  define LEN wcslen
+#else
+#  define LEN strlen
+#endif
+    pos += LEN(str.ptr + pos) + 1;
+#undef LEN
+    ++n;
+  }
+  TEST_CHECK(n > 0);
+cleanup:
+  ereport(sfree(&str));
+}
+
+#ifdef _WIN32
+static void test_mo_win32_locale(void) {
+  struct mo *mp = NULL;
+  if (!TEST_EIS_F(mo_parse_from_resource_ex(&mp, NULL, L"ko-KR\0en_US\0"), err_type_generic, err_not_found)) {
+    goto cleanup;
+  }
+  if (!TEST_SUCCEEDED_F(mo_parse_from_resource_ex(&mp, NULL, L"zh-CN\0"))) {
+    goto cleanup;
+  }
+  TEST_CHECK(strcmp(mo_gettext(mp, "Hello world"), "世界你好") == 0);
+  mo_free(&mp);
+  if (!TEST_SUCCEEDED_F(mo_parse_from_resource_ex(&mp, NULL, L"zh-TW\0"))) {
+    goto cleanup;
+  }
+  TEST_CHECK(strcmp(mo_gettext(mp, "Hello world"), "世界你好") == 0);
+cleanup:
+  mo_free(&mp);
+}
+
 static void test_mo_win32(void) {
   struct mo *mp = NULL;
-  struct wstr ws = {0};
-  if (!TEST_SUCCEEDED_F(mo_parse_from_resource(&mp, NULL, MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT)))) {
+  if (!TEST_SUCCEEDED_F(mo_parse_from_resource_ex(&mp, NULL, L"ja-JP\0"))) {
     return;
   }
 
@@ -119,13 +172,14 @@ static void test_mo_win32(void) {
   TEST_CHECK(strcmp(mo_ngettext(mp, "an apple3", "%d apples3", 2), "%d apples3") == 0);
 
   mo_free(&mp);
-  ereport(sfree(&ws));
 }
 #endif
 
 TEST_LIST = {
     {"test_mo", test_mo},
+    {"test_mo_get_preferred_ui_languages", test_mo_get_preferred_ui_languages},
 #ifdef _WIN32
+    {"test_mo_win32_locale", test_mo_win32_locale},
     {"test_mo_win32", test_mo_win32},
 #endif
     {NULL, NULL},

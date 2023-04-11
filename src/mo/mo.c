@@ -1,5 +1,10 @@
 #include "ovmo.h"
 
+#ifndef _WIN32
+#  include <locale.h>
+#  include <stdio.h>
+#endif
+
 struct mo_msg {
   char const *id;
   size_t id_len;
@@ -248,3 +253,36 @@ static struct mo *g_mp = NULL;
 void mo_set_default(struct mo *const mp) { g_mp = mp; }
 
 struct mo *mo_get_default(void) { return g_mp; }
+
+#ifndef _WIN32
+NODISCARD error mo_get_preferred_ui_languages(struct NATIVE_STR *const dest) {
+  if (!dest) {
+    return errg(err_invalid_arugment);
+  }
+  if (dest->len) {
+    dest->len = 0;
+    dest->ptr[0] = NSTR('\0');
+  }
+  char const *lang = setlocale(LC_MESSAGES, NULL);
+  if (!lang) {
+    lang = "C";
+  }
+  size_t const langlen = strlen(lang);
+  error err = sgrow(dest, langlen + 2);
+  if (efailed(err)) {
+    err = ethru(err);
+    return err;
+  }
+  memcpy(dest->ptr, lang, langlen + 1);
+  dest->len = langlen;
+  for (size_t i = langlen - 1; i < langlen; --i) {
+    if (dest->ptr[i] == NSTR('.')) {
+      dest->ptr[i] = NSTR('\0');
+      dest->len = i;
+      break;
+    }
+  }
+  dest->ptr[++dest->len] = NSTR('\0');
+  return eok();
+}
+#endif

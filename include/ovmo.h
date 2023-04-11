@@ -14,11 +14,16 @@ mo_ngettext(struct mo const *const mp, char const *const id, char const *const i
 void mo_set_default(struct mo *const mp);
 struct mo *mo_get_default(void);
 
+NODISCARD error mo_get_preferred_ui_languages(struct NATIVE_STR *dest);
+
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
 
-NODISCARD error mo_parse_from_resource(struct mo **const mpp, HINSTANCE const hinst, uint16_t const lang_id);
+NODISCARD error mo_parse_from_resource(struct mo **const mpp, HMODULE const hmod);
+NODISCARD error mo_parse_from_resource_ex(struct mo **const mpp,
+                                          HMODULE const hmod,
+                                          wchar_t const *const preferred_languages);
 #endif
 
 int mo_sprintf_char(char *const buf, size_t const buflen, char const *const reference, char const *const format, ...);
