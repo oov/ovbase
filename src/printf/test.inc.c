@@ -40,15 +40,33 @@ static void test_printf_order_extension(void) {
   TEST_CHECK(STRCMP(TT("hello0020."), buf) == 0);
 }
 
-static void test_string(void) {
+static void test_string_ascii(void) {
   CHAR_TYPE buf[bufsize];
   TEST_CHECK(ov_snprintf(buf, bufsize, NULL, TT("%hs%ls"), "hello", L"world") > 0);
   TEST_CHECK(STRCMP(buf, TT("helloworld")) == 0);
+  TEST_MSG(sizeof(CHAR_TYPE) == 1 ? "want %s, got %s" : "want %ls, got %ls", TT("helloworld"), buf);
 }
+
+static void test_string_s(void) {
+  CHAR_TYPE buf[bufsize];
+  TEST_CHECK(ov_snprintf(buf, bufsize, NULL, TT("%s"), "ＡＢＣ") > 0);
+  TEST_CHECK(STRCMP(buf, TT("ＡＢＣ")) == 0);
+  TEST_MSG(sizeof(CHAR_TYPE) == 1 ? "want %s, got %s" : "want %ls, got %ls", TT("ＡＢＣ"), buf);
+}
+
+static void test_string_ls(void) {
+  CHAR_TYPE buf[bufsize];
+  TEST_CHECK(ov_snprintf(buf, bufsize, NULL, TT("%ls"), L"ＡＢＣ") > 0);
+  TEST_CHECK(STRCMP(buf, TT("ＡＢＣ")) == 0);
+  TEST_MSG(sizeof(CHAR_TYPE) == 1 ? "want %s, got %s" : "want %ls, got %ls", TT("ＡＢＣ"), buf);
+}
+
 TEST_LIST = {
     {"test1", test1},
     {"test_printf_verify_format", test_printf_verify_format},
     {"test_printf_order_extension", test_printf_order_extension},
-    {"test_string", test_string},
+    {"test_string_ascii", test_string_ascii},
+    {"test_string_s", test_string_s},
+    {"test_string_ls", test_string_ls},
     {NULL, NULL},
 };

@@ -1223,7 +1223,7 @@ struct ovutf_context {
 
 static enum ov_codepoint_fn_result write_codepoint(int_fast32_t codepoint, void *ctx) {
   struct ovutf_context *const c = ctx;
-  if (sizeof(NPF_CHAR_TYPE) == sizeof(char)) {
+  if (sizeof(NPF_CHAR_TYPE) != sizeof(char)) {
     if (sizeof(wchar_t) == 2 && codepoint > 0xffff) {
       c->pc((int)((codepoint - 0x10000) / 0x400 + 0xd800), c->pc_ctx);
       c->pc((int)((codepoint - 0x10000) % 0x400 + 0xdc00), c->pc_ctx);
@@ -1334,7 +1334,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
       npf_uint_t binval;
     } u;
     NPF_CHAR_TYPE *cbuf = u.cbuf_mem, sign_c = 0;
-    int cbuf_len = 0, need_0x = 0;
+    int cbuf_len = 0, cbuf_origlen = 0, need_0x = 0;
 #    if NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1
     int field_pad = 0;
     NPF_CHAR_TYPE pad_c = 0;
@@ -1367,6 +1367,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
         for (char const *s = (void *)cbuf; *s; ++s, ++cbuf_len)
           ; // strlen
         if (sizeof(NPF_CHAR_TYPE) != sizeof(char)) {
+          cbuf_origlen = cbuf_len;
           cbuf_len = (int)ov_utf8_to_wchar_len((void *)cbuf, (size_t)cbuf_len);
           if (!cbuf_len) {
             return 0;
@@ -1377,6 +1378,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
         for (wchar_t const *s = (void *)cbuf; *s; ++s, ++cbuf_len)
           ; // wcslen
         if (sizeof(NPF_CHAR_TYPE) != sizeof(wchar_t)) {
+          cbuf_origlen = cbuf_len;
           cbuf_len = (int)ov_wchar_to_utf8_len((void *)cbuf, (size_t)cbuf_len);
           if (!cbuf_len) {
             return 0;
@@ -1635,7 +1637,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
           if (!ov_utf8_to_codepoint(write_codepoint,
                                     &(struct ovutf_context){.pc = npf_putc_cnt, .pc_ctx = &pc_cnt},
                                     (void *)cbuf,
-                                    (size_t)cbuf_len)) {
+                                    (size_t)cbuf_origlen)) {
             return 0;
           }
         } else {
@@ -1648,7 +1650,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
           if (!ov_wchar_to_codepoint(write_codepoint,
                                      &(struct ovutf_context){.pc = npf_putc_cnt, .pc_ctx = &pc_cnt},
                                      (void *)cbuf,
-                                     (size_t)cbuf_len)) {
+                                     (size_t)cbuf_origlen)) {
             return 0;
           }
         } else {
