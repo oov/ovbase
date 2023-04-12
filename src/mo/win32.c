@@ -81,7 +81,8 @@ static BOOL CALLBACK enumlang(HMODULE hModule, LPCWSTR lpType, LPCWSTR lpName, W
   return TRUE;
 }
 
-static WORD choose(WORD const*const preferred, size_t const num_preferred, WORD const*const resources, size_t num_resources) {
+static WORD
+choose(WORD const *const preferred, size_t const num_preferred, WORD const *const resources, size_t num_resources) {
   WORD candidate = 0;
   for (size_t i = 0; i < num_preferred; ++i) {
     WORD const prefered_primary = PRIMARYLANGID(preferred[i]);
