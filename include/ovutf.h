@@ -83,3 +83,37 @@ size_t ov_wchar_to_utf8_len(wchar_t const *const src, size_t const src_len);
  */
 size_t ov_wchar_to_utf8(
     wchar_t const *const src, size_t const src_len, char *const dest, size_t const dest_len, size_t *const read);
+
+/**
+ * @brief Converts a Shift_JIS string to a codepoint.
+ *
+ * @param fn Callback function
+ * @param ctx Used in fn
+ * @param src Shift_JIS encoded string
+ * @param src_len length of src
+ * @return Returns the number of bytes processed on success, or zero on failure
+ */
+size_t ov_sjis_to_codepoint(ov_codepoint_fn fn, void *ctx, char const *const src, size_t const src_len);
+
+/**
+ * @brief Returns the number of characters when converted to UTF-8.
+ *
+ * @param src char string
+ * @param src_len length of src
+ * @return Returns the number of bytes in the UTF-8 string on success, or zero on failure
+ */
+size_t ov_sjis_to_utf8_len(char const *const src, size_t const src_len);
+
+/**
+ * @brief Converts char string and write to dest.
+ *
+ * @param src char string
+ * @param src_len length of src
+ * @param dest destination buffer
+ * @param dest_len length of dest
+ * @param read Number of characters read from src on success, can be NULL
+ * @return Returns the number of characters in the char string on success, or zero on failure
+ * @note If dest is not long enough, it is converted up to the middle. dest is always nul-terminated.
+ */
+size_t ov_sjis_to_utf8(
+    char const *const src, size_t const src_len, char *const dest, size_t const dest_len, size_t *const read);

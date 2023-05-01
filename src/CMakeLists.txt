@@ -54,6 +54,8 @@ add_library(ovbase STATIC
   str/str_.c
   str/to_str_.c
   str/utoa_.c
+  utf/common.c
+  utf/sjis.c
   utf/u2w.c
   utf/w2u.c
   wstr/atoi_.c

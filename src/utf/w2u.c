@@ -32,63 +32,12 @@ size_t ov_wchar_to_codepoint(ov_codepoint_fn fn, void *ctx, wchar_t const *const
   return i;
 }
 
-static inline size_t codepoint_to_utf8len(int_fast32_t codepoint) {
-  if (codepoint < 0x80) {
-    return 1;
-  } else if (codepoint < 0x800) {
-    return 2;
-  } else if (codepoint < 0x10000) {
-    return 3;
-  }
-  return 4;
-}
-
-static enum ov_codepoint_fn_result count(int_fast32_t codepoint, void *ctx) {
-  size_t *n = ctx;
-  *n += codepoint_to_utf8len(codepoint);
-  return ov_codepoint_fn_result_continue;
-}
-
 size_t ov_wchar_to_utf8_len(wchar_t const *const src, size_t const src_len) {
   size_t n = 0;
-  if (!ov_wchar_to_codepoint(count, &n, src, src_len)) {
+  if (!ov_wchar_to_codepoint(ovutf_utf8_count, &n, src, src_len)) {
     return 0;
   }
   return n;
-}
-
-struct context {
-  uint8_t *cur;
-  uint8_t *end;
-};
-
-static enum ov_codepoint_fn_result write(int_fast32_t codepoint, void *ctx) {
-  struct context *c = ctx;
-  size_t const n = codepoint_to_utf8len(codepoint);
-  if ((size_t)(c->end - c->cur) <= n) {
-    return ov_codepoint_fn_result_abort;
-  }
-  switch (n) {
-  case 1:
-    *c->cur++ = codepoint & 0x7f;
-    break;
-  case 2:
-    *c->cur++ = 0xc0 | ((codepoint >> 6) & 0x1f);
-    *c->cur++ = 0x80 | (codepoint & 0x3f);
-    break;
-  case 3:
-    *c->cur++ = 0xe0 | ((codepoint >> 12) & 0x0f);
-    *c->cur++ = 0x80 | ((codepoint >> 6) & 0x3f);
-    *c->cur++ = 0x80 | (codepoint & 0x3f);
-    break;
-  case 4:
-    *c->cur++ = 0xf0 | ((codepoint >> 18) & 0x07);
-    *c->cur++ = 0x80 | ((codepoint >> 12) & 0x3f);
-    *c->cur++ = 0x80 | ((codepoint >> 6) & 0x3f);
-    *c->cur++ = 0x80 | (codepoint & 0x3f);
-    break;
-  }
-  return ov_codepoint_fn_result_continue;
 }
 
 size_t ov_wchar_to_utf8(
@@ -96,11 +45,11 @@ size_t ov_wchar_to_utf8(
   if (!src || !src_len || !dest || !dest_len) {
     return 0;
   }
-  struct context ctx = {
+  struct ovutf_utf8_write_context ctx = {
       .cur = (uint8_t *)dest,
       .end = (uint8_t *)dest + dest_len,
   };
-  size_t const r = ov_wchar_to_codepoint(write, &ctx, src, src_len);
+  size_t const r = ov_wchar_to_codepoint(ovutf_utf8_write, &ctx, src, src_len);
   *ctx.cur = L'\0';
   if (!r) {
     return 0;
