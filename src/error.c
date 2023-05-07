@@ -37,8 +37,20 @@ static void write_stderr(NATIVE_CHAR const *const str) {
     }
   }
 #else
+#  ifdef __GNUC__
+#    ifndef __has_warning
+#      define __has_warning(x) 0
+#    endif
+#    pragma GCC diagnostic push
+#    if __has_warning("-Wdisabled-macro-expansion")
+#      pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
+#    endif
+#  endif
   fputs(str, stderr);
   fputs(NEWLINE, stderr);
+#  ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#  endif // __GNUC__
 #endif
 }
 

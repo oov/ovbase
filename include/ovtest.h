@@ -48,6 +48,15 @@ static inline void test_fini_(void) {
 #  if __has_warning("-Wimplicit-int-float-conversion")
 #    pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
 #  endif
+#  if __has_warning("-Wdisabled-macro-expansion")
+#    pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
+#  endif
+#  if __has_warning("-Wunused-parameter")
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#  endif
+#  if __has_warning("-Wunused-function")
+#    pragma GCC diagnostic ignored "-Wunused-function"
+#  endif
 #  include "../3rd/acutest/include/acutest.h"
 #  pragma GCC diagnostic pop
 

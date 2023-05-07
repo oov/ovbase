@@ -26,6 +26,11 @@ int timespec_get(struct timespec *ts, int base);
 #  endif
 #  define DISABLE_TLS
 #  define DISABLE_CALL_ONCE
+#  ifdef OVBASE_WASI_THREADS
+#    define pthread_exit(x)                                                                                            \
+      (void)(x);                                                                                                       \
+      abort()
+#  endif
 #  include "../3rd/tinycthread/source/tinycthread.h"
 #  undef DISABLE_TLS
 #  undef DISABLE_CALL_ONCE
