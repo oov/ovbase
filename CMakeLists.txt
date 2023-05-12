@@ -8,15 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(FORMAT_SOURCES "execute clang-format" ON)
 
 if(FORMAT_SOURCES)
-  file(GLOB sources
-    "${PROJECT_SOURCE_DIR}/include/*.h"
-    "${PROJECT_SOURCE_DIR}/src/*.c"
-    "${PROJECT_SOURCE_DIR}/src/*.h"
-    "${PROJECT_SOURCE_DIR}/src/*/*.c"
-    "${PROJECT_SOURCE_DIR}/src/*/*.h"
-    "${PROJECT_SOURCE_DIR}/src/*/*/*.c"
-    "${PROJECT_SOURCE_DIR}/src/*/*/*.h"
-  )
+  file(GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS "include/*.h" "src/*.h" "src/*.c")
   find_program(CLANG_FORMAT_EXE clang-format)
   add_custom_target(${PROJECT_NAME}-format ALL
     COMMAND ${CLANG_FORMAT_EXE} -style=file -i ${sources}

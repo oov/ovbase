@@ -4,4 +4,9 @@
 #  define TT(str) str
 #  define STRFMT "s"
 #  include "test.inc.c"
+#else
+#  include "ovtest.h"
+TEST_LIST = {
+    {NULL, NULL},
+};
 #endif // USE_STR
