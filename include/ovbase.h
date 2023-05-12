@@ -552,12 +552,12 @@ static inline NODISCARD error str_to_wstr_(struct str const *const src, struct w
     _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_itoa_))((int64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
 #  define sutoa(uint64_t, struct_str_ptr)                                                                              \
     _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_utoa_))((uint64_t), (struct_str_ptr)MEM_FILEPOS_VALUES)
-#  define ssprintf(struct_str_ptr, format, ...)                                                                        \
-    _Generic((struct_str_ptr),                                                                                         \
-        OV_GENERIC_CASE(struct str *, str_sprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
-#  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
-    _Generic((struct_str_ptr),                                                                                         \
-        OV_GENERIC_CASE(struct str *, str_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
+#  define ssprintf(struct_str_ptr, reference, format, ...)                                                             \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_sprintf_))(                                           \
+        (struct_str_ptr)MEM_FILEPOS_VALUES, (reference), (format), __VA_ARGS__)
+#  define svsprintf(struct_str_ptr, reference, format, va_list)                                                        \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct str *, str_vsprintf_))(                                          \
+        (struct_str_ptr)MEM_FILEPOS_VALUES, (reference), (format), (va_list))
 
 #  define to_str(wchar_ptr, ...)                                                                                       \
     _Generic((wchar_ptr), OV_GENERIC_CASE(wchar_t *, to_str_), OV_GENERIC_CASE(wchar_t const *, to_str_))(             \
@@ -607,12 +607,12 @@ static inline NODISCARD error str_to_wstr_(struct str const *const src, struct w
 #  define sutoa(uint64_t, struct_str_ptr)                                                                              \
     _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_utoa_))((uint64_t),                                 \
                                                                            (struct_str_ptr)MEM_FILEPOS_VALUES)
-#  define ssprintf(struct_str_ptr, format, ...)                                                                        \
-    _Generic((struct_str_ptr),                                                                                         \
-        OV_GENERIC_CASE(struct wstr *, wstr_sprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, __VA_ARGS__)
-#  define svsprintf(struct_str_ptr, format, va_list)                                                                   \
-    _Generic((struct_str_ptr),                                                                                         \
-        OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_))((struct_str_ptr)MEM_FILEPOS_VALUES, format, va_list)
+#  define ssprintf(struct_str_ptr, reference, format, ...)                                                             \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_sprintf_))(                                         \
+        (struct_str_ptr)MEM_FILEPOS_VALUES, (reference), (format), __VA_ARGS__)
+#  define svsprintf(struct_str_ptr, reference, format, va_list)                                                        \
+    _Generic((struct_str_ptr), OV_GENERIC_CASE(struct wstr *, wstr_vsprintf_))(                                        \
+        (struct_str_ptr)MEM_FILEPOS_VALUES, (reference), (format), (va_list))
 
 #  define to_wstr(char_ptr, ...)                                                                                       \
     _Generic((char_ptr), OV_GENERIC_CASE(char *, to_wstr_), OV_GENERIC_CASE(char const *, to_wstr_))(                  \
