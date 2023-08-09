@@ -72,7 +72,7 @@ static void test_mtx_timedwait(void) {
 static void test_cnd_timedwait(void) {
   mtx_t m = {0};
   cnd_t c = {0};
-  mtx_init(&m, mtx_plain | mtx_recursive);
+  mtx_init(&m, mtx_plain);
   cnd_init(&c);
   mtx_lock(&m);
   struct timespec ts = {0};

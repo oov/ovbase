@@ -46,7 +46,7 @@ struct cndvar {
 };
 
 static inline void cndvar_init(struct cndvar *const cv) {
-  mtx_init(&cv->mtx, mtx_plain | mtx_recursive);
+  mtx_init(&cv->mtx, mtx_plain);
   cnd_init(&cv->cnd);
   cv->var = 0;
 }
