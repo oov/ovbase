@@ -80,7 +80,7 @@ static int am_compare(void const *const a, void const *const b, void *udata) {
 }
 
 static void allocate_logger_init(void) {
-  mtx_init(&g_mem_mtx, mtx_recursive);
+  mtx_init(&g_mem_mtx, mtx_plain);
   uint64_t hash = ov_splitmix64_next(get_global_hint());
   uint64_t const s0 = ov_splitmix64(hash);
   hash = ov_splitmix64_next(hash);
