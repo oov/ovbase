@@ -7,6 +7,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(FORMAT_SOURCES "execute clang-format" ON)
 
+project(ovbase C)
+if(WIN32)
+  enable_language(RC)
+endif()
+enable_testing()
+
 if(FORMAT_SOURCES)
   file(GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS "include/*.h" "src/*.h" "src/*.c")
   find_program(CLANG_FORMAT_EXE clang-format)
@@ -14,11 +20,5 @@ if(FORMAT_SOURCES)
     COMMAND ${CLANG_FORMAT_EXE} -style=file -i ${sources}
   )
 endif()
-
-project(ovbase C)
-if(WIN32)
-  enable_language(RC)
-endif()
-enable_testing()
 
 add_subdirectory(src)
