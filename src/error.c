@@ -150,7 +150,7 @@ cleanup:
 }
 #endif
 
-static NODISCARD error error_default_message_mapper(int const type, int const code, struct NATIVE_STR *const dest) {
+NODISCARD static error error_default_message_mapper(int const type, int const code, struct NATIVE_STR *const dest) {
   if (type == err_type_generic) {
     return error_generic_message_mapper(type, code, dest);
   }

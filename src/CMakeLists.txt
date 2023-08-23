@@ -4,8 +4,10 @@ option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
 option(USE_ADDRESS_SANITIZER "use address sanitizer" OFF)
 option(USE_COMPILER_RT "use compiler-rt runtime" OFF)
+option(USE_LTO "use LTO" ON)
 option(SKIP_OVTHREADS_TEST "skip ovthreads tests" ON)
 option(WASI_THREADS "use wasm32-wasi-threads" OFF)
+set(LDNAME "lld" CACHE STRING "ld name")
 
 add_library(ovbase STATIC
   array.c
@@ -106,6 +108,7 @@ endif()
 
 set(is_clang "$<C_COMPILER_ID:Clang>")
 set(v16_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,16>")
+set(v17_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,17>")
 foreach(target ${targets})
   if(target MATCHES "_test$")
     if(WASI_THREADS)
@@ -159,12 +162,13 @@ foreach(target ${targets})
     -Wno-declaration-after-statement
     -Wno-padded
     $<$<AND:${is_clang},${v16_or_later}>:-Wno-unsafe-buffer-usage>
+    $<$<AND:${is_clang},${v17_or_later}>:-Wno-c2x-extensions>
     -ffunction-sections
     -fdata-sections
     $<$<BOOL:${USE_ADDRESS_SANITIZER}>:-fsanitize=address>
     $<$<CONFIG:Debug>:-O0>
     $<$<CONFIG:Release>:-O2>
-    -flto
+    $<$<BOOL:${USE_LTO}>:-flto>
   )
   target_link_options(${target} PUBLIC
     $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
@@ -173,7 +177,7 @@ foreach(target ${targets})
     $<$<BOOL:${USE_ADDRESS_SANITIZER}>:-fsanitize=address>
   )
   target_link_options(${target} PRIVATE
-    -fuse-ld=lld
+    $<$<NOT:$<STREQUAL:${LDNAME},>>:-fuse-ld=${LDNAME}>
     -Wl,--gc-sections
     # -Wl,--print-gc-sections
     -static

@@ -418,10 +418,10 @@ NODISCARD error to_wstr_(char const *const src, size_t const src_len, struct wst
 #endif
 
 #if defined(USE_STR) && defined(USE_WSTR)
-static inline NODISCARD error wstr_to_str_(struct wstr const *const src, struct str *const dest MEM_FILEPOS_PARAMS) {
+NODISCARD static inline error wstr_to_str_(struct wstr const *const src, struct str *const dest MEM_FILEPOS_PARAMS) {
   return to_str_(src->ptr, src->len, dest MEM_FILEPOS_VALUES_PASSTHRU);
 }
-static inline NODISCARD error str_to_wstr_(struct str const *const src, struct wstr *const dest MEM_FILEPOS_PARAMS) {
+NODISCARD static inline error str_to_wstr_(struct str const *const src, struct wstr *const dest MEM_FILEPOS_PARAMS) {
   return to_wstr_(src->ptr, src->len, dest MEM_FILEPOS_VALUES_PASSTHRU);
 }
 #endif
