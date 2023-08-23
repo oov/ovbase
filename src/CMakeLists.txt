@@ -6,7 +6,7 @@ option(USE_ADDRESS_SANITIZER "use address sanitizer" OFF)
 option(USE_COMPILER_RT "use compiler-rt runtime" OFF)
 option(USE_LTO "use LTO" ON)
 option(SKIP_OVTHREADS_TEST "skip ovthreads tests" ON)
-option(WASI_THREADS "use wasm32-wasi-threads" OFF)
+option(TARGET_WASI_SDK "target wasi-sdk" OFF)
 set(LDNAME "lld" CACHE STRING "ld name")
 
 add_library(ovbase STATIC
@@ -111,7 +111,7 @@ set(v16_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,16>")
 set(v17_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,17>")
 foreach(target ${targets})
   if(target MATCHES "_test$")
-    if(WASI_THREADS)
+    if(TARGET_WASI_SDK)
       add_test(
         NAME
           ${target}
@@ -120,13 +120,13 @@ foreach(target ${targets})
             --dir=${CMAKE_CURRENT_SOURCE_DIR}/mo/test
             --wasm-features threads
             --wasi-modules experimental-wasi-threads
-            ${target}
+            ${target} -- --exec=never
       )
     else()
       add_test(NAME ${target} COMMAND ${target})
     endif()
     target_compile_definitions(${target} PRIVATE
-      $<$<BOOL:${WASI_THREADS}>:ACUTEST_NOSETJMP>
+      $<$<BOOL:${TARGET_WASI_SDK}>:ACUTEST_NOSETJMP>
       SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
       SOURCE_DIR_WIDE=L"${CMAKE_CURRENT_SOURCE_DIR}"
     )
@@ -136,7 +136,7 @@ foreach(target ${targets})
   )
   target_compile_definitions(${target} PUBLIC
     $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
-    $<$<BOOL:${WASI_THREADS}>:OVBASE_WASI_THREADS __STDC_NO_THREADS__ _POSIX_C_SOURCE=199309L _WASI_EMULATED_SIGNAL _TTHREAD_MTX_T_SIZE_=6 _TTHREAD_CND_T_SIZE_=12>
+    $<$<BOOL:${TARGET_WASI_SDK}>:OVBASE_DISABLE_PTHREAD_EXIT __STDC_NO_THREADS__ _POSIX_C_SOURCE=199309L _WASI_EMULATED_SIGNAL _TTHREAD_MTX_T_SIZE_=6 _TTHREAD_CND_T_SIZE_=12>
     $<$<BOOL:${USE_COMPILER_RT}>:USE_COMPILER_RT>
     $<$<BOOL:${USE_STR}>:USE_STR>
     $<$<BOOL:${USE_WSTR}>:USE_WSTR>
@@ -181,7 +181,7 @@ foreach(target ${targets})
     -Wl,--gc-sections
     # -Wl,--print-gc-sections
     -static
-    $<$<BOOL:${WASI_THREADS}>:-Wl,--import-memory,--export-memory,--max-memory=67108864>
+    $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--import-memory,--export-memory,--max-memory=67108864>
   )
   target_link_libraries(${target} PRIVATE
     $<$<NOT:$<STREQUAL:${target},ovbase>>:ovbase>

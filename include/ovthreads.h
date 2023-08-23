@@ -26,7 +26,7 @@ int timespec_get(struct timespec *ts, int base);
 #  endif
 #  define DISABLE_TLS
 #  define DISABLE_CALL_ONCE
-#  ifdef OVBASE_WASI_THREADS
+#  ifdef OVBASE_DISABLE_PTHREAD_EXIT
 #    define pthread_exit(x)                                                                                            \
       (void)(x);                                                                                                       \
       abort()
