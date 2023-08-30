@@ -98,22 +98,18 @@ static void allocate_logger_exit(void) {
   mtx_destroy(&g_mem_mtx);
 }
 
-static void allocated_put(void const *const p MEM_FILEPOS_PARAMS) {
+static bool allocated_put(void const *const p MEM_FILEPOS_PARAMS) {
   hashmap_set(g_allocated,
               &(struct allocated_at){
                   .p = p,
                   .filepos = *filepos,
               });
-  if (hashmap_oom(g_allocated)) {
-    ereport(emsg_i18n(err_type_generic, err_unexpected, "failed to record allocated memory."));
-  }
+  return hashmap_oom(g_allocated);
 }
 
-static void allocated_remove(void const *const p) {
+static bool allocated_remove(void const *const p) {
   struct allocated_at *const aa = hashmap_delete(g_allocated, &(struct allocated_at){.p = p});
-  if (aa == NULL) {
-    ereport(emsg_i18n(err_type_generic, err_unexpected, "double free detected."));
-  }
+  return aa == NULL;
 }
 
 static bool report_leaks_iterate(void const *const item, void *const udata) {
@@ -182,9 +178,15 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
     freed();
 #endif
 #ifdef ALLOCATE_LOGGER
-    mtx_lock(&g_mem_mtx);
-    allocated_remove(*(void **)pp);
-    mtx_unlock(&g_mem_mtx);
+    {
+      mtx_lock(&g_mem_mtx);
+      bool const found_double_free = allocated_remove(*(void **)pp);
+      mtx_unlock(&g_mem_mtx);
+      if (found_double_free) {
+        ereport(error_add_i18n_(
+            NULL, err_type_generic, err_unexpected, "double free detected." MEM_FILEPOS_VALUES_PASSTHRU));
+      }
+    }
 #endif
     FREE(*(void **)pp);
     *(void **)pp = NULL;
@@ -199,16 +201,30 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
     allocated();
 #endif
 #ifdef ALLOCATE_LOGGER
-    mtx_lock(&g_mem_mtx);
-    allocated_put(np MEM_FILEPOS_VALUES_PASSTHRU);
-    mtx_unlock(&g_mem_mtx);
+    {
+      mtx_lock(&g_mem_mtx);
+      bool const failed_allocate = allocated_put(np MEM_FILEPOS_VALUES_PASSTHRU);
+      mtx_unlock(&g_mem_mtx);
+      if (failed_allocate) {
+        ereport(error_add_i18n_(
+            NULL, err_type_generic, err_unexpected, "failed to record allocated memory." MEM_FILEPOS_VALUES_PASSTHRU));
+      }
+    }
 #endif
   } else {
 #ifdef ALLOCATE_LOGGER
     mtx_lock(&g_mem_mtx);
-    allocated_remove(*(void **)pp);
-    allocated_put(np MEM_FILEPOS_VALUES_PASSTHRU);
+    bool const found_double_free = allocated_remove(*(void **)pp);
+    bool const failed_allocate = allocated_put(np MEM_FILEPOS_VALUES_PASSTHRU);
     mtx_unlock(&g_mem_mtx);
+    if (found_double_free) {
+      ereport(
+          error_add_i18n_(NULL, err_type_generic, err_unexpected, "double free detected." MEM_FILEPOS_VALUES_PASSTHRU));
+    }
+    if (failed_allocate) {
+      ereport(error_add_i18n_(
+          NULL, err_type_generic, err_unexpected, "failed to record allocated memory." MEM_FILEPOS_VALUES_PASSTHRU));
+    }
 #endif
   }
   *(void **)pp = np;
