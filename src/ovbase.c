@@ -105,14 +105,14 @@ static void allocated_put(void const *const p MEM_FILEPOS_PARAMS) {
                   .filepos = *filepos,
               });
   if (hashmap_oom(g_allocated)) {
-    ereport(emsg_i18nf(err_type_generic, err_unexpected, NULL, "%s", "failed to record allocated memory."));
+    ereport(emsg_i18n(err_type_generic, err_unexpected, "failed to record allocated memory."));
   }
 }
 
 static void allocated_remove(void const *const p) {
   struct allocated_at *const aa = hashmap_delete(g_allocated, &(struct allocated_at){.p = p});
   if (aa == NULL) {
-    ereport(emsg_i18nf(err_type_generic, err_unexpected, NULL, "%s", "double free detected."));
+    ereport(emsg_i18n(err_type_generic, err_unexpected, "double free detected."));
   }
 }
 
@@ -132,10 +132,27 @@ static bool report_leaks_iterate(void const *const item, void *const udata) {
 }
 
 static size_t report_leaks(void) {
-  size_t n = 0;
+  // Make dummy to scan without lock
+  uint64_t hash = ov_splitmix64_next(get_global_hint());
+  uint64_t const s0 = ov_splitmix64(hash);
+  hash = ov_splitmix64_next(hash);
+  uint64_t const s1 = ov_splitmix64(hash);
+  struct hashmap *dummy = hashmap_new_with_allocator(
+      ov_hm_malloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+  if (!dummy) {
+    abort();
+  }
+
   mtx_lock(&g_mem_mtx);
-  hashmap_scan(g_allocated, report_leaks_iterate, &n);
+  {
+    struct hashmap *tmp = g_allocated;
+    g_allocated = dummy;
+    dummy = tmp;
+  }
   mtx_unlock(&g_mem_mtx);
+  size_t n = 0;
+  hashmap_scan(dummy, report_leaks_iterate, &n);
+  hashmap_free(dummy);
   return n;
 }
 
