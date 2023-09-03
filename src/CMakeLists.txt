@@ -76,6 +76,24 @@ add_library(ovbase STATIC
   wstr/to_wstr_.c
   wstr/utoa_.c
 )
+set_property(TARGET ovbase PROPERTY PUBLIC_HEADER
+  ../include/ovbase.h
+  ../include/ovmo.h
+  ../include/ovnum.h
+  ../include/ovprintf.h
+  ../include/ovtest.h
+  ../include/ovthreads.h
+  ../include/ovutf.h
+)
+target_include_directories(ovbase INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:../include>
+)
+install(TARGETS ovbase
+        EXPORT libovbase
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include)
 list(APPEND targets ovbase)
 
 add_executable(array_test array_test.c)
