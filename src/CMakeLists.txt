@@ -14,15 +14,11 @@ set(LDNAME "lld" CACHE STRING "ld name")
 set(is_clang "$<C_COMPILER_ID:Clang>")
 set(v16_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,16>")
 
-# set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
 add_library(ovbase_intf INTERFACE)
-target_compile_features(ovbase_intf INTERFACE c_std_11)
-# This method requires CMake 3.19 or later.
-# set_property(TARGET ovbase_intf PROPERTY C_STANDARD_REQUIRED ON)
-# set_property(TARGET ovbase_intf PROPERTY C_EXTENSIONS OFF)
 target_compile_options(ovbase_intf
 INTERFACE
   -mstackrealign
@@ -143,6 +139,7 @@ PUBLIC
 target_compile_definitions(ovbase
 PRIVATE
   $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0501>
+  $<$<BOOL:${UNIX}>:_POSIX_C_SOURCE=199309L>
   $<$<CONFIG:Release>:NDEBUG>
 )
 target_compile_options(ovbase
@@ -227,8 +224,8 @@ foreach(target ${tests})
   )
   target_link_libraries(${target}
   PRIVATE
-    ovbase_intf
-    ovbase
     m
+    ovbase
+    ovbase_intf
   )
-  endforeach(target)
+endforeach(target)
