@@ -38,4 +38,4 @@ jobs:
         run: |
           mkdir build
           cd build
-          rm -rf CmakeCache.txt && cmake -GNinja -DCMAKE_C_COMPILER=clang -DFORMAT_SOURCES=OFF -DSKIP_OVTHREADS_TEST=OFF .. && cmake --build . && ctest --output-on-failure --output-junit testlog.xml
+          rm -rf CmakeCache.txt && cmake -GNinja -DCMAKE_C_COMPILER=clang -DFORMAT_SOURCES=OFF -DSKIP_OVTHREADS_TEST=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .. && cmake --build . && ctest --output-on-failure --output-junit testlog.xml

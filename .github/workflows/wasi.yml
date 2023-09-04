@@ -26,4 +26,4 @@ jobs:
           wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
           tar zxf wasi-sdk-20.0-linux.tar.gz
           export PATH="$(pwd)/wasmtime-${WASMTIME_VERSION}-x86_64-linux:$PATH"
-          rm -rf CmakeCache.txt && CC="$(pwd)/wasi-sdk-20.0/bin/clang --target=wasm32-wasi-threads --sysroot=$(pwd)/wasi-sdk-20.0/share/wasi-sysroot -pthread" cmake -GNinja -DFORMAT_SOURCES=OFF -DSKIP_OVTHREADS_TEST=OFF -DTARGET_WASI_SDK=ON .. && cmake --build . && ctest --output-on-failure --output-junit testlog.xml
+          rm -rf CmakeCache.txt && CC="$(pwd)/wasi-sdk-20.0/bin/clang --target=wasm32-wasi-threads --sysroot=$(pwd)/wasi-sdk-20.0/share/wasi-sysroot -pthread" cmake -GNinja -DFORMAT_SOURCES=OFF -DSKIP_OVTHREADS_TEST=OFF -DTARGET_WASI_SDK=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .. && cmake --build . && ctest --output-on-failure --output-junit testlog.xml
