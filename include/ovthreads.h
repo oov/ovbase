@@ -1,8 +1,8 @@
 #pragma once
 
-#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
-#  include <threads.h>
-#else
+#include <ovbase_config.h>
+
+#if __STDC_VERSION__ < 201112L || !defined(__STDC_NO_THREADS) || __STDC_NO_THREADS__
 #  ifdef __GNUC__
 #    ifndef __has_warning
 #      define __has_warning(x) 0
@@ -31,13 +31,15 @@ int timespec_get(struct timespec *ts, int base);
       (void)(x);                                                                                                       \
       abort()
 #  endif
-#  include "../3rd/tinycthread/source/tinycthread.h"
+#  include <ovbase_3rd/tinycthread.h>
 #  undef DISABLE_TLS
 #  undef DISABLE_CALL_ONCE
 #  ifdef __GNUC__
 #    pragma GCC diagnostic pop
 #  endif // __GNUC__
-#endif   // __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+#else
+#  include <threads.h>
+#endif // __STDC_VERSION__ < 201112L || !defined(__STDC_NO_THREADS) || __STDC_NO_THREADS__
 
 struct cndvar {
   cnd_t cnd;

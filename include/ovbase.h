@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ovbase_config.h>
+
 #include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>

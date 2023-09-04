@@ -52,6 +52,10 @@ INTERFACE
   $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--import-memory,--export-memory,--max-memory=67108864>
 )
 
+configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/ovbase_config_user.h @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/3rd/acutest/include/acutest.h ${CMAKE_CURRENT_BINARY_DIR}/ovbase_3rd/acutest.h COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/3rd/tinycthread/source/tinycthread.h ${CMAKE_CURRENT_BINARY_DIR}/ovbase_3rd/tinycthread.h COPYONLY)
+
 add_library(ovbase STATIC
   array.c
   error.c
@@ -120,28 +124,23 @@ add_library(ovbase STATIC
   wstr/utoa_.c
 )
 set_property(TARGET ovbase PROPERTY PUBLIC_HEADER
-  ../include/ovbase.h
-  ../include/ovmo.h
-  ../include/ovnum.h
-  ../include/ovprintf.h
-  ../include/ovtest.h
-  ../include/ovthreads.h
-  ../include/ovutf.h
+  ${PROJECT_SOURCE_DIR}/include/ovbase.h
+  ${PROJECT_SOURCE_DIR}/include/ovbase_config.h
+  ${PROJECT_SOURCE_DIR}/include/ovmo.h
+  ${PROJECT_SOURCE_DIR}/include/ovnum.h
+  ${PROJECT_SOURCE_DIR}/include/ovprintf.h
+  ${PROJECT_SOURCE_DIR}/include/ovtest.h
+  ${PROJECT_SOURCE_DIR}/include/ovthreads.h
+  ${PROJECT_SOURCE_DIR}/include/ovutf.h
+  ${CMAKE_CURRENT_BINARY_DIR}/ovbase_config_user.h
 )
 target_include_directories(ovbase
 PUBLIC
   $<INSTALL_INTERFACE:../include>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
 target_compile_definitions(ovbase
-PUBLIC
-  $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
-  $<$<BOOL:${TARGET_WASI_SDK}>:OVBASE_DISABLE_PTHREAD_EXIT __STDC_NO_THREADS__ _POSIX_C_SOURCE=199309L _WASI_EMULATED_SIGNAL _TTHREAD_MTX_T_SIZE_=6 _TTHREAD_CND_T_SIZE_=12>
-  $<$<BOOL:${TARGET_EMSCRIPTEN}>:__STDC_NO_THREADS__ _POSIX_C_SOURCE=199309L _WASI_EMULATED_SIGNAL _TTHREAD_MTX_T_SIZE_=6 _TTHREAD_CND_T_SIZE_=12>
-  $<$<BOOL:${USE_STR}>:USE_STR>
-  $<$<BOOL:${USE_WSTR}>:USE_WSTR>
-  $<$<BOOL:${LEAK_DETECTOR}>:LEAK_DETECTOR>
-  $<$<BOOL:${ALLOCATE_LOGGER}>:ALLOCATE_LOGGER>
 PRIVATE
   $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0501>
   $<$<CONFIG:Release>:NDEBUG>
@@ -171,7 +170,13 @@ install(TARGETS ovbase
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include)
-
+install(
+FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/ovbase_3rd/tinycthread.h
+  ${CMAKE_CURRENT_BINARY_DIR}/ovbase_3rd/acutest.h
+DESTINATION
+  include/ovbase_3rd
+)
 add_executable(array_test array_test.c)
 list(APPEND tests array_test)
 add_executable(ovbase_test ovbase_test.c)
@@ -217,7 +222,6 @@ foreach(target ${tests})
   endif()
   target_compile_definitions(${target}
   PRIVATE
-    $<$<OR:$<BOOL:${TARGET_EMSCRIPTEN}>,$<BOOL:${TARGET_WASI_SDK}>>:ACUTEST_NOSETJMP>
     SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
     SOURCE_DIR_WIDE=L"${CMAKE_CURRENT_SOURCE_DIR}"
   )

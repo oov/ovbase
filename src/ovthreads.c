@@ -2,7 +2,7 @@
 
 #include <ovthreads.h>
 
-#if __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
+#if __STDC_VERSION__ < 201112L || !defined(__STDC_NO_THREADS) || __STDC_NO_THREADS__
 #  if defined(IMPLEMENT_BASE_TIMESPEC_WIN32)
 
 #    define WIN32_LEAN_AND_MEAN
@@ -49,4 +49,4 @@ int timespec_get(struct timespec *ts, int base) {
 #  undef DISABLE_TLS
 #  undef DISABLE_CALL_ONCE
 
-#endif // __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
+#endif // __STDC_VERSION__ < 201112L || !defined(__STDC_NO_THREADS) || __STDC_NO_THREADS__

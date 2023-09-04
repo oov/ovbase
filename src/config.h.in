@@ -1,0 +1,33 @@
+#pragma once
+
+#cmakedefine USE_STR
+#cmakedefine USE_WSTR
+#cmakedefine LEAK_DETECTOR
+#cmakedefine ALLOCATE_LOGGER
+
+#cmakedefine TARGET_WASI_SDK
+#cmakedefine TARGET_EMSCRIPTEN
+
+#if defined(TARGET_WASI_SDK)||defined(TARGET_EMSCRIPTEN)
+
+#  ifdef __GNUC__
+#    ifndef __has_warning
+#      define __has_warning(x) 0
+#    endif
+#    pragma GCC diagnostic push
+#    if __has_warning("-Wreserved-macro-identifier")
+#      pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
+#    endif
+#  endif // __GNUC__
+
+  #define OVBASE_DISABLE_PTHREAD_EXIT
+  #define _WASI_EMULATED_SIGNAL
+  #define _TTHREAD_MTX_T_SIZE_ 6
+  #define _TTHREAD_CND_T_SIZE_ 12
+  #define ACUTEST_NOSETJMP
+
+#  ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#  endif // __GNUC__
+
+#endif

@@ -57,12 +57,12 @@ static inline void test_fini_(void) {
 #  if __has_warning("-Wunused-function")
 #    pragma GCC diagnostic ignored "-Wunused-function"
 #  endif
-#  include "../3rd/acutest/include/acutest.h"
+#  include <ovbase_3rd/acutest.h>
 #  pragma GCC diagnostic pop
 
 #else
 
-#  include "../3rd/acutest/include/acutest.h"
+#  include <ovbase_3rd/acutest.h>
 
 #endif // __GNUC__
 
