@@ -1,5 +1,5 @@
 #include "mo.c"
-#include "ovtest.h"
+#include <ovtest.h>
 
 #include <stdio.h>
 #ifndef _WIN32

@@ -1,6 +1,6 @@
 #include "common.h"
 
-#include "ovutf.h"
+#include <ovutf.h>
 
 static inline size_t codepoint_to_utf8len(int_fast32_t codepoint) {
   if (codepoint < 0x80) {

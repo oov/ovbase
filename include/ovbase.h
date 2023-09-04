@@ -16,18 +16,18 @@
 #  define __has_warning(x) 0
 #endif
 
-#if __has_c_attribute(nodiscard)
-#  define NODISCARD [[nodiscard]]
-#elif __has_attribute(warn_unused_result)
+#if __has_attribute(warn_unused_result)
 #  define NODISCARD __attribute__((warn_unused_result))
+#elif __has_c_attribute(nodiscard)
+#  define NODISCARD [[nodiscard]]
 #else
 #  define NODISCARD
 #endif
 
-#if __has_c_attribute(noreturn)
-#  define NORETURN [[noreturn]]
-#elif __has_attribute(noreturn)
+#if __has_attribute(noreturn)
 #  define NORETURN __attribute__((noreturn))
+#elif __has_c_attribute(noreturn)
+#  define NORETURN [[noreturn]]
 #else
 #  define NORETURN
 #endif

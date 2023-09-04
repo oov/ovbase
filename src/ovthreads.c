@@ -1,6 +1,6 @@
-#include "ovbase.h"
+#include <ovbase.h>
 
-#include "ovthreads.h"
+#include <ovthreads.h>
 
 #if __STDC_VERSION__ < 201112L || defined(__STDC_NO_THREADS__)
 #  if defined(IMPLEMENT_BASE_TIMESPEC_WIN32)

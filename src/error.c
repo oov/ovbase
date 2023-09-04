@@ -1,7 +1,7 @@
 #include "error.h"
 
 #include "mem.h"
-#include "ovthreads.h"
+#include <ovthreads.h>
 
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN

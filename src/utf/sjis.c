@@ -1,5 +1,5 @@
 #include "common.h"
-#include "ovutf.h"
+#include <ovutf.h>
 
 // Based on http://encoding.spec.whatwg.org/index-jis0208.txt
 static uint16_t const jis0208[] = {

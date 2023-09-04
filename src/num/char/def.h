@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ovnum.h"
+#include <ovnum.h>
 
 #define CHAR_TYPE char
 #define STR(str) str

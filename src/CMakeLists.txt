@@ -4,10 +4,53 @@ option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
 option(USE_ADDRESS_SANITIZER "use address sanitizer" OFF)
 option(USE_COMPILER_RT "use compiler-rt runtime" OFF)
+option(USE_NO_PTHREAD "add -no-pthread" OFF)
 option(USE_LTO "use LTO" ON)
 option(SKIP_OVTHREADS_TEST "skip ovthreads tests" ON)
+option(TARGET_EMSCRIPTEN "target emscripten" OFF)
 option(TARGET_WASI_SDK "target wasi-sdk" OFF)
 set(LDNAME "lld" CACHE STRING "ld name")
+
+set(is_clang "$<C_COMPILER_ID:Clang>")
+set(v16_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,16>")
+
+# set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
+add_library(ovbase_intf INTERFACE)
+target_compile_features(ovbase_intf INTERFACE c_std_11)
+# This method requires CMake 3.19 or later.
+# set_property(TARGET ovbase_intf PROPERTY C_STANDARD_REQUIRED ON)
+# set_property(TARGET ovbase_intf PROPERTY C_EXTENSIONS OFF)
+target_compile_options(ovbase_intf
+INTERFACE
+  -mstackrealign
+  -Wall
+  -Wextra
+  -Werror
+  -Weverything
+  -Wshadow
+  -Werror=return-type
+  -pedantic-errors
+  -Wno-declaration-after-statement
+  -Wno-padded
+  $<$<AND:${is_clang},${v16_or_later}>:-Wno-unsafe-buffer-usage>
+  -ffunction-sections
+  -fdata-sections
+  $<$<BOOL:${USE_ADDRESS_SANITIZER}>:-fsanitize=address>
+  $<$<CONFIG:Debug>:-O0>
+  $<$<CONFIG:Release>:-O2>
+  $<$<BOOL:${USE_LTO}>:-flto>
+)
+target_link_options(ovbase_intf
+INTERFACE
+  $<$<NOT:$<STREQUAL:${LDNAME},>>:-fuse-ld=${LDNAME}>
+  -Wl,--gc-sections
+  # -Wl,--print-gc-sections
+  -static
+  $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--import-memory,--export-memory,--max-memory=67108864>
+)
 
 add_library(ovbase STATIC
   array.c
@@ -85,124 +128,103 @@ set_property(TARGET ovbase PROPERTY PUBLIC_HEADER
   ../include/ovthreads.h
   ../include/ovutf.h
 )
-target_include_directories(ovbase INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+target_include_directories(ovbase
+PUBLIC
   $<INSTALL_INTERFACE:../include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+)
+target_compile_definitions(ovbase
+PUBLIC
+  $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
+  $<$<BOOL:${TARGET_WASI_SDK}>:OVBASE_DISABLE_PTHREAD_EXIT __STDC_NO_THREADS__ _POSIX_C_SOURCE=199309L _WASI_EMULATED_SIGNAL _TTHREAD_MTX_T_SIZE_=6 _TTHREAD_CND_T_SIZE_=12>
+  $<$<BOOL:${TARGET_EMSCRIPTEN}>:__STDC_NO_THREADS__ _POSIX_C_SOURCE=199309L _WASI_EMULATED_SIGNAL _TTHREAD_MTX_T_SIZE_=6 _TTHREAD_CND_T_SIZE_=12>
+  $<$<BOOL:${USE_STR}>:USE_STR>
+  $<$<BOOL:${USE_WSTR}>:USE_WSTR>
+  $<$<BOOL:${LEAK_DETECTOR}>:LEAK_DETECTOR>
+  $<$<BOOL:${ALLOCATE_LOGGER}>:ALLOCATE_LOGGER>
+PRIVATE
+  $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0501>
+  $<$<CONFIG:Release>:NDEBUG>
+)
+target_compile_options(ovbase
+PUBLIC
+  $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
+  $<$<BOOL:${TARGET_EMSCRIPTEN}>:-sUSE_PTHREADS>
+)
+target_link_options(ovbase
+PUBLIC
+  $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
+  $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_NO_PTHREAD}>>:-no-pthread>
+  $<$<NOT:$<BOOL:${WIN32}>>:-pthread>
+  $<$<BOOL:${USE_ADDRESS_SANITIZER}>:-fsanitize=address>
+  $<$<BOOL:${TARGET_EMSCRIPTEN}>:-sUSE_PTHREADS -sSTANDALONE_WASM>
+PRIVATE
+  -static
+)
+target_link_libraries(ovbase
+PRIVATE
+  m
+  ovbase_intf
 )
 install(TARGETS ovbase
         EXPORT libovbase
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include)
-list(APPEND targets ovbase)
 
 add_executable(array_test array_test.c)
-list(APPEND targets array_test)
+list(APPEND tests array_test)
 add_executable(ovbase_test ovbase_test.c)
-list(APPEND targets ovbase_test)
+list(APPEND tests ovbase_test)
 add_executable(hmap_test hmap/test.c)
-list(APPEND targets hmap_test)
+list(APPEND tests hmap_test)
 add_executable(str_test str/test.c)
-list(APPEND targets str_test)
+list(APPEND tests str_test)
 add_executable(wstr_test wstr/test.c)
-list(APPEND targets wstr_test)
+list(APPEND tests wstr_test)
 add_executable(mo_test mo/test.c $<$<BOOL:${WIN32}>:mo/test_win32/test.rc>)
-list(APPEND targets mo_test)
+list(APPEND tests mo_test)
 add_executable(num_wchar_test num/wchar/test.c)
-list(APPEND targets num_wchar_test)
+list(APPEND tests num_wchar_test)
 add_executable(num_char_test num/char/test.c)
-list(APPEND targets num_char_test)
+list(APPEND tests num_char_test)
 add_executable(printf_char_test printf/char_test.c)
-list(APPEND targets printf_char_test)
+list(APPEND tests printf_char_test)
 add_executable(printf_wchar_test printf/wchar_test.c)
-list(APPEND targets printf_wchar_test)
+list(APPEND tests printf_wchar_test)
 add_executable(utf_test utf/test.c)
-list(APPEND targets utf_test)
+list(APPEND tests utf_test)
 
 if(NOT SKIP_OVTHREADS_TEST)
   add_executable(ovthreads_test ovthreads_test.c)
-  list(APPEND targets ovthreads_test)
+  list(APPEND tests ovthreads_test)
 endif()
 
-set(is_clang "$<C_COMPILER_ID:Clang>")
-set(v16_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,16>")
-set(v17_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,17>")
-foreach(target ${targets})
-  if(target MATCHES "_test$")
-    if(TARGET_WASI_SDK)
-      add_test(
-        NAME
-          ${target}
-        COMMAND
-          wasmtime
-            --dir=${CMAKE_CURRENT_SOURCE_DIR}/mo/test
-            --wasm-features threads
-            --wasi-modules experimental-wasi-threads
-            ${target} -- --exec=never
-      )
-    else()
-      add_test(NAME ${target} COMMAND ${target})
-    endif()
-    target_compile_definitions(${target} PRIVATE
-      $<$<BOOL:${TARGET_WASI_SDK}>:ACUTEST_NOSETJMP>
-      SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-      SOURCE_DIR_WIDE=L"${CMAKE_CURRENT_SOURCE_DIR}"
+foreach(target ${tests})
+  if(TARGET_EMSCRIPTEN OR TARGET_WASI_SDK)
+    add_test(
+      NAME
+        ${target}
+      COMMAND
+        wasmtime
+          --dir=${CMAKE_CURRENT_SOURCE_DIR}/mo/test
+          --wasm-features threads
+          --wasi-modules experimental-wasi-threads
+          ${target} -- --exec=never
     )
+  else()
+    add_test(NAME ${target} COMMAND ${target})
   endif()
-  target_include_directories(${target} PUBLIC
-    "${PROJECT_SOURCE_DIR}/include"
+  target_compile_definitions(${target}
+  PRIVATE
+    $<$<OR:$<BOOL:${TARGET_EMSCRIPTEN}>,$<BOOL:${TARGET_WASI_SDK}>>:ACUTEST_NOSETJMP>
+    SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+    SOURCE_DIR_WIDE=L"${CMAKE_CURRENT_SOURCE_DIR}"
   )
-  target_compile_definitions(${target} PUBLIC
-    $<$<BOOL:${WIN32}>:__STDC_NO_THREADS__>
-    $<$<BOOL:${TARGET_WASI_SDK}>:OVBASE_DISABLE_PTHREAD_EXIT __STDC_NO_THREADS__ _POSIX_C_SOURCE=199309L _WASI_EMULATED_SIGNAL _TTHREAD_MTX_T_SIZE_=6 _TTHREAD_CND_T_SIZE_=12>
-    $<$<BOOL:${USE_COMPILER_RT}>:USE_COMPILER_RT>
-    $<$<BOOL:${USE_STR}>:USE_STR>
-    $<$<BOOL:${USE_WSTR}>:USE_WSTR>
-    $<$<BOOL:${LEAK_DETECTOR}>:LEAK_DETECTOR>
-    $<$<BOOL:${ALLOCATE_LOGGER}>:ALLOCATE_LOGGER>
-  )
-  target_compile_definitions(${target} PRIVATE
-    $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0501>
-    $<$<CONFIG:Release>:NDEBUG>
-  )
-  target_compile_options(${target} PUBLIC
-    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
-  )
-  target_compile_options(${target} PRIVATE
-    -mstackrealign
-    -Wall
-    -Wextra
-    -Werror
-    -Weverything
-    -Wshadow
-    -Werror=return-type
-    -pedantic-errors
-    -Wno-declaration-after-statement
-    -Wno-padded
-    $<$<AND:${is_clang},${v16_or_later}>:-Wno-unsafe-buffer-usage>
-    $<$<AND:${is_clang},${v17_or_later}>:-Wno-c2x-extensions>
-    -ffunction-sections
-    -fdata-sections
-    $<$<BOOL:${USE_ADDRESS_SANITIZER}>:-fsanitize=address>
-    $<$<CONFIG:Debug>:-O0>
-    $<$<CONFIG:Release>:-O2>
-    $<$<BOOL:${USE_LTO}>:-flto>
-  )
-  target_link_options(${target} PUBLIC
-    $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
-    $<$<BOOL:${WIN32}>:-no-pthread>
-    $<$<NOT:$<BOOL:${WIN32}>>:-pthread>
-    $<$<BOOL:${USE_ADDRESS_SANITIZER}>:-fsanitize=address>
-  )
-  target_link_options(${target} PRIVATE
-    $<$<NOT:$<STREQUAL:${LDNAME},>>:-fuse-ld=${LDNAME}>
-    -Wl,--gc-sections
-    # -Wl,--print-gc-sections
-    -static
-    $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--import-memory,--export-memory,--max-memory=67108864>
-  )
-  target_link_libraries(${target} PRIVATE
-    $<$<NOT:$<STREQUAL:${target},ovbase>>:ovbase>
+  target_link_libraries(${target}
+  PRIVATE
+    ovbase_intf
+    ovbase
     m
   )
-endforeach(target)
+  endforeach(target)

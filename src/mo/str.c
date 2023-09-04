@@ -1,6 +1,6 @@
-#include "ovmo.h"
+#include <ovmo.h>
 
-#include "ovprintf.h"
+#include <ovprintf.h>
 
 #ifdef USE_STR
 int mo_sprintf_char(char *const buf, size_t const buflen, char const *const reference, char const *const format, ...) {

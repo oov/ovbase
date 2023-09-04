@@ -1,5 +1,5 @@
-#include "ovtest.h"
 #include <inttypes.h>
+#include <ovtest.h>
 
 enum {
   bufsize = 128,

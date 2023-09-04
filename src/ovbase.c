@@ -1,4 +1,4 @@
-#include "ovbase.h"
+#include <ovbase.h>
 
 #include <stdlib.h> // realloc, free
 
@@ -17,7 +17,7 @@ static _Atomic uint64_t g_global_hint = 0;
 
 #include "../3rd/hashmap.c/hashmap.h"
 #include "mem.h"
-#include "ovthreads.h"
+#include <ovthreads.h>
 
 #ifndef __FILE_NAME__
 char const *ov_find_file_name(char const *s) {

@@ -1,6 +1,6 @@
-#include "ovtest.h"
+#include <ovtest.h>
 
-#include "ovutf.h"
+#include <ovutf.h>
 
 static void test_ov_utf8_to_wchar(void) {
   char const *u8 = "ABCabc123ﾃｽﾄテストこんにちは𠮷野家🌏🌍🌎";

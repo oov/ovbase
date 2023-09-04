@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ovbase.h"
+#include <ovbase.h>
 
 #ifdef USE_WSTR
 NODISCARD static inline error wstr_grow(struct wstr *const ws, size_t const least_size MEM_FILEPOS_PARAMS) {

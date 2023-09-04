@@ -1,13 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 option(FORMAT_SOURCES "execute clang-format" ON)
 
-project(ovbase C)
+project(ovbase
+        HOMEPAGE_URL "https://github.com/oov/ovbase"
+        LANGUAGES C
+)
 if(WIN32)
   enable_language(RC)
 endif()

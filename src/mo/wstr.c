@@ -1,7 +1,7 @@
-#include "ovmo.h"
+#include <ovmo.h>
 
-#include "ovprintf.h"
-#include "ovutf.h"
+#include <ovprintf.h>
+#include <ovutf.h>
 
 #ifdef USE_WSTR
 int mo_sprintf_wchar(

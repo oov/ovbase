@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ovnum.h"
+#include <ovnum.h>
 
 #define CHAR_TYPE wchar_t
 #define STR(str) L##str
