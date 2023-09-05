@@ -48,9 +48,18 @@ INTERFACE
   $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--import-memory,--export-memory,--max-memory=67108864>
 )
 
-configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/ovbase_config_user.h @ONLY)
-configure_file(${PROJECT_SOURCE_DIR}/3rd/acutest/include/acutest.h ${CMAKE_CURRENT_BINARY_DIR}/ovbase_3rd/acutest.h COPYONLY)
-configure_file(${PROJECT_SOURCE_DIR}/3rd/tinycthread/source/tinycthread.h ${CMAKE_CURRENT_BINARY_DIR}/ovbase_3rd/tinycthread.h COPYONLY)
+set(SOURCE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+set(DESTINATION_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
+configure_file(${SOURCE_INCLUDE_DIR}/ovbase_config.h.in ${DESTINATION_INCLUDE_DIR}/ovbase_config.h @ONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovbase.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovmo.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovnum.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovprintf.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovtest.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovthreads.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovutf.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/3rd/acutest/include/acutest.h ${DESTINATION_INCLUDE_DIR}/ovbase_3rd/acutest.h COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/3rd/tinycthread/source/tinycthread.h ${DESTINATION_INCLUDE_DIR}/ovbase_3rd/tinycthread.h COPYONLY)
 
 add_library(ovbase STATIC
   array.c
@@ -119,22 +128,29 @@ add_library(ovbase STATIC
   wstr/to_wstr_.c
   wstr/utoa_.c
 )
+set_target_properties(ovbase PROPERTIES
+RUNTIME_OUTPUT_DIRECTORY
+  ${CMAKE_CURRENT_BINARY_DIR}/bin
+ARCHIVE_OUTPUT_DIRECTORY
+  ${CMAKE_CURRENT_BINARY_DIR}/lib
+LIBRARY_OUTPUT_DIRECTORY
+  ${CMAKE_CURRENT_BINARY_DIR}/lib
+)
 set_property(TARGET ovbase PROPERTY PUBLIC_HEADER
-  ${PROJECT_SOURCE_DIR}/include/ovbase.h
-  ${PROJECT_SOURCE_DIR}/include/ovbase_config.h
-  ${PROJECT_SOURCE_DIR}/include/ovmo.h
-  ${PROJECT_SOURCE_DIR}/include/ovnum.h
-  ${PROJECT_SOURCE_DIR}/include/ovprintf.h
-  ${PROJECT_SOURCE_DIR}/include/ovtest.h
-  ${PROJECT_SOURCE_DIR}/include/ovthreads.h
-  ${PROJECT_SOURCE_DIR}/include/ovutf.h
-  ${CMAKE_CURRENT_BINARY_DIR}/ovbase_config_user.h
+  ${DESTINATION_INCLUDE_DIR}/ovbase.h
+  ${DESTINATION_INCLUDE_DIR}/ovbase_config.h
+  ${DESTINATION_INCLUDE_DIR}/ovmo.h
+  ${DESTINATION_INCLUDE_DIR}/ovnum.h
+  ${DESTINATION_INCLUDE_DIR}/ovprintf.h
+  ${DESTINATION_INCLUDE_DIR}/ovtest.h
+  ${DESTINATION_INCLUDE_DIR}/ovthreads.h
+  ${DESTINATION_INCLUDE_DIR}/ovutf.h
 )
 target_include_directories(ovbase
 PUBLIC
   $<INSTALL_INTERFACE:../include>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 )
 target_compile_definitions(ovbase
 PRIVATE
@@ -164,13 +180,14 @@ PRIVATE
 )
 install(TARGETS ovbase
         EXPORT libovbase
+        RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include)
 install(
 FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/ovbase_3rd/tinycthread.h
-  ${CMAKE_CURRENT_BINARY_DIR}/ovbase_3rd/acutest.h
+  ${DESTINATION_INCLUDE_DIR}/ovbase_3rd/tinycthread.h
+  ${DESTINATION_INCLUDE_DIR}/ovbase_3rd/acutest.h
 DESTINATION
   include/ovbase_3rd
 )
