@@ -18,6 +18,9 @@
 #    if __has_warning("-Wreserved-macro-identifier")
 #      pragma GCC diagnostic ignored "-Wreserved-macro-identifier"
 #    endif
+#    if __has_warning("-Wreserved-id-macro")
+#      pragma GCC diagnostic ignored "-Wreserved-id-macro"
+#    endif
 #  endif // __GNUC__
 
   #define OVBASE_DISABLE_PTHREAD_EXIT

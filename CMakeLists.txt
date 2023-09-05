@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.20)
 
 option(FORMAT_SOURCES "execute clang-format" ON)
 

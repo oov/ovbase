@@ -36,6 +36,4 @@ jobs:
       - name: Build
         shell: msys2 {0}
         run: |
-          mkdir build
-          cd build
-          rm -rf CmakeCache.txt && cmake -GNinja -DCMAKE_C_COMPILER=clang -DFORMAT_SOURCES=OFF -DSKIP_OVTHREADS_TEST=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .. && cmake --build . && ctest --output-on-failure --output-junit testlog.xml
+          rm -f build/default/CMakeCache.txt && cmake --preset default -DSKIP_OVTHREADS_TEST=OFF -DFORMAT_SOURCES=OFF && cmake --build --preset default && ctest --preset default --output-junit testlog.xml
