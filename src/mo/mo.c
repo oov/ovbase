@@ -252,9 +252,7 @@ static struct mo *g_mp = NULL;
 
 void mo_set_default(struct mo *const mp) { g_mp = mp; }
 
-struct mo *mo_get_default(void) {
-  return g_mp;
-}
+struct mo *mo_get_default(void) { return g_mp; }
 
 #ifndef _WIN32
 NODISCARD error mo_get_preferred_ui_languages(struct NATIVE_STR *const dest) {
