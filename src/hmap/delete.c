@@ -14,7 +14,7 @@ error hmap_delete(struct hmap *const hm, void const *const key_item, void **cons
 #endif
   };
   hashmap_set_udata(hm->ptr, &ud);
-  void *r = hashmap_delete(hm->ptr, key_item);
+  void *r = ov_deconster_(hashmap_delete(hm->ptr, key_item));
   if (r == NULL) {
     return errg(err_not_found);
   }

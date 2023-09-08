@@ -10,4 +10,5 @@ struct hmap_udata {
 };
 
 void *hm_malloc(size_t const s, void *const udata);
+void *hm_realloc(void *p, size_t const s, void *const udata);
 void hm_free(void *p, void *const udata);

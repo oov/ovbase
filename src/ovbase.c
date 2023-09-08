@@ -52,6 +52,10 @@ void *ov_hm_malloc(size_t const s, void *const udata) {
   (void)udata;
   return REALLOC(NULL, s);
 }
+void *ov_hm_realloc(void *const p, size_t const s, void *const udata) {
+  (void)udata;
+  return REALLOC(p, s);
+}
 void ov_hm_free(void *const p, void *const udata) {
   (void)udata;
   FREE(p);
@@ -86,7 +90,7 @@ static void allocate_logger_init(void) {
   hash = ov_splitmix64_next(hash);
   uint64_t const s1 = ov_splitmix64(hash);
   g_allocated = hashmap_new_with_allocator(
-      ov_hm_malloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+      ov_hm_malloc, ov_hm_realloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!g_allocated) {
     abort();
   }
@@ -108,7 +112,7 @@ static bool allocated_put(void const *const p MEM_FILEPOS_PARAMS) {
 }
 
 static bool allocated_remove(void const *const p) {
-  struct allocated_at *const aa = hashmap_delete(g_allocated, &(struct allocated_at){.p = p});
+  struct allocated_at const *const aa = hashmap_delete(g_allocated, &(struct allocated_at){.p = p});
   return aa == NULL;
 }
 
@@ -134,7 +138,7 @@ static size_t report_leaks(void) {
   hash = ov_splitmix64_next(hash);
   uint64_t const s1 = ov_splitmix64(hash);
   struct hashmap *dummy = hashmap_new_with_allocator(
-      ov_hm_malloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+      ov_hm_malloc, ov_hm_realloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!dummy) {
     abort();
   }

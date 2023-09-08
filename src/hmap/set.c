@@ -11,7 +11,7 @@ error hmap_set(struct hmap *const hm, void const *const item, void **const old_i
 #endif
   };
   hashmap_set_udata(hm->ptr, &ud);
-  void *r = hashmap_set(hm->ptr, item);
+  void *r = ov_deconster_(hashmap_set(hm->ptr, item));
   if (r == NULL && hashmap_oom(hm->ptr)) {
     return errg(err_out_of_memory);
   }
