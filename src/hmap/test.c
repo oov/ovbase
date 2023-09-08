@@ -58,6 +58,14 @@ static void test_hmap_dynamic(void) {
   if (!TEST_CHECK(got->v == 100)) {
     goto cleanup;
   }
+  {
+    size_t found = 0;
+    struct test_item_dynamic *item = NULL;
+    for (size_t i = 0; hmiter(&tmp, &i, &item); ++found) {
+      TEST_CHECK(item != NULL && (item->v == 100 || item->v == 200));
+    }
+    TEST_CHECK(found == 2);
+  }
   if (!TEST_SUCCEEDED_F(hmdelete(&tmp, &(struct test_item_dynamic){.key = native_unmanaged(NSTR("test1"))}, NULL))) {
     goto cleanup;
   }
@@ -124,6 +132,14 @@ static void test_hmap_static(void) {
   }
   if (!TEST_CHECK(got->v == 100)) {
     goto cleanup;
+  }
+  {
+    size_t found = 0;
+    struct test_item_static *item = NULL;
+    for (size_t i = 0; hmiter(&tmp, &i, &item); ++found) {
+      TEST_CHECK(item != NULL && (item->v == 100 || item->v == 200));
+    }
+    TEST_CHECK(found == 2);
   }
   if (!TEST_SUCCEEDED_F(hmdelete(&tmp, &(struct test_item_static){.key = 123}, NULL))) {
     goto cleanup;

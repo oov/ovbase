@@ -71,6 +71,7 @@ add_library(ovbase STATIC
   hmap/delete.c
   hmap/free.c
   hmap/get.c
+  hmap/iter.c
   hmap/new_dynamic.c
   hmap/new_static.c
   hmap/scan.c

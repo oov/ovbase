@@ -653,6 +653,7 @@ NODISCARD error hmap_delete(struct hmap *const hm,
 NODISCARD error hmap_scan(struct hmap *const hm,
                           bool (*iter)(void const *const item, void *const udata),
                           void *const udata);
+bool hmap_iter(struct hmap *const hm, size_t *const i, void **const item);
 #define hmnewd(struct_hmap_ptr, item_size, cap, get_key_fn)                                                            \
   hmap_new_dynamic((struct_hmap_ptr), (item_size), (cap), (get_key_fn)MEM_FILEPOS_VALUES)
 #define hmnews(struct_hmap_ptr, item_size, cap, key_size)                                                              \
@@ -667,6 +668,8 @@ NODISCARD error hmap_scan(struct hmap *const hm,
 #define hmdelete(struct_hmap_ptr, key_item_ptr, old_item_ptr_ptr)                                                      \
   hmap_delete((struct_hmap_ptr), (key_item_ptr), (void **)(old_item_ptr_ptr)MEM_FILEPOS_VALUES)
 #define hmscan(struct_hmap_ptr, iter, udata_ptr) hmap_scan((struct_hmap_ptr), (iter), (udata_ptr))
+#define hmiter(struct_hmap_ptr, size_t_ptr, item_ptr_ptr)                                                              \
+  hmap_iter((struct_hmap_ptr), (size_t_ptr), (void **)(item_ptr_ptr))
 
 uint64_t get_global_hint(void);
 
