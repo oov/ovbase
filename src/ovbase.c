@@ -1,15 +1,32 @@
 #include <ovbase.h>
 
-#include <stdlib.h> // realloc, free
+#ifdef USE_MIMALLOC
 
+#  ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    if __has_warning("-Wreserved-identifier")
+#      pragma GCC diagnostic ignored "-Wreserved-identifier"
+#    endif
+#  endif // __GNUC__
+#  include <mimalloc.h>
+#  ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#  endif // __GNUC__
+
+#  define REALLOC(ptr, size) (mi_realloc(ptr, size))
+#  define FREE(ptr) (mi_free(ptr))
+
+#else
+
+#  define REALLOC(ptr, size) (realloc(ptr, size))
+#  define FREE(ptr) (free(ptr))
+
+#endif
+
+#include <stdlib.h> // realloc, free
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
-#  define REALLOC(ptr, size) (realloc(ptr, size))
-#  define FREE(ptr) (free(ptr))
-#else
-#  define REALLOC(ptr, size) (realloc(ptr, size))
-#  define FREE(ptr) (free(ptr))
 #endif
 
 #include <stdatomic.h>

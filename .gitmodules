@@ -8,3 +8,6 @@
 [submodule "3rd/acutest"]
 	path = 3rd/acutest
 	url = https://github.com/oov/acutest
+[submodule "3rd/mimalloc"]
+	path = 3rd/mimalloc
+	url = https://github.com/microsoft/mimalloc

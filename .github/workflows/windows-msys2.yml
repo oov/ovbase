@@ -36,4 +36,7 @@ jobs:
       - name: Build
         shell: msys2 {0}
         run: |
-          rm -f build/default/CMakeCache.txt && cmake --preset default -DSKIP_OVTHREADS_TEST=OFF -DFORMAT_SOURCES=OFF && cmake --build --preset default && ctest --preset default --output-junit testlog.xml
+          mkdir -p build/ovbase
+          cd build
+          rm -f ovbase/CmakeCache.txt ovbase/local/build/mimalloc/CmakeCache.txt && cmake -S .. -B ovbase --preset default -DFORMAT_SOURCES=OFF -DUSE_MIMALLOC=ON -DCMAKE_INSTALL_PREFIX=local && \
+          cmake --build ovbase && ctest --test-dir ovbase --output-on-failure --output-junit testlog.xml

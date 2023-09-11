@@ -4,6 +4,7 @@
 #cmakedefine USE_WSTR
 #cmakedefine LEAK_DETECTOR
 #cmakedefine ALLOCATE_LOGGER
+#cmakedefine USE_MIMALLOC
 
 #cmakedefine TARGET_WASI_SDK
 #cmakedefine TARGET_EMSCRIPTEN
