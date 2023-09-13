@@ -190,6 +190,34 @@ static void report_allocated_count(void) {
 }
 #endif
 
+#if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
+void mem_log_allocated(void const *const p MEM_FILEPOS_PARAMS) {
+#ifdef ALLOCATE_LOGGER
+  mtx_lock(&g_mem_mtx);
+  allocated_put(p MEM_FILEPOS_VALUES_PASSTHRU);
+  mtx_unlock(&g_mem_mtx);
+#else
+  (void)p;
+#endif
+#ifdef LEAK_DETECTOR
+  allocated();
+#endif
+}
+
+void mem_log_free(void const *const p) {
+#ifdef ALLOCATE_LOGGER
+  mtx_lock(&g_mem_mtx);
+  allocated_remove(p);
+  mtx_unlock(&g_mem_mtx);
+#else
+  (void)p;
+#endif
+#ifdef LEAK_DETECTOR
+  freed();
+#endif
+}
+#endif
+
 bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
   if (sz == 0) {
     if (*(void **)pp == NULL) {
