@@ -156,14 +156,10 @@ PUBLIC
 PRIVATE
   $<$<BOOL:${USE_MIMALLOC}>:${PROJECT_BINARY_DIR}/local/include/mimalloc-2.1>
 )
-target_link_directories(ovbase
-PUBLIC
-  $<$<BOOL:${USE_MIMALLOC}>:${PROJECT_BINARY_DIR}/local/lib/mimalloc-2.1>
-)
 target_link_libraries(ovbase
 PUBLIC
-  $<$<AND:$<BOOL:${USE_MIMALLOC}>,$<CONFIG:Debug>>:mimalloc-static-debug>
-  $<$<AND:$<BOOL:${USE_MIMALLOC}>,$<CONFIG:Release>>:mimalloc-static>
+  $<$<AND:$<BOOL:${USE_MIMALLOC}>,$<CONFIG:Debug>>:${PROJECT_BINARY_DIR}/local/lib/mimalloc-2.1/libmimalloc-static-debug.a>
+  $<$<AND:$<BOOL:${USE_MIMALLOC}>,$<CONFIG:Release>>:${PROJECT_BINARY_DIR}/local/lib/mimalloc-2.1/libmimalloc-static.a>
 )
 target_compile_definitions(ovbase
 PRIVATE
