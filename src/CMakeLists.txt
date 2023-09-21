@@ -9,7 +9,6 @@ option(USE_LTO "use LTO" ON)
 option(SKIP_OVTHREADS_TEST "skip ovthreads tests" ON)
 option(TARGET_EMSCRIPTEN "target emscripten" OFF)
 option(TARGET_WASI_SDK "target wasi-sdk" OFF)
-option(USE_MIMALLOC "use mimalloc" OFF)
 set(LDNAME "lld" CACHE STRING "ld name")
 
 set(is_clang "$<C_COMPILER_ID:Clang>")
@@ -154,12 +153,7 @@ PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
 PRIVATE
-  $<$<BOOL:${USE_MIMALLOC}>:${PROJECT_BINARY_DIR}/local/include/mimalloc-2.1>
-)
-target_link_libraries(ovbase
-PUBLIC
-  $<$<AND:$<BOOL:${USE_MIMALLOC}>,$<CONFIG:Debug>>:${PROJECT_BINARY_DIR}/local/lib/mimalloc-2.1/libmimalloc-static-debug.a>
-  $<$<AND:$<BOOL:${USE_MIMALLOC}>,$<CONFIG:Release>>:${PROJECT_BINARY_DIR}/local/lib/mimalloc-2.1/libmimalloc-static.a>
+  $<$<BOOL:${USE_MIMALLOC}>:${LOCAL_INSTALL_PREFIX}/include/mimalloc-2.1>
 )
 target_compile_definitions(ovbase
 PRIVATE
@@ -186,6 +180,7 @@ target_link_libraries(ovbase
 PRIVATE
   m
   ovbase_intf
+  $<$<BOOL:${USE_MIMALLOC}>:mimalloc-static>
 )
 install(TARGETS ovbase
         EXPORT libovbase
@@ -200,7 +195,6 @@ FILES
 DESTINATION
   include/ovbase_3rd
 )
-add_dependencies(ovbase mimalloc)
 
 add_executable(array_test array_test.c)
 list(APPEND tests array_test)
