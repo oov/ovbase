@@ -234,10 +234,10 @@ foreach(target ${tests})
           --dir=${CMAKE_CURRENT_SOURCE_DIR}/mo/test
           --wasm-features threads
           --wasi-modules experimental-wasi-threads
-          ${target} -- --exec=never
+          $<TARGET_FILE:${target}> -- --exec=never
     )
   else()
-    add_test(NAME ${target} COMMAND ${target})
+    add_test(NAME ${target} COMMAND $<TARGET_FILE:${target}>)
   endif()
   target_compile_definitions(${target}
   PRIVATE
