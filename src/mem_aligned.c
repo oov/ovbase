@@ -27,9 +27,9 @@ NODISCARD error mem_aligned_alloc_(void *const pp,
   if (*(void **)pp == NULL) {
     return errg(err_out_of_memory);
   }
-#if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
+#  if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
   mem_log_allocated(*(void **)pp MEM_FILEPOS_VALUES_PASSTHRU);
-#endif
+#  endif
   return eok();
 }
 
@@ -41,13 +41,13 @@ NODISCARD error mem_aligned_free_(void *const pp MEM_FILEPOS_PARAMS) {
     return errg(err_invalid_arugment);
   }
   mi_free(*(void **)pp);
-#if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
+#  if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
   mem_log_free(*(void **)pp);
-#endif
+#  endif
   *(void **)pp = NULL;
-  #ifdef ALLOCATE_LOGGER
+#  ifdef ALLOCATE_LOGGER
   (void)filepos;
-  #endif
+#  endif
   return eok();
 }
 

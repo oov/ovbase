@@ -192,29 +192,29 @@ static void report_allocated_count(void) {
 
 #if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
 void mem_log_allocated(void const *const p MEM_FILEPOS_PARAMS) {
-#ifdef ALLOCATE_LOGGER
+#  ifdef ALLOCATE_LOGGER
   mtx_lock(&g_mem_mtx);
   allocated_put(p MEM_FILEPOS_VALUES_PASSTHRU);
   mtx_unlock(&g_mem_mtx);
-#else
+#  else
   (void)p;
-#endif
-#ifdef LEAK_DETECTOR
+#  endif
+#  ifdef LEAK_DETECTOR
   allocated();
-#endif
+#  endif
 }
 
 void mem_log_free(void const *const p) {
-#ifdef ALLOCATE_LOGGER
+#  ifdef ALLOCATE_LOGGER
   mtx_lock(&g_mem_mtx);
   allocated_remove(p);
   mtx_unlock(&g_mem_mtx);
-#else
+#  else
   (void)p;
-#endif
-#ifdef LEAK_DETECTOR
+#  endif
+#  ifdef LEAK_DETECTOR
   freed();
-#endif
+#  endif
 }
 #endif
 
