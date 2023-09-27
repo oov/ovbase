@@ -65,10 +65,6 @@ static void global_hint_init(void) {
 
 uint64_t get_global_hint(void) { return ov_splitmix64(atomic_fetch_add(&g_global_hint, 0x9e3779b97f4a7c15)); }
 
-void *ov_hm_malloc(size_t const s, void *const udata) {
-  (void)udata;
-  return REALLOC(NULL, s);
-}
 void *ov_hm_realloc(void *const p, size_t const s, void *const udata) {
   (void)udata;
   return REALLOC(p, s);
@@ -107,7 +103,7 @@ static void allocate_logger_init(void) {
   hash = ov_splitmix64_next(hash);
   uint64_t const s1 = ov_splitmix64(hash);
   g_allocated = hashmap_new_with_allocator(
-      ov_hm_malloc, ov_hm_realloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+      ov_hm_realloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!g_allocated) {
     abort();
   }
@@ -155,7 +151,7 @@ static size_t report_leaks(void) {
   hash = ov_splitmix64_next(hash);
   uint64_t const s1 = ov_splitmix64(hash);
   struct hashmap *dummy = hashmap_new_with_allocator(
-      ov_hm_malloc, ov_hm_realloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+      ov_hm_realloc, ov_hm_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!dummy) {
     abort();
   }
