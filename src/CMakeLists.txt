@@ -50,6 +50,7 @@ INTERFACE
 
 set(SOURCE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(DESTINATION_INCLUDE_DIR ${PROJECT_BINARY_DIR}/include)
+configure_file(${SOURCE_INCLUDE_DIR}/ovarray.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovbase_config.h.in ${DESTINATION_INCLUDE_DIR}/ovbase_config.h @ONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovbase.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovmo.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
@@ -63,6 +64,7 @@ configure_file(${PROJECT_SOURCE_DIR}/3rd/tinycthread/source/tinycthread.h ${DEST
 
 add_library(ovbase STATIC
   array.c
+  array2.c
   error.c
   error_i18n.c
   hashmap.c
@@ -138,6 +140,7 @@ LIBRARY_OUTPUT_DIRECTORY
   ${PROJECT_BINARY_DIR}/lib
 )
 set_property(TARGET ovbase PROPERTY PUBLIC_HEADER
+  ${DESTINATION_INCLUDE_DIR}/ovarray.h
   ${DESTINATION_INCLUDE_DIR}/ovbase.h
   ${DESTINATION_INCLUDE_DIR}/ovbase_config.h
   ${DESTINATION_INCLUDE_DIR}/ovmo.h
@@ -198,6 +201,8 @@ DESTINATION
 
 add_executable(array_test array_test.c)
 list(APPEND tests array_test)
+add_executable(array2_test array2_test.c)
+list(APPEND tests array2_test)
 add_executable(ovbase_test ovbase_test.c)
 list(APPEND tests ovbase_test)
 add_executable(hmap_test hmap/test.c)
