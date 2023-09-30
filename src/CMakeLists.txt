@@ -86,21 +86,25 @@ add_library(ovbase STATIC
   mo/wstr.c
   $<$<BOOL:${WIN32}>:mo/win32.c>
   num/char/atoi.c
+  num/char/atof.c
   num/char/atou.c
   num/char/ftoa.c
   num/char/itoa.c
   num/char/utoa.c
   num/char16/atoi.c
+  num/char16/atof.c
   num/char16/atou.c
   num/char16/ftoa.c
   num/char16/itoa.c
   num/char16/utoa.c
   num/char32/atoi.c
+  num/char32/atof.c
   num/char32/atou.c
   num/char32/ftoa.c
   num/char32/itoa.c
   num/char32/utoa.c
   num/wchar/atoi.c
+  num/wchar/atof.c
   num/wchar/atou.c
   num/wchar/ftoa.c
   num/wchar/itoa.c

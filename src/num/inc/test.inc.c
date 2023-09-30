@@ -4,14 +4,6 @@
 
 #include <inttypes.h>
 
-#ifndef STR_PH
-#  define STR_PH "ls"
-#endif
-
-#ifndef STRCMP
-#  define STRCMP wcscmp
-#endif
-
 static char const *convstr(CHAR_TYPE const *str, char *buf) {
   char const *const first = buf;
   while (*str) {
@@ -78,6 +70,77 @@ static void test_atoi_strict(void) {
     INT_TYPE r = 0;
     if (TEST_CHECK(FUNCNAME(atoi)(td->input, &r, true) == td->result)) {
       TEST_CHECK(r == td->output);
+    }
+  }
+}
+
+static inline int fcompare(FLOAT_TYPE x, FLOAT_TYPE y, FLOAT_TYPE tolerance) {
+  return (x > y + tolerance) ? 1 : (y > x + tolerance) ? -1 : 0;
+}
+#define fcmp(x, op, y, tolerance) ((fcompare((x), (y), (tolerance)))op 0)
+
+static void test_atof_strict(void) {
+  static const struct test_data {
+    CHAR_TYPE const *input;
+    bool result;
+    FLOAT_TYPE output;
+  } test_data[] = {
+      {
+          .input = STR("0"),
+          .output = (FLOAT_TYPE)(0),
+          .result = true,
+      },
+      {
+          .input = STR("1"),
+          .output = (FLOAT_TYPE)(1),
+          .result = true,
+      },
+      {
+          .input = STR("-1"),
+          .output = (FLOAT_TYPE)(-1),
+          .result = true,
+      },
+      {
+          .input = STR("1234567890.1234567890"),
+          .output = (FLOAT_TYPE)(1234567890.1234567890),
+          .result = true,
+      },
+      {
+          .input = STR("-1234567890.1234567890"),
+          .output = (FLOAT_TYPE)(-1234567890.1234567890),
+          .result = true,
+      },
+      {
+          .input = STR("1234567890.01234567890"),
+          .output = (FLOAT_TYPE)(1234567890.01234567890),
+          .result = true,
+      },
+      {
+          .input = STR("-1234567890.01234567890"),
+          .output = (FLOAT_TYPE)(-1234567890.01234567890),
+          .result = true,
+      },
+      {
+          .input = STR("0x0"),
+          .result = false,
+      },
+      {
+          .input = STR("hello"),
+          .result = false,
+      },
+  };
+
+  size_t n = sizeof(test_data) / sizeof(test_data[0]);
+  char buf[128] = {0};
+  CHAR_TYPE fbuf[64] = {0};
+  for (size_t i = 0; i < n; ++i) {
+    struct test_data const *const td = test_data + i;
+    TEST_CASE_("test #%zu \"%s\"", i, convstr(td->input, buf));
+    FLOAT_TYPE r = 0;
+    if (TEST_CHECK(FUNCNAME(atof)(td->input, &r, true) == td->result)) {
+      TEST_CHECK(fcmp(r, ==, td->output, 1e-12));
+      TEST_MSG("expected %s", convstr(FUNCNAME(ftoa)(td->output, 12, STR('.'), fbuf), buf));
+      TEST_MSG("got      %s", convstr(FUNCNAME(ftoa)(r, 12, STR('.'), fbuf), buf));
     }
   }
 }
@@ -317,6 +380,7 @@ static void test_ftoa(void) {
 
 TEST_LIST = {
     {"test_atoi_strict", test_atoi_strict},
+    {"test_atof_strict", test_atof_strict},
     {"test_atou_strict", test_atou_strict},
     {"test_itoa", test_itoa},
     {"test_utoa", test_utoa},

@@ -6,24 +6,28 @@
 #include <wchar.h>
 
 bool ov_atoi_char(char const *ptr, int64_t *const dest, bool const strict);
+bool ov_atof_char(char const *ptr, double *const dest, bool const strict);
 bool ov_atou_char(char const *ptr, uint64_t *const dest, bool const strict);
 char *ov_itoa_char(int64_t const v, char buf[32]);
 char *ov_utoa_char(uint64_t const v, char buf[32]);
 char *ov_ftoa_char(double const d, size_t const frac_len, char const dot, char buf[64]);
 
 bool ov_atoi_char16(char16_t const *ptr, int64_t *const dest, bool const strict);
+bool ov_atof_char16(char16_t const *ptr, double *const dest, bool const strict);
 bool ov_atou_char16(char16_t const *ptr, uint64_t *const dest, bool const strict);
 char16_t *ov_itoa_char16(int64_t const v, char16_t buf[32]);
 char16_t *ov_utoa_char16(uint64_t const v, char16_t buf[32]);
 char16_t *ov_ftoa_char16(double const d, size_t const frac_len, char16_t const dot, char16_t buf[64]);
 
 bool ov_atoi_char32(char32_t const *ptr, int64_t *const dest, bool const strict);
+bool ov_atof_char32(char32_t const *ptr, double *const dest, bool const strict);
 bool ov_atou_char32(char32_t const *ptr, uint64_t *const dest, bool const strict);
 char32_t *ov_itoa_char32(int64_t const v, char32_t buf[32]);
 char32_t *ov_utoa_char32(uint64_t const v, char32_t buf[32]);
 char32_t *ov_ftoa_char32(double const d, size_t const frac_len, char32_t const dot, char32_t buf[64]);
 
 bool ov_atoi_wchar(wchar_t const *ptr, int64_t *const dest, bool const strict);
+bool ov_atof_wchar(wchar_t const *ptr, double *const dest, bool const strict);
 bool ov_atou_wchar(wchar_t const *ptr, uint64_t *const dest, bool const strict);
 wchar_t *ov_itoa_wchar(int64_t const v, wchar_t buf[32]);
 wchar_t *ov_utoa_wchar(uint64_t const v, wchar_t buf[32]);
