@@ -90,6 +90,16 @@ add_library(ovbase STATIC
   num/char/ftoa.c
   num/char/itoa.c
   num/char/utoa.c
+  num/char16/atoi.c
+  num/char16/atou.c
+  num/char16/ftoa.c
+  num/char16/itoa.c
+  num/char16/utoa.c
+  num/char32/atoi.c
+  num/char32/atou.c
+  num/char32/ftoa.c
+  num/char32/itoa.c
+  num/char32/utoa.c
   num/wchar/atoi.c
   num/wchar/atou.c
   num/wchar/ftoa.c
@@ -227,6 +237,10 @@ add_executable(num_wchar_test num/wchar/test.c)
 list(APPEND tests num_wchar_test)
 add_executable(num_char_test num/char/test.c)
 list(APPEND tests num_char_test)
+add_executable(num_char16_test num/char16/test.c)
+list(APPEND tests num_char16_test)
+add_executable(num_char32_test num/char32/test.c)
+list(APPEND tests num_char32_test)
 add_executable(printf_char_test printf/char_test.c)
 list(APPEND tests printf_char_test)
 add_executable(printf_wchar_test printf/wchar_test.c)

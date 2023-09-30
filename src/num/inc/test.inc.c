@@ -12,6 +12,15 @@
 #  define STRCMP wcscmp
 #endif
 
+static char const *convstr(CHAR_TYPE const *str, char *buf) {
+  char const *const first = buf;
+  while (*str) {
+    *buf++ = (char)*str++;
+  }
+  *buf = '\0';
+  return first;
+}
+
 static void test_atoi_strict(void) {
   static const struct test_data {
     CHAR_TYPE const *input;
@@ -62,9 +71,10 @@ static void test_atoi_strict(void) {
   };
 
   size_t n = sizeof(test_data) / sizeof(test_data[0]);
+  char buf[128] = {0};
   for (size_t i = 0; i < n; ++i) {
     struct test_data const *const td = test_data + i;
-    TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->input);
+    TEST_CASE_("test #%zu \"%s\"", i, convstr(td->input, buf));
     INT_TYPE r = 0;
     if (TEST_CHECK(FUNCNAME(atoi)(td->input, &r, true) == td->result)) {
       TEST_CHECK(r == td->output);
@@ -107,9 +117,10 @@ static void test_atou_strict(void) {
   };
 
   size_t n = sizeof(test_data) / sizeof(test_data[0]);
+  char buf[128] = {0};
   for (size_t i = 0; i < n; ++i) {
     struct test_data const *const td = test_data + i;
-    TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->input);
+    TEST_CASE_("test #%zu \"%s\"", i, convstr(td->input, buf));
     UINT_TYPE r = 0;
     if (TEST_CHECK(FUNCNAME(atou)(td->input, &r, true) == td->result)) {
       TEST_CHECK(r == td->output);
@@ -144,15 +155,17 @@ static void test_itoa(void) {
       },
   };
   CHAR_TYPE buf[32] = {0};
+  char strbuf[128] = {0};
+  char strbuf2[128] = {0};
   size_t n = sizeof(test_data) / sizeof(test_data[0]);
   for (size_t i = 0; i < n; ++i) {
     struct test_data const *const td = test_data + i;
-    TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->output);
+    TEST_CASE_("test #%zu \"%s\"", i, convstr(td->output, strbuf));
     CHAR_TYPE *r = FUNCNAME(itoa)(td->input, buf);
     if (TEST_CHECK(r != NULL)) {
-      TEST_CHECK(STRCMP(r, td->output) == 0);
-      TEST_MSG("expected %" STR_PH, td->output);
-      TEST_MSG("got %" STR_PH, r);
+      TEST_CHECK(strcmp(convstr(r, strbuf), convstr(td->output, strbuf2)) == 0);
+      TEST_MSG("expected %s", strbuf2);
+      TEST_MSG("got %s", strbuf);
     }
   }
 }
@@ -173,15 +186,17 @@ static void test_utoa(void) {
   };
 
   CHAR_TYPE buf[32] = {0};
+  char strbuf[128] = {0};
+  char strbuf2[128] = {0};
   size_t n = sizeof(test_data) / sizeof(test_data[0]);
   for (size_t i = 0; i < n; ++i) {
     struct test_data const *const td = test_data + i;
-    TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->output);
+    TEST_CASE_("test #%zu \"%s\"", i, convstr(td->output, strbuf));
     CHAR_TYPE *r = FUNCNAME(utoa)(td->input, buf);
     if (TEST_CHECK(r != NULL)) {
-      TEST_CHECK(STRCMP(r, td->output) == 0);
-      TEST_MSG("expected %" STR_PH, td->output);
-      TEST_MSG("got %" STR_PH, r);
+      TEST_CHECK(strcmp(convstr(r, strbuf), convstr(td->output, strbuf2)) == 0);
+      TEST_MSG("expected %s", strbuf2);
+      TEST_MSG("got %s", strbuf);
     }
   }
 }
@@ -285,15 +300,17 @@ static void test_ftoa(void) {
   };
 
   CHAR_TYPE buf[BUFFER_SIZE_FLOAT] = {0};
+  char strbuf[128] = {0};
+  char strbuf2[128] = {0};
   size_t n = sizeof(test_data) / sizeof(test_data[0]);
   for (size_t i = 0; i < n; ++i) {
     struct test_data const *const td = test_data + i;
-    TEST_CASE_("test #%zu \"%" STR_PH "\"", i, td->output);
+    TEST_CASE_("test #%zu \"%s\"", i, convstr(td->output, strbuf));
     CHAR_TYPE *r = FUNCNAME(ftoa)(td->input, td->frac_len, STR('.'), buf);
     if (TEST_CHECK(r != NULL)) {
-      TEST_CHECK(STRCMP(r, td->output) == 0);
-      TEST_MSG("expected %" STR_PH, td->output);
-      TEST_MSG("got %" STR_PH, r);
+      TEST_CHECK(strcmp(convstr(r, strbuf), convstr(td->output, strbuf2)) == 0);
+      TEST_MSG("expected %s", strbuf2);
+      TEST_MSG("got %s", strbuf);
     }
   }
 }
