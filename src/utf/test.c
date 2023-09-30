@@ -2,6 +2,60 @@
 
 #include <ovutf.h>
 
+#ifdef __GNUC__
+#  ifndef __has_warning
+#    define __has_warning(x) 0
+#  endif
+#  pragma GCC diagnostic push
+#  if __has_warning("-Wc99-compat")
+#    pragma GCC diagnostic ignored "-Wc99-compat"
+#  endif
+#endif // __GNUC__
+
+static size_t char16len(char16_t const *s) {
+  size_t len = 0;
+  while (*s++)
+    ++len;
+  return len;
+}
+
+static size_t char32len(char32_t const *s) {
+  size_t len = 0;
+  while (*s++)
+    ++len;
+  return len;
+}
+
+static void test_ov_utf8_to_char16(void) {
+  char const *u8 = "ABCabc123ﾃｽﾄテストこんにちは𠮷野家🌏🌍🌎";
+  char16_t *golden = u"ABCabc123ﾃｽﾄテストこんにちは𠮷野家🌏🌍🌎";
+  char16_t buf[128];
+  size_t sz;
+  TEST_CHECK(ov_utf8_to_char16_len(u8, 9) == 9);
+  TEST_CHECK(ov_utf8_to_char16_len(u8, 10) == 0);
+  TEST_CHECK(ov_utf8_to_char16_len(u8, strlen(u8)) == char16len(golden));
+  TEST_CHECK(ov_utf8_to_char16(u8, strlen(u8), buf, 7, &sz) == 6);
+  TEST_CHECK(memcmp(buf, golden, sz * sizeof(char16_t)) == 0);
+  TEST_CHECK(ov_utf8_to_char16(u8, strlen(u8), buf, 128, &sz) == char16len(golden));
+  TEST_CHECK(sz == strlen(u8));
+  TEST_CHECK(char16len(buf) == char16len(golden) && memcmp(buf, golden, char16len(golden) * sizeof(char16_t)) == 0);
+}
+
+static void test_ov_utf8_to_char32(void) {
+  char const *u8 = "ABCabc123ﾃｽﾄテストこんにちは𠮷野家🌏🌍🌎";
+  char32_t *golden = U"ABCabc123ﾃｽﾄテストこんにちは𠮷野家🌏🌍🌎";
+  char32_t buf[128];
+  size_t sz;
+  TEST_CHECK(ov_utf8_to_char32_len(u8, 9) == 9);
+  TEST_CHECK(ov_utf8_to_char32_len(u8, 10) == 0);
+  TEST_CHECK(ov_utf8_to_char32_len(u8, strlen(u8)) == char32len(golden));
+  TEST_CHECK(ov_utf8_to_char32(u8, strlen(u8), buf, 7, &sz) == 6);
+  TEST_CHECK(memcmp(buf, golden, sz * sizeof(char32_t)) == 0);
+  TEST_CHECK(ov_utf8_to_char32(u8, strlen(u8), buf, 128, &sz) == char32len(golden));
+  TEST_CHECK(sz == strlen(u8));
+  TEST_CHECK(char32len(buf) == char32len(golden) && memcmp(buf, golden, char32len(golden) * sizeof(char32_t)) == 0);
+}
+
 static void test_ov_utf8_to_wchar(void) {
   char const *u8 = "ABCabc123ﾃｽﾄテストこんにちは𠮷野家🌏🌍🌎";
   wchar_t *golden = L"ABCabc123ﾃｽﾄテストこんにちは𠮷野家🌏🌍🌎";
@@ -46,6 +100,28 @@ static void test_bad_encoding(void) {
   TEST_CHECK(ov_utf8_to_wchar_len(str, strlen(str)) == 0);
 }
 
+static void test_char16_to_utf8(void) {
+  char16_t const *ws = u"ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
+  char *golden = "ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
+  char buf[128];
+  size_t sz;
+  TEST_CHECK(ov_char16_to_utf8_len(ws, char16len(ws)) == strlen(golden));
+  TEST_CHECK(ov_char16_to_utf8(ws, char16len(ws), buf, 128, &sz) == strlen(golden));
+  TEST_CHECK(sz == char16len(ws));
+  TEST_CHECK(strcmp(buf, golden) == 0);
+}
+
+static void test_char32_to_utf8(void) {
+  char32_t const *ws = U"ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
+  char *golden = "ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
+  char buf[128];
+  size_t sz;
+  TEST_CHECK(ov_char32_to_utf8_len(ws, char32len(ws)) == strlen(golden));
+  TEST_CHECK(ov_char32_to_utf8(ws, char32len(ws), buf, 128, &sz) == strlen(golden));
+  TEST_CHECK(sz == char32len(ws));
+  TEST_CHECK(strcmp(buf, golden) == 0);
+}
+
 static void test_wchar_to_utf8(void) {
   wchar_t const *ws = L"ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
   char *golden = "ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
@@ -78,10 +154,18 @@ static void test_ov_sjis_to_utf8(void) {
 }
 
 TEST_LIST = {
+    {"test_ov_utf8_to_char16", test_ov_utf8_to_char16},
+    {"test_ov_utf8_to_char32", test_ov_utf8_to_char32},
     {"test_ov_utf8_to_wchar", test_ov_utf8_to_wchar},
     {"test_bad_encoding", test_bad_encoding},
+    {"test_char16_to_utf8", test_char16_to_utf8},
+    {"test_char32_to_utf8", test_char32_to_utf8},
     {"test_wchar_to_utf8", test_wchar_to_utf8},
     {"test_kick_broken_surrogate_pair", test_kick_broken_surrogate_pair},
     {"test_ov_sjis_to_utf8", test_ov_sjis_to_utf8},
     {NULL, NULL},
 };
+
+#ifdef __GNUC__
+#  pragma GCC diagnostic pop
+#endif // __GNUC__

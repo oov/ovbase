@@ -113,10 +113,19 @@ add_library(ovbase STATIC
   str/str_.c
   str/to_str_.c
   str/utoa_.c
+  utf/codepoint_char16.c
+  utf/codepoint_char32.c
+  utf/codepoint_sjis.c
+  utf/codepoint_utf8.c
+  utf/codepoint_wchar.c
   utf/common.c
-  utf/sjis.c
-  utf/u2w.c
-  utf/w2u.c
+  utf/to_char16.c
+  utf/to_char32.c
+  utf/to_wchar.c
+  utf/utf8_from_char16.c
+  utf/utf8_from_char32.c
+  utf/utf8_from_sjis.c
+  utf/utf8_from_wchar.c
   wstr/atoi_.c
   wstr/atou_.c
   wstr/cat_.c
