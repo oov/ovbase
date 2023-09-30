@@ -18,14 +18,18 @@ jobs:
           sudo apt install -y git wget tar cmake ninja-build clang-format xz-utils
       - name: Build
         run: |
-          mkdir -p build/tools
-          cd build/tools
-          WASMTIME_VERSION=v11.0.1
+          mkdir build
+          cd build
+          mkdir -p tools ovbase
+          cd tools
+          WASMTIME_VERSION=v13.0.0
           wget https://github.com/bytecodealliance/wasmtime/releases/download/${WASMTIME_VERSION}/wasmtime-${WASMTIME_VERSION}-x86_64-linux.tar.xz
           tar Jxf wasmtime-${WASMTIME_VERSION}-x86_64-linux.tar.xz
           wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
           tar zxf wasi-sdk-20.0-linux.tar.gz
           export PATH="$(pwd)/wasmtime-${WASMTIME_VERSION}-x86_64-linux:$PATH"
           export WASISDK="$(pwd)/wasi-sdk-20.0"
-          cd ../..
-          rm -rf build/default/CmakeCache.txt && CC="${WASISDK}/bin/clang --target=wasm32-wasi-threads --sysroot=${WASISDK}/share/wasi-sysroot -pthread" cmake --preset default -DCMAKE_C_COMPILER="" -DTARGET_WASI_SDK=ON && cmake --build --preset default && ctest --preset default --output-junit testlog.xml
+          cd ..
+
+          rm -f ovbase/CmakeCache.txt && CC="${WASISDK}/bin/clang --target=wasm32-wasi-threads --sysroot=${WASISDK}/share/wasi-sysroot -pthread" cmake -S .. -B ovbase --preset debug -DCMAKE_C_COMPILER="" -DTARGET_WASI_SDK=ON -DFORMAT_SOURCES=ON -DCMAKE_INSTALL_PREFIX=local -DSKIP_OVTHREADS_TEST=OFF && \
+          cmake --build ovbase && ctest --test-dir ovbase --output-on-failure --output-junit testlog.xml

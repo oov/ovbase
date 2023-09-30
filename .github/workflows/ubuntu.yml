@@ -18,4 +18,7 @@ jobs:
           sudo apt install -y cmake ninja-build clang clang-format lld
       - name: Build
         run: |
-          rm -f build/default/CMakeCache.txt && cmake --preset default -DSKIP_OVTHREADS_TEST=OFF -DFORMAT_SOURCES=OFF && cmake --build --preset default && ctest --preset default --output-junit testlog.xml
+          mkdir -p build/ovbase
+          cd build
+          rm -f ovbase/CmakeCache.txt && cmake -S .. -B ovbase --preset debug -DFORMAT_SOURCES=ON -DCMAKE_INSTALL_PREFIX=local -DSKIP_OVTHREADS_TEST=OFF && \
+          cmake --build ovbase && ctest --test-dir ovbase --output-on-failure --output-junit testlog.xml
