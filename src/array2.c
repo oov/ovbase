@@ -65,7 +65,9 @@ bool ov_array_prepare_for_push(void **const a, size_t const itemsize MEM_FILEPOS
   return true;
 }
 
-size_t ov_array_length_decrement(void *const a) { return a && OV_ARRAY_HEADER_CONST(a)->len ? --(OV_ARRAY_HEADER(a)->len) : 0; }
+size_t ov_array_length_decrement(void *const a) {
+  return a && OV_ARRAY_HEADER_CONST(a)->len ? --(OV_ARRAY_HEADER(a)->len) : 0;
+}
 
 bool ov_bitarray_grow(ov_bitarray **const a, size_t const newcap MEM_FILEPOS_PARAMS) {
   assert(a != NULL);
