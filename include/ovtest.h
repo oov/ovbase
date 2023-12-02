@@ -1,5 +1,6 @@
 #pragma once
 
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,6 +16,7 @@
 #endif // __GNUC__
 
 static inline void test_init_(void) {
+  setlocale(LC_ALL, "");
   ov_init();
 #ifdef TEST_MY_INIT
   TEST_MY_INIT;
