@@ -7,7 +7,7 @@
 #endif
 
 static struct mo *open_mo(uint8_t *mobuf) {
-  FILE *f = fopen(SOURCE_DIR "/mo/test/en_US.mo", "rb");
+  FILE *f = fopen(OVBASE_SOURCE_DIR "/mo/test/en_US.mo", "rb");
   if (!TEST_CHECK(f != NULL)) {
     return NULL;
   }

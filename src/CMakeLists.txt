@@ -270,8 +270,8 @@ foreach(target ${tests})
   endif()
   target_compile_definitions(${target}
   PRIVATE
-    SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-    SOURCE_DIR_WIDE=L"${CMAKE_CURRENT_SOURCE_DIR}"
+    OVBASE_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+    OVBASE_SOURCE_DIR_WIDE=L"${CMAKE_CURRENT_SOURCE_DIR}"
   )
   target_link_libraries(${target}
   PRIVATE
