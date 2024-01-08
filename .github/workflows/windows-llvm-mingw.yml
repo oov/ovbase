@@ -1,0 +1,43 @@
+name: windows-msys2
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build
+        shell: bash
+        run: |
+          set -eu
+          mkdir -p build/tools
+          cd build/tools
+          
+          curl -OL https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.zip
+          unzip -q $(ls -1 | grep cmake-.*\.zip)
+          mv $(ls -1d */ | grep ^cmake- | sed 's/\///') cmake
+          export PATH=$PWD/cmake/bin:$PATH
+          
+          curl -OL https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip
+          mkdir ninja && cd ninja && cmake -E tar xf ../$(ls -1 .. | grep ninja.*\.zip) && cd ..
+          export PATH=$PWD/ninja:$PATH
+          
+          curl -OL https://github.com/mstorsjo/llvm-mingw/releases/download/20231128/llvm-mingw-20231128-ucrt-x86_64.zip
+          cmake -E tar xf $(ls -1 | grep ^llvm-mingw-.*\.zip) && mv $(ls -1d */ | grep ^llvm-mingw- | sed 's/\///') llvm-mingw
+          export PATH=$PWD/llvm-mingw/bin:$PATH
+          
+          cd ..
+          
+          for arch in i686 x86_64; do
+            rm -f ovbase-$arch/CmakeCache.txt
+            cmake -S .. -B ovbase-$arch --preset debug -DFORMAT_SOURCES=ON -DCMAKE_INSTALL_PREFIX=local -DSKIP_OVTHREADS_TEST=OFF -DCMAKE_TOOLCHAIN_FILE=cmake/llvm-mingw.cmake -DCMAKE_C_COMPILER=$arch-w64-mingw32-clang
+            cmake --build ovbase-$arch
+            ctest --test-dir ovbase-$arch --output-on-failure --output-junit testlog.xml
+          done
