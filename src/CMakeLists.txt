@@ -14,10 +14,6 @@ set(LDNAME "lld" CACHE STRING "ld name")
 set(is_clang "$<C_COMPILER_ID:Clang>")
 set(v16_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,16>")
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
-
 add_library(ovbase_intf INTERFACE)
 target_compile_options(ovbase_intf
 INTERFACE
