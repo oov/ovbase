@@ -59,6 +59,9 @@ static inline void test_fini_(void) {
 #  if __has_warning("-Wunused-function")
 #    pragma GCC diagnostic ignored "-Wunused-function"
 #  endif
+#  if __has_warning("-Wswitch-enum")
+#    pragma GCC diagnostic ignored "-Wswitch-enum"
+#  endif
 #  include <ovbase_3rd/acutest.h>
 #  pragma GCC diagnostic pop
 
