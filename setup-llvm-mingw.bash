@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -eu
-cd "$(dirname "${BASH_SOURCE:-$0}")"
 
 function download_cmake () {
   url="$1"
@@ -91,8 +90,33 @@ case "$(uname -s)" in
     ;;
 esac
 
-mkdir -p build/tools
-cd build/tools
+CUR_DIR="${PWD}"
+DEST_DIR=""
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -d|--dir)
+      DEST_DIR=$2
+      shift
+      shift
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+if [ -z "${DEST_DIR}" ]; then
+  cd "$(dirname "${BASH_SOURCE:-$0}")"
+  mkdir -p build/tools
+  cd build/tools
+else
+  cd "${DEST_DIR}"
+fi
 
 download_cmake ${CMAKE_URL} "${PWD}/cmake-${platform}"
 export PATH=$PWD/cmake-${platform}/bin:$PATH
@@ -105,4 +129,4 @@ echo "export PATH=$PWD/llvm-mingw-${platform}/bin:\$PATH" >> env.sh
 chmod +x env.sh
 . env.sh
 
-cd ../..
+cd "${CUR_DIR}"
