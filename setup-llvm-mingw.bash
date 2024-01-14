@@ -156,7 +156,7 @@ else
 fi
 
 download_busybox "${BUSYBOX_URL}" "${PWD}/busybox-${platform}"
-export PATH="$PWD/busybox-${platform}/bin:$PATH"
+export PATH="$PWD/busybox-${platform}:$PATH"
 download_cmake "${CMAKE_URL}" "${PWD}/cmake-${platform}"
 download_ninja "${NINJA_URL}" "${PWD}/ninja-${platform}"
 download_llvm_mingw "${LLVM_MINGW_URL}" "${PWD}/llvm-mingw-${platform}"
