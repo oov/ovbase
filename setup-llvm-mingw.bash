@@ -12,17 +12,23 @@ function download_cmake () {
   # download if not exists
   filename="$(basename "$url")"
   if [ ! -f "${filename}" ]; then
-    curl -OL "$url"
+    echo "Downloading: ${url}"
+    curl -sOL "$url"
   fi
   # install
+  echo "Extracting: ${filename}"
   ext="${filename##*.}"
   if [ "${ext}" = "zip" ]; then
-    unzip -q "${filename}"
+    busybox unzip -q "${filename}"
     noext="${filename%.*}"
     mv "${noext}" "${destdir}"
-  elif [ "${ext}" = "sh" ]; then
-    mkdir "${destdir}"
-    sh "${filename}" --skip-license --prefix="${destdir}"
+  elif [ "${ext}" = "gz" ]; then
+    noext="${filename%.*}"
+    noext="${noext%.tar}"
+    # it seems that busybox tar is not fast on WSL so use cmake tar
+    busybox tar xzf "${filename}" --exclude "${noext}/share" --exclude "${noext}/man" --exclude "${noext}/doc"
+    "${noext}/bin/cmake" -E tar xf "${filename}"
+    mv "${noext}" "${destdir}"
   fi
   return
 }
@@ -37,12 +43,14 @@ function download_ninja () {
   # download if not exists
   filename="$(basename "$url")"
   if [ ! -f "${filename}" ]; then
-    curl -OL "$url"
+    echo "Downloading: ${url}"
+    curl -sOL "$url"
   fi
   # install
+  echo "Extracting: ${filename}"
   mkdir "${destdir}"
   cd "${destdir}"
-  cmake -E tar xf "../${filename}"
+  busybox unzip -q "../${filename}"
   cd ..
   return
 }
@@ -57,13 +65,40 @@ function download_llvm_mingw () {
   # download if not exists
   filename="$(basename "$url")"
   if [ ! -f "${filename}" ]; then
-    curl -OL "$url"
+    echo "Downloading: ${url}"
+    curl -sOL "$url"
   fi
   # install
+  echo "Extracting: ${filename}"
   cmake -E tar xf "${filename}"
   noext="${filename%.*}"
   noext="${noext%.tar}"
   mv "${noext}" "${destdir}"
+  return
+}
+
+function download_busybox () {
+  url="$1"
+  destdir="$2"
+  if [ -d "${destdir}" ]; then
+    # already installed
+    return
+  fi
+  # download if not exists
+  filename="$(basename "$url")"
+  if [ ! -f "${filename}" ]; then
+    echo "Downloading: ${url}"
+    curl -sOL "$url"
+  fi
+  # install
+  echo "Extracting: ${filename}"
+  mkdir "${destdir}"
+  ext="${filename##*.}"
+  if [ "${ext}" = "exe" ]; then
+    cp "${filename}" "${destdir}/busybox.exe"
+  else
+    cp "${filename}" "${destdir}/busybox"
+  fi
   return
 }
 
@@ -74,12 +109,14 @@ LLVM_MINGW_VERSION="20231128"
 case "$(uname -s)" in
   Linux*)
     platform="linux"
-    CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh"
+    BUSYBOX_URL="https://github.com/oov/busybox/releases/download/build-dfe76d6/busybox-linux-x86_64-dfe76d6"
+    CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz"
     NINJA_URL="https://github.com/ninja-build/ninja/releases/download/v${NINJA_VERSION}/ninja-linux.zip"
     LLVM_MINGW_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64.tar.xz"
     ;;
   MINGW64_NT* | MINGW32_NT*)
     platform="windows"
+    BUSYBOX_URL="https://github.com/oov/busybox/releases/download/build-dfe76d6/busybox-windows-i686-dfe76d6.exe"
     CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-windows-x86_64.zip"
     NINJA_URL="https://github.com/ninja-build/ninja/releases/download/v${NINJA_VERSION}/ninja-win.zip"
     LLVM_MINGW_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-x86_64.zip"
@@ -118,14 +155,16 @@ else
   cd "${DEST_DIR}"
 fi
 
-download_cmake ${CMAKE_URL} "${PWD}/cmake-${platform}"
-export PATH=$PWD/cmake-${platform}/bin:$PATH
-download_ninja ${NINJA_URL} "${PWD}/ninja-${platform}"
-download_llvm_mingw ${LLVM_MINGW_URL} "${PWD}/llvm-mingw-${platform}"
+download_busybox "${BUSYBOX_URL}" "${PWD}/busybox-${platform}"
+export PATH="$PWD/busybox-${platform}/bin:$PATH"
+download_cmake "${CMAKE_URL}" "${PWD}/cmake-${platform}"
+download_ninja "${NINJA_URL}" "${PWD}/ninja-${platform}"
+download_llvm_mingw "${LLVM_MINGW_URL}" "${PWD}/llvm-mingw-${platform}"
 
-echo "export PATH=$PWD/cmake-${platform}/bin:\$PATH" > env.sh
-echo "export PATH=$PWD/ninja-${platform}:\$PATH" >> env.sh
-echo "export PATH=$PWD/llvm-mingw-${platform}/bin:\$PATH" >> env.sh
+echo "export PATH=\"$PWD/busybox-${platform}:\$PATH\"" > env.sh
+echo "export PATH=\"$PWD/cmake-${platform}/bin:\$PATH\"" >> env.sh
+echo "export PATH=\"$PWD/ninja-${platform}:\$PATH\"" >> env.sh
+echo "export PATH=\"$PWD/llvm-mingw-${platform}/bin:\$PATH\"" >> env.sh
 chmod +x env.sh
 . env.sh
 
