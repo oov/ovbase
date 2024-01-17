@@ -2,6 +2,32 @@
 
 set -eu
 
+function download_busybox () {
+  url="$1"
+  destdir="$2"
+  if [ -d "${destdir}" ]; then
+    # already installed
+    return
+  fi
+  # download if not exists
+  filename="$(basename "$url")"
+  if [ ! -f "${filename}" ]; then
+    echo "Downloading: ${url}"
+    curl -sOL "$url"
+  fi
+  # install
+  echo "Extracting: ${filename}"
+  mkdir "${destdir}"
+  ext="${filename##*.}"
+  if [ "${ext}" = "exe" ]; then
+    cp "${filename}" "${destdir}/busybox.exe"
+  else
+    cp "${filename}" "${destdir}/busybox"
+    chmod +x "${destdir}/busybox"
+  fi
+  return
+}
+
 function download_cmake () {
   url="$1"
   destdir="$2"
@@ -77,31 +103,6 @@ function download_llvm_mingw () {
   return
 }
 
-function download_busybox () {
-  url="$1"
-  destdir="$2"
-  if [ -d "${destdir}" ]; then
-    # already installed
-    return
-  fi
-  # download if not exists
-  filename="$(basename "$url")"
-  if [ ! -f "${filename}" ]; then
-    echo "Downloading: ${url}"
-    curl -sOL "$url"
-  fi
-  # install
-  echo "Extracting: ${filename}"
-  mkdir "${destdir}"
-  ext="${filename##*.}"
-  if [ "${ext}" = "exe" ]; then
-    cp "${filename}" "${destdir}/busybox.exe"
-  else
-    cp "${filename}" "${destdir}/busybox"
-  fi
-  return
-}
-
 CMAKE_VERSION="3.28.1"
 NINJA_VERSION="1.11.1"
 LLVM_MINGW_VERSION="20231128"
@@ -155,11 +156,13 @@ else
   cd "${DEST_DIR}"
 fi
 
+OLD_PATH="$PATH"
+export PATH="$PWD/cmake-${platform}/bin:$PWD/busybox-${platform}:$PATH"
 download_busybox "${BUSYBOX_URL}" "${PWD}/busybox-${platform}"
-export PATH="$PWD/busybox-${platform}:$PATH"
 download_cmake "${CMAKE_URL}" "${PWD}/cmake-${platform}"
 download_ninja "${NINJA_URL}" "${PWD}/ninja-${platform}"
 download_llvm_mingw "${LLVM_MINGW_URL}" "${PWD}/llvm-mingw-${platform}"
+export PATH="$OLD_PATH"
 
 echo "export PATH=\"$PWD/busybox-${platform}:\$PATH\"" > env.sh
 echo "export PATH=\"$PWD/cmake-${platform}/bin:\$PATH\"" >> env.sh
