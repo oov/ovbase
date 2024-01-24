@@ -103,24 +103,51 @@ function download_llvm_mingw () {
   return
 }
 
+function download_gettext () {
+  url="$1"
+  destdir="$2"
+  if [ -d "${destdir}" ]; then
+    # already installed
+    return
+  fi
+  # download if not exists
+  filename="$(basename "$url")"
+  if [ ! -f "${filename}" ]; then
+    echo "Downloading: ${url}"
+    curl -sOL "$url"
+  fi
+  # install
+  echo "Extracting: ${filename}"
+
+  mkdir "${destdir}"
+  cd "${destdir}"
+  cmake -E tar xf "../${filename}"
+  cd ..
+  return
+}
+
+BUSYBOX_VERSION="dfe76d6"
 CMAKE_VERSION="3.28.1"
 NINJA_VERSION="1.11.1"
 LLVM_MINGW_VERSION="20231128"
+GETTEXT_VERSION="70437c4"
 
 case "$(uname -s)" in
   Linux*)
     platform="linux"
-    BUSYBOX_URL="https://github.com/oov/busybox/releases/download/build-dfe76d6/busybox-linux-x86_64-dfe76d6"
+    BUSYBOX_URL="https://github.com/oov/busybox/releases/download/build-${BUSYBOX_VERSION}/busybox-linux-x86_64-${BUSYBOX_VERSION}"
     CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz"
     NINJA_URL="https://github.com/ninja-build/ninja/releases/download/v${NINJA_VERSION}/ninja-linux.zip"
     LLVM_MINGW_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64.tar.xz"
+    GETTEXT_URL="https://github.com/oov/gettext/releases/download/build-${GETTEXT_VERSION}/gettext-linux-x86_64-${GETTEXT_VERSION}.tar.xz"
     ;;
   MINGW64_NT* | MINGW32_NT*)
     platform="windows"
-    BUSYBOX_URL="https://github.com/oov/busybox/releases/download/build-dfe76d6/busybox-windows-i686-dfe76d6.exe"
+    BUSYBOX_URL="https://github.com/oov/busybox/releases/download/build-${BUSYBOX_VERSION}/busybox-windows-i686-${BUSYBOX_VERSION}.exe"
     CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-windows-x86_64.zip"
     NINJA_URL="https://github.com/ninja-build/ninja/releases/download/v${NINJA_VERSION}/ninja-win.zip"
     LLVM_MINGW_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-x86_64.zip"
+    GETTEXT_URL="https://github.com/oov/gettext/releases/download/build-${GETTEXT_VERSION}/gettext-windows-i686-${GETTEXT_VERSION}.zip"
     ;;
   *)
     echo "Unsupported platform: $(uname -s)"
@@ -162,12 +189,14 @@ download_busybox "${BUSYBOX_URL}" "${PWD}/busybox-${platform}"
 download_cmake "${CMAKE_URL}" "${PWD}/cmake-${platform}"
 download_ninja "${NINJA_URL}" "${PWD}/ninja-${platform}"
 download_llvm_mingw "${LLVM_MINGW_URL}" "${PWD}/llvm-mingw-${platform}"
+download_gettext "${GETTEXT_URL}" "${PWD}/gettext-${platform}"
 export PATH="$OLD_PATH"
 
 echo "export PATH=\"$PWD/busybox-${platform}:\$PATH\"" > env.sh
 echo "export PATH=\"$PWD/cmake-${platform}/bin:\$PATH\"" >> env.sh
 echo "export PATH=\"$PWD/ninja-${platform}:\$PATH\"" >> env.sh
 echo "export PATH=\"$PWD/llvm-mingw-${platform}/bin:\$PATH\"" >> env.sh
+echo "export PATH=\"$PWD/gettext-${platform}/bin:\$PATH\"" >> env.sh
 chmod +x env.sh
 . env.sh
 
