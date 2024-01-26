@@ -21,7 +21,7 @@ jobs:
           - msystem: CLANG32
             arch: clang-i686
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@main
         with:
           submodules: recursive
       - uses: msys2/setup-msys2@v2
