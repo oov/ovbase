@@ -53,7 +53,7 @@ bool ov_bitarray_grow(ov_bitarray **const a, size_t const newcap MEM_FILEPOS_PAR
 #define OV_BITARRAY_DESTROY(baptrptr) OV_ARRAY_DESTROY((baptrptr))
 #define OV_BITARRAY_LENGTH(baptr) OV_ARRAY_LENGTH((baptr))
 #define OV_BITARRAY_SET_LENGTH(baptr, newlen) OV_ARRAY_SET_LENGTH((baptr), (size_t)(newlen))
-#define OV_BITARRAY_CAPACITY(baptr) (OV_ARRAY_CAPACITY((baptr)) * sizeof(ov_bitarray) * 8)
+#define OV_BITARRAY_CAPACITY(baptr) (OV_ARRAY_CAPACITY((baptr)) * 8)
 
 static inline void ov_bitarray_set(ov_bitarray *const a, size_t const index) {
   size_t const d = index / (sizeof(ov_bitarray) * 8);
@@ -71,7 +71,7 @@ static inline bool ov_bitarray_get(ov_bitarray const *const a, size_t const inde
   return (a[d] & ((size_t)(1) << r)) != 0;
 }
 static inline size_t ov_bitarray_length_to_bytes(size_t const bits) {
-  return (bits + (sizeof(ov_bitarray) * 8) - 1) / (sizeof(ov_bitarray) * 8);
+  return ((bits + (sizeof(ov_bitarray) * 8) - 1) / (sizeof(ov_bitarray) * 8)) * sizeof(ov_bitarray);
 }
 
 #define OV_BITARRAY_SET(baptr, index) ov_bitarray_set(baptr, (size_t)(index))

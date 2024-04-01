@@ -78,7 +78,7 @@ bool ov_bitarray_grow(ov_bitarray **const a, size_t const newcap MEM_FILEPOS_PAR
   if (realnewcap <= curcap) {
     return true;
   }
-  if (!mem_core_(&h, sizeof(struct ov_array_header) + realnewcap * sizeof(ov_bitarray) MEM_FILEPOS_VALUES_PASSTHRU)) {
+  if (!mem_core_(&h, sizeof(struct ov_array_header) + realnewcap MEM_FILEPOS_VALUES_PASSTHRU)) {
     return false;
   }
   h->cap = realnewcap;
@@ -86,17 +86,17 @@ bool ov_bitarray_grow(ov_bitarray **const a, size_t const newcap MEM_FILEPOS_PAR
     h->len = 0;
   }
   *a = (void *)(h + 1);
-  memset(*a + curcap, 0, (realnewcap - curcap) * sizeof(ov_bitarray));
+  memset(*a + curcap, 0, (realnewcap - curcap));
   return true;
 }
 
 NODISCARD error ov_bitarray_alloc(ov_bitarray **const a, size_t const len MEM_FILEPOS_PARAMS) {
   size_t const n = OV_BITARRAY_LENGTH_TO_BYTES(len);
-  error err = mem_(a, n, sizeof(ov_bitarray) MEM_FILEPOS_VALUES_PASSTHRU);
+  error err = mem_(a, n, 1 MEM_FILEPOS_VALUES_PASSTHRU);
   if (efailed(err)) {
     err = ethru(err);
     return err;
   }
-  memset(*a, 0, n * sizeof(ov_bitarray));
+  memset(*a, 0, n);
   return eok();
 }

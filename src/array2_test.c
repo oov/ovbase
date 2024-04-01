@@ -47,8 +47,8 @@ static void test_bitarray_growable(void) {
   TEST_SUCCEEDED_F(OV_BITARRAY_GROW(&a, 4));
   TEST_CHECK(a != NULL);
   TEST_CHECK(OV_BITARRAY_LENGTH(a) == 0);
-  TEST_CHECK(OV_BITARRAY_CAPACITY(a) == sizeof(size_t) * 8);
-  TEST_CHECK(OV_ARRAY_CAPACITY(a) == 1);
+  TEST_CHECK(OV_BITARRAY_CAPACITY(a) == sizeof(ov_bitarray) * 8);
+  TEST_CHECK(OV_ARRAY_CAPACITY(a) == sizeof(ov_bitarray));
   OV_BITARRAY_SET_LENGTH(a, 4);
   TEST_CHECK(OV_BITARRAY_LENGTH(a) == 4);
   OV_BITARRAY_DESTROY(&a);
