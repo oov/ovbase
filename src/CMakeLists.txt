@@ -13,6 +13,7 @@ set(LDNAME "lld" CACHE STRING "ld name")
 
 set(is_clang "$<C_COMPILER_ID:Clang>")
 set(v16_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,16>")
+set(v18_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,18>")
 
 add_library(ovbase_intf INTERFACE)
 target_compile_options(ovbase_intf
@@ -27,6 +28,7 @@ INTERFACE
   -pedantic-errors
   -Wno-declaration-after-statement
   -Wno-padded
+  $<$<AND:${is_clang},${v18_or_later}>:-Wno-switch-default>
   $<$<AND:${is_clang},${v16_or_later}>:-Wno-unsafe-buffer-usage>
   -ffunction-sections
   -fdata-sections

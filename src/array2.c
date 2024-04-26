@@ -9,8 +9,8 @@ struct ov_array_header {
   size_t cap;
 };
 
-#define OV_ARRAY_HEADER(a) ((struct ov_array_header *)(a)-1)
-#define OV_ARRAY_HEADER_CONST(a) ((struct ov_array_header const *)(a)-1)
+#define OV_ARRAY_HEADER(a) ((struct ov_array_header *)(a) - 1)
+#define OV_ARRAY_HEADER_CONST(a) ((struct ov_array_header const *)(a) - 1)
 
 static inline size_t zumax(size_t const a, size_t const b) { return a > b ? a : b; }
 

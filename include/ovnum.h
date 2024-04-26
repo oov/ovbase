@@ -34,9 +34,7 @@ wchar_t *ov_utoa_wchar(uint64_t const v, wchar_t buf[32]);
 wchar_t *ov_ftoa_wchar(double const d, size_t const frac_len, wchar_t const dot, wchar_t buf[64]);
 
 #ifndef OV_GENERIC_CASE
-#  define OV_GENERIC_CASE(typ, fn)                                                                                     \
-  typ:                                                                                                                 \
-    fn
+#  define OV_GENERIC_CASE(typ, fn) typ : fn
 #endif
 
 #define ov_atoi(char_const_ptr, dest, strict)                                                                          \
