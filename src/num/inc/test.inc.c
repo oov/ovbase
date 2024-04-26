@@ -341,6 +341,11 @@ static void test_ftoa(void) {
           .frac_len = 2,
       },
       {
+          .input = -0.1234,
+          .output = STR("-0.12"),
+          .frac_len = 2,
+      },
+      {
           .input = 3.456,
           .output = STR("3"),
           .frac_len = 0,

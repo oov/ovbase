@@ -36,7 +36,7 @@ FUNCNAME(ftoa)(FLOAT_TYPE const d, size_t const frac_len, CHAR_TYPE const dot, C
     uv = uv2;
   }
   *--c = (CHAR_TYPE)(uv) + STR('0');
-  if (iv < 0) {
+  if (d < 0) {
     *--c = STR('-');
   }
   return c;
