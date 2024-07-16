@@ -50,7 +50,9 @@ int ov_printf_verify_format_char(char const *const reference, char const *const 
 int ov_printf_verify_format_wchar(wchar_t const *const reference, wchar_t const *const format);
 
 #ifndef OV_GENERIC_CASE
-#  define OV_GENERIC_CASE(typ, fn) typ : fn
+#  define OV_GENERIC_CASE(typ, fn)                                                                                     \
+  typ:                                                                                                                 \
+    fn
 #endif
 
 #define ov_vpprintf(putc, ctx, reference, format, valist)                                                              \

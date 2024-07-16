@@ -428,7 +428,9 @@ NODISCARD static inline error str_to_wstr_(struct str const *const src, struct w
 }
 #endif
 
-#define OV_GENERIC_CASE(typ, fn) typ : fn
+#define OV_GENERIC_CASE(typ, fn)                                                                                       \
+  typ:                                                                                                                 \
+  fn
 
 #if defined(USE_STR) && defined(USE_WSTR)
 #  define sfree(struct_str_ptr)                                                                                        \
