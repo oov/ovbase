@@ -22,13 +22,13 @@ jobs:
           cd build
           mkdir -p tools ovbase
           cd tools
-          WASMTIME_VERSION=v13.0.0
+          WASMTIME_VERSION=v22.0.0
           wget https://github.com/bytecodealliance/wasmtime/releases/download/${WASMTIME_VERSION}/wasmtime-${WASMTIME_VERSION}-x86_64-linux.tar.xz
           tar Jxf wasmtime-${WASMTIME_VERSION}-x86_64-linux.tar.xz
-          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
-          tar zxf wasi-sdk-20.0-linux.tar.gz
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-22.0-linux.tar.gz
+          tar zxf wasi-sdk-22.0-linux.tar.gz
           export PATH="$(pwd)/wasmtime-${WASMTIME_VERSION}-x86_64-linux:$PATH"
-          export WASISDK="$(pwd)/wasi-sdk-20.0"
+          export WASISDK="$(pwd)/wasi-sdk-22.0"
           cd ..
 
           rm -f ovbase/CmakeCache.txt && CC="${WASISDK}/bin/clang --target=wasm32-wasi-threads --sysroot=${WASISDK}/share/wasi-sysroot -pthread" cmake -S .. -B ovbase --preset debug -DCMAKE_C_COMPILER="" -DTARGET_WASI_SDK=ON -DFORMAT_SOURCES=ON -DCMAKE_INSTALL_PREFIX=local -DSKIP_OVTHREADS_TEST=OFF && \
