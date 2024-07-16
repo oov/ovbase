@@ -263,9 +263,8 @@ foreach(target ${tests})
       COMMAND
         wasmtime
           --dir=${CMAKE_CURRENT_SOURCE_DIR}/mo/test
-          --wasm-features threads
-          --wasi-modules experimental-wasi-threads
-          $<TARGET_FILE:${target}> -- --exec=never
+          --wasi threads
+          $<TARGET_FILE:${target}>
     )
   else()
     add_test(NAME ${target} COMMAND $<TARGET_FILE:${target}>)
