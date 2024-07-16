@@ -25,7 +25,7 @@ jobs:
           WASMTIME_VERSION=v22.0.0
           wget https://github.com/bytecodealliance/wasmtime/releases/download/${WASMTIME_VERSION}/wasmtime-${WASMTIME_VERSION}-x86_64-linux.tar.xz
           tar Jxf wasmtime-${WASMTIME_VERSION}-x86_64-linux.tar.xz
-          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-22.0-linux.tar.gz
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-22/wasi-sdk-22.0-linux.tar.gz
           tar zxf wasi-sdk-22.0-linux.tar.gz
           export PATH="$(pwd)/wasmtime-${WASMTIME_VERSION}-x86_64-linux:$PATH"
           export WASISDK="$(pwd)/wasi-sdk-22.0"
