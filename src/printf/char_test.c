@@ -1,3 +1,4 @@
+#include <ovbase.h>
 #ifdef USE_STR
 #  include "char.c"
 #  define STRCMP strcmp

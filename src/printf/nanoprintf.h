@@ -1368,9 +1368,11 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
           ; // strlen
         if (sizeof(NPF_CHAR_TYPE) != sizeof(char)) {
           cbuf_origlen = cbuf_len;
-          cbuf_len = (int)ov_utf8_to_wchar_len((void *)cbuf, (size_t)cbuf_len);
-          if (!cbuf_len) {
-            return 0;
+          if (cbuf_len) {
+            cbuf_len = (int)ov_utf8_to_wchar_len((void *)cbuf, (size_t)cbuf_len);
+            if (!cbuf_len) {
+              return 0;
+            }
           }
         }
       } else if (fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_LONG) {
@@ -1379,9 +1381,11 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
           ; // wcslen
         if (sizeof(NPF_CHAR_TYPE) != sizeof(wchar_t)) {
           cbuf_origlen = cbuf_len;
-          cbuf_len = (int)ov_wchar_to_utf8_len((void *)cbuf, (size_t)cbuf_len);
-          if (!cbuf_len) {
-            return 0;
+          if (cbuf_len) {
+            cbuf_len = (int)ov_wchar_to_utf8_len((void *)cbuf, (size_t)cbuf_len);
+            if (!cbuf_len) {
+              return 0;
+            }
           }
         }
       } else {
@@ -1633,7 +1637,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
     // Write the converted payload
     if (fs.conv_spec == NPF_FMT_SPEC_CONV_STRING) {
       if (fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_NONE || fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_SHORT) {
-        if (sizeof(NPF_CHAR_TYPE) != sizeof(char)) {
+        if (sizeof(NPF_CHAR_TYPE) != sizeof(char) && cbuf_origlen) {
           if (!ov_utf8_to_codepoint(write_codepoint,
                                     &(struct ovutf_context){.pc = npf_putc_cnt, .pc_ctx = &pc_cnt},
                                     (void *)cbuf,
@@ -1646,7 +1650,7 @@ int npf_vpprintf(npf_putc pc, void *pc_ctx, NPF_CHAR_TYPE const *reference, NPF_
           }
         }
       } else if (fs.length_modifier == NPF_FMT_SPEC_LEN_MOD_LONG) {
-        if (sizeof(NPF_CHAR_TYPE) != sizeof(wchar_t)) {
+        if (sizeof(NPF_CHAR_TYPE) != sizeof(wchar_t) && cbuf_origlen) {
           if (!ov_wchar_to_codepoint(write_codepoint,
                                      &(struct ovutf_context){.pc = npf_putc_cnt, .pc_ctx = &pc_cnt},
                                      (void *)cbuf,

@@ -61,6 +61,13 @@ static void test_string_ls(void) {
   TEST_MSG(sizeof(CHAR_TYPE) == 1 ? "want %s, got %s" : "want %ls, got %ls", TT("ＡＢＣ"), buf);
 }
 
+static void test_empty_string(void) {
+  CHAR_TYPE buf[bufsize];
+  TEST_CHECK(ov_snprintf(buf, bufsize, NULL, TT("a%1$hsb"), "") > 0);
+  TEST_CHECK(STRCMP(buf, TT("ab")) == 0);
+  TEST_MSG(sizeof(CHAR_TYPE) == 1 ? "want %s, got %s" : "want %ls, got %ls", TT("ab"), buf);
+}
+
 TEST_LIST = {
     {"test1", test1},
     {"test_printf_verify_format", test_printf_verify_format},
@@ -68,5 +75,6 @@ TEST_LIST = {
     {"test_string_ascii", test_string_ascii},
     {"test_string_s", test_string_s},
     {"test_string_ls", test_string_ls},
+    {"test_empty_string", test_empty_string},
     {NULL, NULL},
 };

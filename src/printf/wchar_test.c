@@ -1,3 +1,4 @@
+#include <ovbase.h>
 #ifdef USE_WSTR
 #  include "wchar.c"
 #  define STRCMP wcscmp
