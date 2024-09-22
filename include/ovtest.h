@@ -65,6 +65,9 @@ static inline void test_fini_(void) {
 #  if __has_warning("-Wswitch-default")
 #    pragma GCC diagnostic ignored "-Wswitch-default"
 #  endif
+#  if __has_warning("-Wformat")
+#    pragma GCC diagnostic ignored "-Wformat"
+#  endif
 #  include <ovbase_3rd/acutest.h>
 #  pragma GCC diagnostic pop
 
@@ -91,12 +94,12 @@ static int test_eis(error err,
     if (type == 0 && code == 0) {
       TEST_MSG("expected NULL");
     } else {
-      TEST_MSG("expected %02x:%08x", type, code);
+      TEST_MSG("expected %02x:%08x", (unsigned int)type, (unsigned int)code);
     }
     if (err == NULL) {
       TEST_MSG("got      NULL");
     } else {
-      TEST_MSG("got      %02x:%08x", err->type, err->code);
+      TEST_MSG("got      %02x:%08x", (unsigned int)err->type, (unsigned int)err->code);
       struct NATIVE_STR s = {0};
       error e = error_to_string(err, &s);
       if (esucceeded(e)) {
