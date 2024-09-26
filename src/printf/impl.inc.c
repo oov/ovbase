@@ -11,7 +11,7 @@
 #define NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS 0
 #define NANOPRINTF_USE_FMT_SPEC_OPT_STAR 0
 #define NANOPRINTF_USE_ORDER_FORMAT_EXTENSION_SPECIFIERS 1
-#include "nanoprintf.h"
+#include "../../3rd/nanoprintf/nanoprintf.h"
 
 #ifndef FUNCNAME
 #  define FUNCNAME_3(prefix, funcname, postfix) prefix##funcname##postfix

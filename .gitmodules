@@ -11,3 +11,7 @@
 [submodule "3rd/mimalloc"]
 	path = 3rd/mimalloc
 	url = https://github.com/microsoft/mimalloc
+[submodule "3rd/nanoprintf"]
+	path = 3rd/nanoprintf
+	url = https://github.com/oov/nanoprintf
+	branch = custom

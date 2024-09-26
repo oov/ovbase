@@ -5,9 +5,11 @@ enum {
   bufsize = 128,
 };
 
-static void test1(void) {
+static void test_printf_basics(void) {
   CHAR_TYPE buf[bufsize];
-  TEST_CHECK(ov_snprintf(NULL, 0, NULL, TT("hello%04d%") STRFMT TT("."), 20, TT("world")) == 15);
+  int r = ov_snprintf(NULL, 0, NULL, TT("hello%04d%") STRFMT TT("."), 20, TT("world"));
+  TEST_CHECK(r == 15);
+  TEST_MSG("want 15, got %d", r);
   TEST_CHECK(ov_snprintf(buf, 10, NULL, TT("hello%04d%") STRFMT TT("."), 20, TT("world")) == 15);
   TEST_CHECK(ov_snprintf(buf, bufsize, NULL, TT("hello%04d%") STRFMT TT("."), 20, TT("world")) == 15);
   TEST_CHECK(STRCMP(TT("hello0020world."), buf) == 0);
@@ -69,7 +71,7 @@ static void test_empty_string(void) {
 }
 
 TEST_LIST = {
-    {"test1", test1},
+    {"test_printf_basics", test_printf_basics},
     {"test_printf_verify_format", test_printf_verify_format},
     {"test_printf_order_extension", test_printf_order_extension},
     {"test_string_ascii", test_string_ascii},
