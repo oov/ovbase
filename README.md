@@ -320,7 +320,7 @@ Lesser General Public License for more details.
 ### [nanoprintf](https://github.com/charlesnicholson/nanoprintf)
 
 > [!NOTE]
-> This program/library used [a modified version of nanoprintf](https://github.com/oov/ovbase/blob/main/src/printf/nanoprintf.h).
+> This program/library used [a modified version of nanoprintf](https://github.com/oov/nanoprintf/tree/custom).
 
 <details>
 <summary>UNLICENSE</summary>
