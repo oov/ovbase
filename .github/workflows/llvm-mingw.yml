@@ -21,15 +21,15 @@ jobs:
         shell: bash
         run: |
           . setup-llvm-mingw.bash
-          cd build
           for arch in i686 x86_64; do
-            rm -f ovbase-$arch/CmakeCache.txt
-            cmake -S .. -B ovbase-$arch --preset debug \
+            rm -f build/ovbase-$arch/CmakeCache.txt
+            cmake -S . -B build/ovbase-$arch --preset debug \
               -DFORMAT_SOURCES=ON \
-              -DCMAKE_INSTALL_PREFIX=local \
+              -DCMAKE_INSTALL_PREFIX=build/local-$arch \
               -DSKIP_OVTHREADS_TEST=OFF \
               -DCMAKE_TOOLCHAIN_FILE=cmake/llvm-mingw.cmake \
               -DCMAKE_C_COMPILER=$arch-w64-mingw32-clang
-            cmake --build ovbase-$arch
-            ctest --test-dir ovbase-$arch --output-on-failure --output-junit testlog.xml
+            cmake --build build/ovbase-$arch
+            ctest --test-dir build/ovbase-$arch --output-on-failure --output-junit testlog.xml
+            cmake --install build/ovbase-$arch
           done

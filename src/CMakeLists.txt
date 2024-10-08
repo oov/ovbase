@@ -209,8 +209,8 @@ PRIVATE
   ovbase_intf
   $<$<BOOL:${USE_MIMALLOC}>:mimalloc-static>
 )
-install(TARGETS ovbase
-        EXPORT libovbase
+install(TARGETS ovbase ovbase_intf
+        EXPORT ovbase-export
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
@@ -222,6 +222,12 @@ FILES
 DESTINATION
   include/ovbase_3rd
 )
+install(EXPORT ovbase-export
+        FILE ovbase-config.cmake
+        DESTINATION share/cmake/ovbase/
+        EXPORT_LINK_INTERFACE_LIBRARIES)
+export(EXPORT ovbase-export
+       FILE "${CMAKE_BINARY_DIR}/ovbase-config.cmake")
 
 add_executable(array_test array_test.c)
 list(APPEND tests array_test)
