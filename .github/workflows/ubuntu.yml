@@ -16,4 +16,4 @@ jobs:
       - name: Build
         run: |
           mkdir -p build/ubuntu-ovbase-debug
-          sudo docker run --net host -i -v .:/root/ovbase ubuntu:jammy /bin/bash -c 'apt update && apt install -y cmake ninja-build clang clang-format lld && cd /root/ovbase/build && rm -f CmakeCache.txt && cmake -S .. -B ubuntu-ovbase-debug --preset debug -DFORMAT_SOURCES=ON -DCMAKE_INSTALL_PREFIX=local -DSKIP_OVTHREADS_TEST=OFF -DCMAKE_C_COMPILER=clang && cmake --build ubuntu-ovbase-debug && ctest --test-dir ubuntu-ovbase-debug --output-on-failure --output-junit testlog.xml'
+          sudo docker run --net host -i -v .:/root/ovbase ubuntu:jammy /bin/bash -c 'apt update && apt install -y cmake ninja-build clang clang-format lld && cd /root/ovbase && ARCHDIR="x86_64_ubuntu" bash build.bash --no-install-tools --debug --no-format'

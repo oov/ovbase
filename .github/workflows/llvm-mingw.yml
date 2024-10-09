@@ -20,16 +20,5 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          . setup-llvm-mingw.bash
-          for arch in i686 x86_64; do
-            rm -f build/ovbase-$arch/CmakeCache.txt
-            cmake -S . -B build/ovbase-$arch --preset debug \
-              -DFORMAT_SOURCES=ON \
-              -DCMAKE_INSTALL_PREFIX=build/local-$arch \
-              -DSKIP_OVTHREADS_TEST=OFF \
-              -DCMAKE_TOOLCHAIN_FILE=cmake/llvm-mingw.cmake \
-              -DCMAKE_C_COMPILER=$arch-w64-mingw32-clang
-            cmake --build build/ovbase-$arch
-            ctest --test-dir build/ovbase-$arch --output-on-failure --output-junit testlog.xml
-            cmake --install build/ovbase-$arch
-          done
+          ARCHDIR=i686 CMAKE_C_COMPILER=i686-w64-mingw32-clang bash build.bash --debug --no-format
+          ARCHDIR=x86_64 CMAKE_C_COMPILER=x86_64-w64-mingw32-clang bash build.bash --debug --no-format

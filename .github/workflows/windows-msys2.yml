@@ -36,7 +36,4 @@ jobs:
       - name: Build
         shell: msys2 {0}
         run: |
-          mkdir -p build/ovbase
-          cd build
-          rm -f ovbase/CmakeCache.txt ovbase/local/build/mimalloc/CmakeCache.txt && cmake -S .. -B ovbase --preset debug -DFORMAT_SOURCES=ON -DUSE_MIMALLOC=ON -DCMAKE_INSTALL_PREFIX=local -DCMAKE_C_COMPILER=clang && \
-          cmake --build ovbase && ctest --test-dir ovbase --output-on-failure --output-junit testlog.xml
+          ARCHDIR="${{ matrix.arch }}" bash build.bash --no-install-tools --debug --no-format

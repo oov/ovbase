@@ -176,8 +176,7 @@ set_property(TARGET ovbase PROPERTY PUBLIC_HEADER
 )
 target_include_directories(ovbase
 PUBLIC
-  $<INSTALL_INTERFACE:../include>
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
 PRIVATE
   $<$<BOOL:${USE_MIMALLOC}>:${LOCAL_INSTALL_PREFIX}/include/mimalloc-2.1>
