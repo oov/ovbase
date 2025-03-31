@@ -43,7 +43,7 @@ done
 
 if [ "${INSTALL_TOOLS}" -eq 1 ]; then
   mkdir -p build/tools
-  . setup-llvm-mingw.bash --dir $PWD/build/tools
+  . setup-llvm-mingw.sh --dir $PWD/build/tools
 fi
 
 ARCHDIR=${ARCHDIR:-`uname -m`}
