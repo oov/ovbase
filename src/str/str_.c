@@ -1,6 +1,7 @@
 #include "str.h"
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 
 error str_str_(struct str const *const s, char const *const s2, ptrdiff_t *const pos) {
   if (!s || !s2) {
@@ -22,4 +23,5 @@ error str_str_(struct str const *const s, char const *const s2, ptrdiff_t *const
   return eok();
 }
 
+#  endif
 #endif

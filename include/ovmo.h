@@ -14,7 +14,11 @@ mo_ngettext(struct mo const *const mp, char const *const id, char const *const i
 void mo_set_default(struct mo *const mp);
 struct mo *mo_get_default(void);
 
+#ifndef OV_NOSTR
 NODISCARD error mo_get_preferred_ui_languages(struct NATIVE_STR *dest);
+#else
+NODISCARD error mo_get_preferred_ui_languages(NATIVE_CHAR **const dest);
+#endif
 
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
@@ -48,18 +52,32 @@ int mo_vpprintf_wchar(void (*putc)(int c, void *ctx),
                       char const *const format,
                       va_list valist);
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 NODISCARD error mo_sprintf_str(struct str *const dest, char const *const reference, char const *const format, ...);
 NODISCARD error mo_vsprintf_str(struct str *const dest,
                                 char const *const reference,
                                 char const *const format,
                                 va_list valist);
-#endif
+#  endif
 
-#ifdef USE_WSTR
+#  ifdef USE_WSTR
 NODISCARD error mo_sprintf_wstr(struct wstr *const dest, wchar_t const *const reference, char const *const format, ...);
 NODISCARD error mo_vsprintf_wstr(struct wstr *const dest,
                                  wchar_t const *const reference,
                                  char const *const format,
                                  va_list valist);
+#  endif
+#else
+NODISCARD error mo_sprintf_char(char **const dest, char const *const reference, char const *const format, ...);
+NODISCARD error mo_vsprintf_char(char **const dest,
+                                 char const *const reference,
+                                 char const *const format,
+                                 va_list valist);
+
+NODISCARD error mo_sprintf_wchar(wchar_t **const dest, wchar_t const *const reference, char const *const format, ...);
+NODISCARD error mo_vsprintf_wchar(wchar_t **const dest,
+                                  wchar_t const *const reference,
+                                  char const *const format,
+                                  va_list valist);
 #endif

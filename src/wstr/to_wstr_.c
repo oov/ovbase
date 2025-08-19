@@ -2,7 +2,8 @@
 
 #include <ovutf.h>
 
-#if defined(USE_WSTR)
+#ifndef OV_NOSTR
+#  ifdef USE_WSTR
 
 NODISCARD error to_wstr_(char const *const src, size_t const src_len, struct wstr *const dest MEM_FILEPOS_PARAMS) {
   if (!src || !src_len || !dest) {
@@ -25,4 +26,5 @@ NODISCARD error to_wstr_(char const *const src, size_t const src_len, struct wst
   return eok();
 }
 
+#  endif
 #endif

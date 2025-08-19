@@ -1,5 +1,7 @@
 #include "hmap.h"
 
+#include <string.h>
+
 static uint64_t hm_hash_static(void const *const item, uint64_t const seed0, uint64_t const seed1, void *const udata) {
   struct hmap_udata const *const ud = udata;
   return hashmap_sip(item, ud->hm->size, seed0, seed1);

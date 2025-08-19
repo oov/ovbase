@@ -2,6 +2,8 @@ option(USE_STR "use struct str" ON)
 option(USE_WSTR "use struct wstr" ON)
 option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
+option(OV_NOSTR "disable struct str/wstr" OFF)
+option(OV_NOARR "disable struct array" OFF)
 option(USE_ADDRESS_SANITIZER "use address sanitizer" OFF)
 option(USE_COMPILER_RT "use compiler-rt runtime" OFF)
 option(USE_NO_PTHREAD "add -no-pthread" OFF)
@@ -47,6 +49,11 @@ INTERFACE
   -static
   $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--import-memory,--export-memory,--max-memory=67108864>
 )
+target_compile_definitions(ovbase_intf
+INTERFACE
+  $<$<BOOL:${OV_NOSTR}>:OV_NOSTR>
+  $<$<BOOL:${OV_NOARR}>:OV_NOARR>
+)
 
 set(SOURCE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(DESTINATION_INCLUDE_DIR ${PROJECT_BINARY_DIR}/include)
@@ -57,6 +64,7 @@ configure_file(${SOURCE_INCLUDE_DIR}/ovbase.h ${DESTINATION_INCLUDE_DIR} COPYONL
 configure_file(${SOURCE_INCLUDE_DIR}/ovmo.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovnum.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovprintf.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovprintf_ex.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovtest.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovthreads.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovutf.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
@@ -82,6 +90,7 @@ add_library(ovbase STATIC
   mem.c
   mem_aligned.c
   mo/mo.c
+  mo/mo_printf_ex.c
   mo/str.c
   mo/wstr.c
   $<$<BOOL:${WIN32}>:mo/win32.c>
@@ -113,6 +122,8 @@ add_library(ovbase STATIC
   ovthreads.c
   printf/char.c
   printf/wchar.c
+  printf_ex/char.c
+  printf_ex/wchar.c
   str/atoi_.c
   str/atou_.c
   str/cat_.c

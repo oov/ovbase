@@ -1,6 +1,7 @@
 #include "str.h"
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 
 error str_cpy_(struct str *const s, char const *const s2 MEM_FILEPOS_PARAMS) {
   if (!s || !s2) {
@@ -18,4 +19,5 @@ error str_cpy_(struct str *const s, char const *const s2 MEM_FILEPOS_PARAMS) {
   return eok();
 }
 
+#  endif
 #endif

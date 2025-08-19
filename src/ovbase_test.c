@@ -73,6 +73,7 @@ static void test_mem_aligned_alloc(void) {
   TEST_EISG_F(mem_aligned_free(NULL), err_invalid_arugment);
 }
 
+#ifndef OV_NOARR
 static void test_array(void) {
   struct {
     int64_t *ptr;
@@ -105,11 +106,14 @@ static void test_array(void) {
   TEST_CHECK(acap(&arr) == 0);
   TEST_CHECK(arr.ptr == NULL);
 }
+#endif
 
 TEST_LIST = {
     {"test_error", test_error},
     {"test_mem", test_mem},
     {"test_mem_aligned_alloc", test_mem_aligned_alloc},
+#ifndef OV_NOARR
     {"test_array", test_array},
+#endif
     {NULL, NULL},
 };

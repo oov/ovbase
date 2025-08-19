@@ -1,8 +1,9 @@
 #include "str.h"
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 
-#  include "ovprintf.h"
+#    include "ovprintf.h"
 
 NODISCARD error str_sprintf_(struct str *const dest MEM_FILEPOS_PARAMS,
                              char const *const reference,
@@ -22,9 +23,9 @@ struct put_char_context {
   struct str *const str;
   size_t pos;
   error err;
-#  ifdef ALLOCATE_LOGGER
+#    ifdef ALLOCATE_LOGGER
   struct ov_filepos const *const filepos;
-#  endif
+#    endif
 };
 
 static void put_char(int c, void *ctx) {
@@ -34,9 +35,9 @@ static void put_char(int c, void *ctx) {
   }
   size_t const cap = pcctx->str->cap;
   if (pcctx->pos >= cap) {
-#  ifdef ALLOCATE_LOGGER
+#    ifdef ALLOCATE_LOGGER
     struct ov_filepos const *const filepos = pcctx->filepos;
-#  endif
+#    endif
     pcctx->err = str_grow_(pcctx->str, cap < 32 ? 64 : cap * 2 MEM_FILEPOS_VALUES_PASSTHRU);
     if (efailed(pcctx->err)) {
       pcctx->err = ethru(pcctx->err);
@@ -56,9 +57,9 @@ NODISCARD error str_vsprintf_(struct str *const dest MEM_FILEPOS_PARAMS,
   struct put_char_context ctx = {
       .str = dest,
       .err = eok(),
-#  ifdef ALLOCATE_LOGGER
+#    ifdef ALLOCATE_LOGGER
       .filepos = filepos,
-#  endif
+#    endif
   };
   int const r = ov_vpprintf(put_char, &ctx, reference, format, valist);
   if (r == 0) {
@@ -73,4 +74,5 @@ NODISCARD error str_vsprintf_(struct str *const dest MEM_FILEPOS_PARAMS,
   return eok();
 }
 
+#  endif
 #endif

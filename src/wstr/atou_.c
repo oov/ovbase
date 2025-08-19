@@ -1,8 +1,9 @@
 #include "wstr.h"
 
-#ifdef USE_WSTR
+#ifndef OV_NOSTR
+#  ifdef USE_WSTR
 
-#  include "ovnum.h"
+#    include "ovnum.h"
 
 NODISCARD error wstr_atou_(struct wstr const *const s, uint64_t *const dest) {
   if (!s) {
@@ -17,4 +18,5 @@ NODISCARD error wstr_atou_(struct wstr const *const s, uint64_t *const dest) {
   return eok();
 }
 
+#  endif
 #endif

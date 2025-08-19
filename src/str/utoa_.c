@@ -1,8 +1,9 @@
 #include "str.h"
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 
-#  include "ovnum.h"
+#    include "ovnum.h"
 
 NODISCARD error str_utoa_(uint64_t const v, struct str *const dest MEM_FILEPOS_PARAMS) {
   if (!dest) {
@@ -17,4 +18,5 @@ NODISCARD error str_utoa_(uint64_t const v, struct str *const dest MEM_FILEPOS_P
   return eok();
 }
 
+#  endif
 #endif

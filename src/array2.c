@@ -1,6 +1,7 @@
 #include <ovarray.h>
 
 #include <assert.h>
+#include <string.h>
 
 #include "mem.h"
 

@@ -5,6 +5,8 @@
 #  include <stdio.h>
 #endif
 
+#include <ovarray.h>
+
 struct mo_msg {
   char const *id;
   size_t id_len;
@@ -191,16 +193,23 @@ char const *mo_pgettext(struct mo const *const mp, char const *const ctxt, char 
   if (!mp) {
     return id;
   }
-  struct str tmp = {0};
+  char *tmp = NULL;
   struct mo_msg *msg = NULL;
-  error err = scatm(&tmp, ctxt, "\x04", id);
+  size_t const ctxtlen = strlen(ctxt);
+  size_t const idlen = strlen(id);
+  error err = OV_ARRAY_GROW(&tmp, ctxtlen + 1 + idlen + 1);
   if (efailed(err)) {
+    efree(&err);
     goto cleanup;
   }
-  msg = find(mp, tmp.ptr);
+  strcpy(tmp, ctxt);
+  strcpy(tmp + ctxtlen, "\x04");
+  strcpy(tmp + ctxtlen + 1, id);
+  msg = find(mp, tmp);
 cleanup:
-  ereport(sfree(&tmp));
-  efree(&err);
+  if (tmp) {
+    OV_ARRAY_DESTROY(&tmp);
+  }
   return msg ? msg->str : id;
 }
 

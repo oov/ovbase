@@ -1,6 +1,7 @@
 #include "wstr.h"
 
-#ifdef USE_WSTR
+#ifndef OV_NOSTR
+#  ifdef USE_WSTR
 
 error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, ptrdiff_t *const pos) {
   if (!ws || !ws2) {
@@ -22,4 +23,5 @@ error wstr_str_(struct wstr const *const ws, wchar_t const *const ws2, ptrdiff_t
   return eok();
 }
 
+#  endif
 #endif

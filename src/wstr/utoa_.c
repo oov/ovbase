@@ -1,8 +1,9 @@
 #include "wstr.h"
 
-#ifdef USE_WSTR
+#ifndef OV_NOSTR
+#  ifdef USE_WSTR
 
-#  include "ovnum.h"
+#    include "ovnum.h"
 
 NODISCARD error wstr_utoa_(uint64_t v, struct wstr *const dest MEM_FILEPOS_PARAMS) {
   if (!dest) {
@@ -17,4 +18,5 @@ NODISCARD error wstr_utoa_(uint64_t v, struct wstr *const dest MEM_FILEPOS_PARAM
   return eok();
 }
 
+#  endif
 #endif

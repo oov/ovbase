@@ -1,6 +1,7 @@
 #include "str.h"
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 
 error str_replace_all_(struct str *const s, char const *const find, char const *const replacement MEM_FILEPOS_PARAMS) {
   if (!s || !find || !replacement) {
@@ -51,4 +52,5 @@ cleanup:
   return err;
 }
 
+#  endif
 #endif

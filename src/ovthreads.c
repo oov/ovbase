@@ -9,8 +9,9 @@
 #    include <windows.h>
 
 int timespec_get(struct timespec *ts, int base) {
-  if (!ts)
+  if (!ts) {
     return 0;
+  }
   if (base == TIME_UTC) {
     ts->tv_sec = time(NULL);
     ts->tv_nsec = 0;

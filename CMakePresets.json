@@ -20,7 +20,9 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "FORMAT_SOURCES": "OFF",
         "LEAK_DETECTOR": "ON",
-        "ALLOCATE_LOGGER": "ON"
+        "ALLOCATE_LOGGER": "ON",
+        "OV_NOSTR": "OFF",
+        "OV_NOARR": "OFF"
       },
       "environment": {}
     },

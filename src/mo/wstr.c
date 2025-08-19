@@ -74,7 +74,8 @@ int mo_pprintf_wchar(
   return r;
 }
 
-#ifdef USE_WSTR
+#ifndef OV_NOSTR
+#  ifdef USE_WSTR
 
 NODISCARD error mo_vsprintf_wstr(struct wstr *const dest,
                                  wchar_t const *const reference,
@@ -114,4 +115,5 @@ NODISCARD error mo_sprintf_wstr(struct wstr *const dest,
 cleanup:
   return err;
 }
+#  endif
 #endif

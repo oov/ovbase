@@ -5,6 +5,9 @@
 #include <stdlib.h>
 
 #include <ovbase.h>
+#ifdef OV_NOSTR
+#  include <ovarray.h>
+#endif
 
 #ifdef __GNUC__
 
@@ -100,17 +103,33 @@ static int test_eis(error err,
       TEST_MSG("got      NULL");
     } else {
       TEST_MSG("got      %02x:%08x", (unsigned int)err->type, (unsigned int)err->code);
+#ifndef OV_NOSTR
       struct NATIVE_STR s = {0};
       error e = error_to_string(err, &s);
       if (esucceeded(e)) {
-#ifdef _WIN32
+#  ifdef _WIN32
         TEST_MSG("%ls\n", s.ptr);
-#else
+#  else
         TEST_MSG("%s\n", s.ptr);
-#endif
+#  endif
       }
       efree(&e);
       ereport(sfree(&s));
+#else
+      NATIVE_CHAR *s = NULL;
+      error e = error_to_string(err, &s);
+      if (esucceeded(e)) {
+#  ifdef _WIN32
+        TEST_MSG("%ls\n", s);
+#  else
+        TEST_MSG("%s\n", s);
+#  endif
+      }
+      efree(&e);
+      if (s) {
+        OV_ARRAY_DESTROY(&s);
+      }
+#endif
     }
   }
   return r;

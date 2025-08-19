@@ -14,15 +14,17 @@
 
 static size_t char16len(char16_t const *s) {
   size_t len = 0;
-  while (*s++)
+  while (*s++) {
     ++len;
+  }
   return len;
 }
 
 static size_t char32len(char32_t const *s) {
   size_t len = 0;
-  while (*s++)
+  while (*s++) {
     ++len;
+  }
   return len;
 }
 

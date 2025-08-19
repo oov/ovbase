@@ -1,6 +1,7 @@
 #include "str.h"
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 
 error str_ncat_(struct str *const s, char const *const s2, size_t const s2len MEM_FILEPOS_PARAMS) {
   if (!s || !s2) {
@@ -17,4 +18,5 @@ error str_ncat_(struct str *const s, char const *const s2, size_t const s2len ME
   return eok();
 }
 
+#  endif
 #endif

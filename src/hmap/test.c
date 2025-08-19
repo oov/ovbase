@@ -1,16 +1,17 @@
+#include <ovarray.h>
 #include <ovtest.h>
 
 #include <inttypes.h>
 
 struct test_item_dynamic {
-  struct NATIVE_STR key;
+  wchar_t *key;
   size_t v;
 };
 
 static void test_hmap_dynamic_get_key(void const *const item, void const **const key, size_t *const key_bytes) {
   struct test_item_dynamic const *const it = item;
-  *key = it->key.ptr;
-  *key_bytes = it->key.len * sizeof(wchar_t);
+  *key = it->key;
+  *key_bytes = it->key ? wcslen(it->key) * sizeof(wchar_t) : 0;
 }
 
 static void test_hmap_dynamic(void) {
@@ -29,18 +30,16 @@ static void test_hmap_dynamic(void) {
     goto cleanup;
   }
   struct test_item_dynamic *got = NULL;
-  if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_dynamic){.key = native_unmanaged(NSTR("test1"))}, &got))) {
+  if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_dynamic){.key = (wchar_t *)L"test1"}, &got))) {
     goto cleanup;
   }
   if (!TEST_CHECK(got == NULL)) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(
-          hmset(&tmp, &((struct test_item_dynamic){.key = native_unmanaged(NSTR("test1")), .v = 100}), NULL))) {
+  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_dynamic){.key = (wchar_t *)L"test1", .v = 100}), NULL))) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(
-          hmset(&tmp, &((struct test_item_dynamic){.key = native_unmanaged(NSTR("test2")), .v = 200}), NULL))) {
+  if (!TEST_SUCCEEDED_F(hmset(&tmp, &((struct test_item_dynamic){.key = (wchar_t *)L"test2", .v = 200}), NULL))) {
     goto cleanup;
   }
   if (!TEST_SUCCEEDED_F(hmcount(&tmp, &count))) {
@@ -49,7 +48,7 @@ static void test_hmap_dynamic(void) {
   if (!TEST_CHECK(count == 2)) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_dynamic){.key = native_unmanaged(NSTR("test1"))}, &got))) {
+  if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_dynamic){.key = (wchar_t *)L"test1"}, &got))) {
     goto cleanup;
   }
   if (!TEST_CHECK(got != NULL)) {
@@ -66,7 +65,7 @@ static void test_hmap_dynamic(void) {
     }
     TEST_CHECK(found == 2);
   }
-  if (!TEST_SUCCEEDED_F(hmdelete(&tmp, &(struct test_item_dynamic){.key = native_unmanaged(NSTR("test1"))}, NULL))) {
+  if (!TEST_SUCCEEDED_F(hmdelete(&tmp, &(struct test_item_dynamic){.key = (wchar_t *)L"test1"}, NULL))) {
     goto cleanup;
   }
   if (!TEST_SUCCEEDED_F(hmcount(&tmp, &count))) {
@@ -75,7 +74,7 @@ static void test_hmap_dynamic(void) {
   if (!TEST_CHECK(count == 1)) {
     goto cleanup;
   }
-  if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_dynamic){.key = native_unmanaged(NSTR("test1"))}, &got))) {
+  if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_dynamic){.key = (wchar_t *)L"test1"}, &got))) {
     goto cleanup;
   }
   if (!TEST_CHECK(got == NULL)) {

@@ -1,8 +1,9 @@
 #include "str.h"
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 
-#  include "ovnum.h"
+#    include "ovnum.h"
 
 NODISCARD error str_atoi_(struct str const *const s, int64_t *const dest) {
   if (!s) {
@@ -17,4 +18,5 @@ NODISCARD error str_atoi_(struct str const *const s, int64_t *const dest) {
   return eok();
 }
 
+#  endif
 #endif

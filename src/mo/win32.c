@@ -1,7 +1,12 @@
+#include <ovarray.h>
 #include <ovmo.h>
 
 #ifdef _WIN32
+#  ifndef OV_NOSTR
 static NODISCARD error mo_get_preferred_ui_languages_core(struct wstr *dest, bool const id) {
+#  else
+static NODISCARD error mo_get_preferred_ui_languages_core(NATIVE_CHAR **dest, bool const id) {
+#  endif
   error err = eok();
   HMODULE h = LoadLibraryW(L"kernel32.dll");
   if (h == NULL) {
@@ -27,6 +32,7 @@ static NODISCARD error mo_get_preferred_ui_languages_core(struct wstr *dest, boo
     err = errhr(HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
   }
+#  ifndef OV_NOSTR
   err = sgrow(dest, len);
   if (efailed(err)) {
     err = ethru(err);
@@ -37,6 +43,18 @@ static NODISCARD error mo_get_preferred_ui_languages_core(struct wstr *dest, boo
     goto cleanup;
   }
   dest->len = (size_t)len;
+#  else
+  err = OV_ARRAY_GROW(dest, len);
+  if (efailed(err)) {
+    err = ethru(err);
+    goto cleanup;
+  }
+  if (!fn(flag, &n, *dest, &len)) {
+    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
+    goto cleanup;
+  }
+  OV_ARRAY_SET_LENGTH(*dest, len);
+#  endif
 cleanup:
   if (h) {
     FreeLibrary(h);
@@ -45,7 +63,11 @@ cleanup:
   return err;
 }
 
+#  ifndef OV_NOSTR
 NODISCARD error mo_get_preferred_ui_languages(struct NATIVE_STR *dest) {
+#  else
+NODISCARD error mo_get_preferred_ui_languages(NATIVE_CHAR **dest) {
+#  endif
   if (!dest) {
     return errg(err_invalid_arugment);
   }
@@ -55,11 +77,19 @@ NODISCARD error mo_get_preferred_ui_languages(struct NATIVE_STR *dest) {
     return err;
   }
   // replace '-' to '_'
+#  ifndef OV_NOSTR
   for (size_t i = 0; i < dest->len; ++i) {
     if (dest->ptr[i] == L'-') {
       dest->ptr[i] = L'_';
     }
   }
+#  else
+  for (size_t i = 0, ln = OV_ARRAY_LENGTH(*dest); i < ln; ++i) {
+    if ((*dest)[i] == L'-') {
+      (*dest)[i] = L'_';
+    }
+  }
+#  endif
   return eok();
 }
 
@@ -208,6 +238,7 @@ cleanup:
 }
 
 NODISCARD error mo_parse_from_resource(struct mo **const mpp, HMODULE const hmod) {
+#  ifndef OV_NOSTR
   struct NATIVE_STR langs = {0};
   error err = mo_get_preferred_ui_languages_core(&langs, false);
   if (efailed(err)) {
@@ -221,6 +252,24 @@ NODISCARD error mo_parse_from_resource(struct mo **const mpp, HMODULE const hmod
   }
 cleanup:
   ereport(sfree(&langs));
+#  else
+  NATIVE_CHAR *langs = NULL;
+  error err = mo_get_preferred_ui_languages_core(&langs, false);
+  if (efailed(err)) {
+    err = ethru(err);
+    goto cleanup;
+  }
+  err = mo_parse_from_resource_ex(mpp, hmod, langs);
+  if (efailed(err)) {
+    err = ethru(err);
+    goto cleanup;
+  }
+cleanup:
+  if (langs) {
+    OV_ARRAY_DESTROY(&langs);
+  }
+#  endif
+
   return err;
 }
 #endif

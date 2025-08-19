@@ -1,10 +1,10 @@
 #include <ovtest.h>
 
-#include <inttypes.h>
+#ifndef OV_NOSTR
 
-#ifdef USE_WSTR
-
-#  define STR_PH "ls"
+#  include <inttypes.h>
+#  if defined(USE_WSTR)
+#    define STR_PH "ls"
 
 static void test_wstr_cpy_free(void) {
   static wchar_t const test_str[] = L"hello";
@@ -457,10 +457,10 @@ cleanup:
   ereport(sfree(&tmp));
 }
 
-#endif // USE_WSTR
+#  endif // USE_WSTR
 
 TEST_LIST = {
-#ifdef USE_WSTR
+#  if defined(USE_WSTR)
     {"test_wstr_cpy_free", test_wstr_cpy_free},
     {"test_wstr_cpym", test_wstr_cpym},
     {"test_wstr_ncpy", test_wstr_ncpy},
@@ -476,6 +476,14 @@ TEST_LIST = {
     {"test_wstr_itoa", test_wstr_itoa},
     {"test_wstr_utoa", test_wstr_utoa},
     {"test_wstr_sprintf", test_wstr_sprintf},
-#endif // USE_WSTR
+#  endif // USE_WSTR
     {NULL, NULL},
 };
+
+#else // OV_NOSTR
+
+TEST_LIST = {
+    {NULL, NULL},
+};
+
+#endif // OV_NOSTR

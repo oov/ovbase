@@ -29,7 +29,8 @@ int mo_pprintf_char(
   return r;
 }
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 NODISCARD error mo_sprintf_str(struct str *const dest, char const *const reference, char const *const format, ...) {
   va_list valist;
   va_start(valist, format);
@@ -48,4 +49,5 @@ NODISCARD error mo_vsprintf_str(struct str *const dest,
                                 va_list valist) {
   return svsprintf(dest, reference, format, valist);
 }
+#  endif
 #endif

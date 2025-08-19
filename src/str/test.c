@@ -2,13 +2,14 @@
 
 #include <inttypes.h>
 
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
 
-#  ifdef _WIN32
-#    define STR_PH "hs"
-#  else
-#    define STR_PH "s"
-#  endif
+#    ifdef _WIN32
+#      define STR_PH "hs"
+#    else
+#      define STR_PH "s"
+#    endif
 
 static void test_str_cpy_free(void) {
   static char const test_str[] = "hello";
@@ -461,10 +462,12 @@ cleanup:
   ereport(sfree(&tmp));
 }
 
-#endif // USE_STR
+#  endif
+#endif
 
 TEST_LIST = {
-#ifdef USE_STR
+#ifndef OV_NOSTR
+#  ifdef USE_STR
     {"test_str_cpy_free", test_str_cpy_free},
     {"test_str_cpym", test_str_cpym},
     {"test_str_ncpy", test_str_ncpy},
@@ -480,6 +483,7 @@ TEST_LIST = {
     {"test_str_itoa", test_str_itoa},
     {"test_str_utoa", test_str_utoa},
     {"test_str_sprintf", test_str_sprintf},
-#endif // USE_STR
+#  endif
+#endif
     {NULL, NULL},
 };

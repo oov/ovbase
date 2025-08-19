@@ -1,6 +1,7 @@
 #include "wstr.h"
 
-#ifdef USE_WSTR
+#ifndef OV_NOSTR
+#  ifdef USE_WSTR
 
 error wstr_replace_all_(struct wstr *const ws,
                         wchar_t const *const find,
@@ -53,4 +54,5 @@ cleanup:
   return err;
 }
 
+#  endif
 #endif

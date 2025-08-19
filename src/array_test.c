@@ -2,6 +2,8 @@
 
 #include <inttypes.h>
 
+#ifndef OV_NOARR
+
 static void test_array(void) {
   struct {
     int64_t *ptr;
@@ -39,3 +41,11 @@ TEST_LIST = {
     {"test_array", test_array},
     {NULL, NULL},
 };
+
+#else
+
+TEST_LIST = {
+    {NULL, NULL},
+};
+
+#endif

@@ -1,6 +1,10 @@
 #include <ovbase.h>
 
-#include "mem.h"
+#ifndef OV_NOARR
+
+#  include <string.h>
+
+#  include "mem.h"
 
 bool array_grow_core_(struct array *const p, size_t const elem_size, size_t const least_size MEM_FILEPOS_PARAMS) {
   if (p->cap >= least_size) {
@@ -45,3 +49,5 @@ error array_free_(struct array *const p MEM_FILEPOS_PARAMS) {
   array_free_core_(p MEM_FILEPOS_VALUES_PASSTHRU);
   return eok();
 }
+
+#endif // OV_NOARR

@@ -1,6 +1,7 @@
 #include "wstr.h"
 
-#ifdef USE_WSTR
+#ifndef OV_NOSTR
+#  ifdef USE_WSTR
 
 error wstr_cat_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARAMS) {
   if (!ws || !ws2) {
@@ -18,4 +19,5 @@ error wstr_cat_(struct wstr *const ws, wchar_t const *const ws2 MEM_FILEPOS_PARA
   return eok();
 }
 
+#  endif
 #endif
