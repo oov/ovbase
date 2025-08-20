@@ -49,11 +49,6 @@ INTERFACE
   -static
   $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--import-memory,--export-memory,--max-memory=67108864>
 )
-target_compile_definitions(ovbase_intf
-INTERFACE
-  $<$<BOOL:${OV_NOSTR}>:OV_NOSTR>
-  $<$<BOOL:${OV_NOARR}>:OV_NOARR>
-)
 
 set(SOURCE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(DESTINATION_INCLUDE_DIR ${PROJECT_BINARY_DIR}/include)
