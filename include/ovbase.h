@@ -65,10 +65,12 @@ struct ov_filepos {
 #ifdef _WIN32
 #  define NATIVE_CHAR wchar_t
 #  define NSTR(str) L##str
+#  define NSTR_PH NSTR("%ls")
 #  define NEWLINE NSTR("\r\n")
 #else
 #  define NATIVE_CHAR char
 #  define NSTR(str) str
+#  define NSTR_PH NSTR("%s")
 #  define NEWLINE NSTR("\n")
 #endif
 

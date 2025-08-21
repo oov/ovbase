@@ -17,11 +17,9 @@
 #ifdef _WIN32
 #  define STRLEN wcslen
 #  define STRCPY wcscpy
-#  define STRPH L"%ls"
 #else
 #  define STRLEN strlen
 #  define STRCPY strcpy
-#  define STRPH "%hs"
 #endif // _WIN32
 
 static void write_stderr(NATIVE_CHAR const *const str) {
@@ -211,7 +209,7 @@ void error_default_reporter(error const e, NATIVE_CHAR const *const message, str
   ov_snprintf(&buf[0],
               sizeof(buf),
               NULL,
-              (STRPH NSTR("(reported at %hs:%ld %hs())") NEWLINE STRPH),
+              (NSTR_PH NSTR("(reported at %hs:%ld %hs())") NEWLINE NSTR_PH),
               message,
               filepos->file,
               filepos->line,
