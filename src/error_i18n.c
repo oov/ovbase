@@ -4,38 +4,12 @@
 #include <ovmo.h>
 #include <ovutf.h>
 
-#ifndef OV_NOSTR
-#  ifdef _WIN32
-#    define mo_vsprintf mo_vsprintf_wstr
-#  else
-#    define mo_vsprintf mo_vsprintf_str
-#  endif
+#ifdef _WIN32
+#  define mo_vsprintf mo_vsprintf_wchar
 #else
-#  ifdef _WIN32
-#    define mo_vsprintf mo_vsprintf_wchar
-#  else
-#    define mo_vsprintf mo_vsprintf_char
-#  endif
+#  define mo_vsprintf mo_vsprintf_char
 #endif
 
-#ifndef OV_NOSTR
-NODISCARD error error_add_i18n_(error const parent,
-                                int const type,
-                                int const code,
-                                char const *const msg ERR_FILEPOS_PARAMS) {
-#  ifdef _WIN32
-  struct wstr ws = {0};
-  error err = to_wstr(msg, strlen(msg), &ws);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
-  }
-  return error_add_(parent, type, code, &ws ERR_FILEPOS_VALUES_PASSTHRU);
-#  else
-  return error_add_(parent, type, code, &native_unmanaged_const(msg) ERR_FILEPOS_VALUES_PASSTHRU);
-#  endif
-}
-#else
 NODISCARD error error_add_i18n_(error const parent,
                                 int const type,
                                 int const code,
@@ -47,7 +21,7 @@ NODISCARD error error_add_i18n_(error const parent,
   NATIVE_CHAR *native_msg = NULL;
   error err = eok();
 
-#  ifdef _WIN32
+#ifdef _WIN32
   size_t const msg_len = strlen(msg);
   size_t const native_len = ov_utf8_to_wchar_len(msg, msg_len);
   if (native_len == SIZE_MAX) {
@@ -67,7 +41,7 @@ NODISCARD error error_add_i18n_(error const parent,
     goto cleanup;
   }
   native_msg[converted] = L'\0';
-#  else
+#else
   size_t const msg_len = strlen(msg);
   err = OV_ARRAY_GROW(&native_msg, msg_len + 1);
   if (efailed(err)) {
@@ -75,7 +49,7 @@ NODISCARD error error_add_i18n_(error const parent,
     goto cleanup;
   }
   strcpy(native_msg, msg);
-#  endif
+#endif
 
   return error_add_(parent, type, code, native_msg ERR_FILEPOS_VALUES_PASSTHRU);
 
@@ -85,27 +59,7 @@ cleanup:
   }
   return err;
 }
-#endif
 
-#ifndef OV_NOSTR
-NODISCARD error error_add_i18nf_(error const parent,
-                                 int const type,
-                                 int const code ERR_FILEPOS_PARAMS,
-                                 NATIVE_CHAR const *const reference,
-                                 char const *const format,
-                                 ...) {
-  struct NATIVE_STR msg = {0};
-  va_list valist;
-  va_start(valist, format);
-  error err = mo_vsprintf(&msg, reference, format, valist);
-  va_end(valist);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
-  }
-  return error_add_(parent, type, code, &msg ERR_FILEPOS_VALUES_PASSTHRU);
-}
-#else
 NODISCARD error error_add_i18nf_(error const parent,
                                  int const type,
                                  int const code ERR_FILEPOS_PARAMS,
@@ -127,25 +81,7 @@ NODISCARD error error_add_i18nf_(error const parent,
   }
   return error_add_(parent, type, code, msg ERR_FILEPOS_VALUES_PASSTHRU);
 }
-#endif
 
-#ifndef OV_NOSTR
-bool error_report_free_i18n_(error e, char const *const msg ERR_FILEPOS_PARAMS) {
-#  ifdef _WIN32
-  struct wstr ws = {0};
-  error err = to_wstr(msg, strlen(msg), &ws);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
-  }
-  bool const r = error_report_free_(e, &ws ERR_FILEPOS_VALUES_PASSTHRU);
-  ereport(sfree(&ws));
-  return r;
-#  else
-  return error_report_free_(e, &native_unmanaged_const(msg) ERR_FILEPOS_VALUES_PASSTHRU);
-#  endif
-}
-#else
 bool error_report_free_i18n_(error e, char const *const msg ERR_FILEPOS_PARAMS) {
   if (!msg) {
     return error_report_free_(e, NULL ERR_FILEPOS_VALUES_PASSTHRU);
@@ -155,7 +91,7 @@ bool error_report_free_i18n_(error e, char const *const msg ERR_FILEPOS_PARAMS) 
   error err = eok();
   bool r = false;
 
-#  ifdef _WIN32
+#ifdef _WIN32
   size_t const msg_len = strlen(msg);
   size_t const native_len = ov_utf8_to_wchar_len(msg, msg_len);
   if (native_len == SIZE_MAX) {
@@ -175,7 +111,7 @@ bool error_report_free_i18n_(error e, char const *const msg ERR_FILEPOS_PARAMS) 
     goto cleanup;
   }
   native_msg[converted] = L'\0';
-#  else
+#else
   size_t const msg_len = strlen(msg);
   err = OV_ARRAY_GROW(&native_msg, msg_len + 1);
   if (efailed(err)) {
@@ -183,7 +119,7 @@ bool error_report_free_i18n_(error e, char const *const msg ERR_FILEPOS_PARAMS) 
     goto cleanup;
   }
   strcpy(native_msg, msg);
-#  endif
+#endif
 
   r = error_report_free_(e, native_msg ERR_FILEPOS_VALUES_PASSTHRU);
 
@@ -197,25 +133,7 @@ cleanup:
   }
   return r;
 }
-#endif
 
-#ifndef OV_NOSTR
-bool error_report_free_i18nf_(error e ERR_FILEPOS_PARAMS,
-                              NATIVE_CHAR const *const reference,
-                              char const *const format,
-                              ...) {
-  struct NATIVE_STR msg = {0};
-  va_list valist;
-  va_start(valist, format);
-  error err = mo_vsprintf(&msg, reference, format, valist);
-  va_end(valist);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
-  }
-  return error_report_free_(e, &msg ERR_FILEPOS_VALUES_PASSTHRU);
-}
-#else
 bool error_report_free_i18nf_(error e ERR_FILEPOS_PARAMS,
                               NATIVE_CHAR const *const reference,
                               char const *const format,
@@ -239,4 +157,3 @@ bool error_report_free_i18nf_(error e ERR_FILEPOS_PARAMS,
   }
   return r;
 }
-#endif

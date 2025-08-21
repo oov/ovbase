@@ -1,9 +1,5 @@
-option(USE_STR "use struct str" ON)
-option(USE_WSTR "use struct wstr" ON)
 option(LEAK_DETECTOR "use leak detector" ON)
 option(ALLOCATE_LOGGER "use allocate logger" ON)
-option(OV_NOSTR "disable struct str/wstr" OFF)
-option(OV_NOARR "disable struct array" OFF)
 option(USE_ADDRESS_SANITIZER "use address sanitizer" OFF)
 option(USE_COMPILER_RT "use compiler-rt runtime" OFF)
 option(USE_NO_PTHREAD "add -no-pthread" OFF)
@@ -66,8 +62,8 @@ configure_file(${SOURCE_INCLUDE_DIR}/ovutf.h ${DESTINATION_INCLUDE_DIR} COPYONLY
 configure_file(${PROJECT_SOURCE_DIR}/3rd/acutest/include/acutest.h ${DESTINATION_INCLUDE_DIR}/ovbase_3rd/acutest.h COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/3rd/tinycthread/source/tinycthread.h ${DESTINATION_INCLUDE_DIR}/ovbase_3rd/tinycthread.h COPYONLY)
 
-add_library(ovbase STATIC
-  array.c
+# Prepare source file lists
+set(OVBASE_SOURCES
   array2.c
   error.c
   error_i18n.c
@@ -86,9 +82,8 @@ add_library(ovbase STATIC
   mem_aligned.c
   mo/mo.c
   mo/mo_printf_ex.c
-  mo/str.c
-  mo/wstr.c
-  $<$<BOOL:${WIN32}>:mo/win32.c>
+  mo/char.c
+  mo/wchar.c
   num/char/atoi.c
   num/char/atof.c
   num/char/atou.c
@@ -119,20 +114,6 @@ add_library(ovbase STATIC
   printf/wchar.c
   printf_ex/char.c
   printf_ex/wchar.c
-  str/atoi_.c
-  str/atou_.c
-  str/cat_.c
-  str/cat_m_.c
-  str/cpy_.c
-  str/cpy_m_.c
-  str/itoa_.c
-  str/ncat_.c
-  str/ncpy_.c
-  str/replace_all_.c
-  str/sprintf_.c
-  str/str_.c
-  str/to_str_.c
-  str/utoa_.c
   utf/codepoint_char16.c
   utf/codepoint_char32.c
   utf/codepoint_sjis.c
@@ -146,21 +127,13 @@ add_library(ovbase STATIC
   utf/utf8_from_char32.c
   utf/utf8_from_sjis.c
   utf/utf8_from_wchar.c
-  wstr/atoi_.c
-  wstr/atou_.c
-  wstr/cat_.c
-  wstr/cat_m_.c
-  wstr/cpy_.c
-  wstr/cpy_m_.c
-  wstr/itoa_.c
-  wstr/ncat_.c
-  wstr/ncpy_.c
-  wstr/replace_all_.c
-  wstr/sprintf_.c
-  wstr/str_.c
-  wstr/to_wstr_.c
-  wstr/utoa_.c
 )
+
+if(WIN32)
+  list(APPEND OVBASE_SOURCES mo/win32.c)
+endif()
+
+add_library(ovbase STATIC ${OVBASE_SOURCES})
 set_target_properties(ovbase PROPERTIES
 RUNTIME_OUTPUT_DIRECTORY
   ${PROJECT_BINARY_DIR}/bin
@@ -234,18 +207,12 @@ install(EXPORT ovbase-export
 export(EXPORT ovbase-export
        FILE "${CMAKE_BINARY_DIR}/ovbase-config.cmake")
 
-add_executable(array_test array_test.c)
-list(APPEND tests array_test)
 add_executable(array2_test array2_test.c)
 list(APPEND tests array2_test)
 add_executable(ovbase_test ovbase_test.c)
 list(APPEND tests ovbase_test)
 add_executable(hmap_test hmap/test.c)
 list(APPEND tests hmap_test)
-add_executable(str_test str/test.c)
-list(APPEND tests str_test)
-add_executable(wstr_test wstr/test.c)
-list(APPEND tests wstr_test)
 add_executable(mo_test mo/test.c $<$<BOOL:${WIN32}>:mo/test_win32/test.rc>)
 list(APPEND tests mo_test)
 add_executable(num_wchar_test num/wchar/test.c)
@@ -256,10 +223,6 @@ add_executable(num_char16_test num/char16/test.c)
 list(APPEND tests num_char16_test)
 add_executable(num_char32_test num/char32/test.c)
 list(APPEND tests num_char32_test)
-add_executable(printf_char_test printf/char_test.c)
-list(APPEND tests printf_char_test)
-add_executable(printf_wchar_test printf/wchar_test.c)
-list(APPEND tests printf_wchar_test)
 add_executable(utf_test utf/test.c)
 list(APPEND tests utf_test)
 

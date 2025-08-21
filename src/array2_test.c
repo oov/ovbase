@@ -1,7 +1,6 @@
 #include <ovtest.h>
 
-#ifndef OV_NOARR
-#  include <ovarray.h>
+#include <ovarray.h>
 
 static void test_array(void) {
   int *a = NULL;
@@ -107,11 +106,3 @@ TEST_LIST = {
     {"test_bitarray_fixed_length", test_bitarray_fixed_length},
     {NULL, NULL},
 };
-
-#else // OV_NOARR
-
-TEST_LIST = {
-    {NULL, NULL},
-};
-
-#endif // OV_NOARR

@@ -28,26 +28,3 @@ int mo_pprintf_char(
   va_end(valist);
   return r;
 }
-
-#ifndef OV_NOSTR
-#  ifdef USE_STR
-NODISCARD error mo_sprintf_str(struct str *const dest, char const *const reference, char const *const format, ...) {
-  va_list valist;
-  va_start(valist, format);
-  error err = svsprintf(dest, reference, format, valist);
-  va_end(valist);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
-  }
-  return eok();
-}
-
-NODISCARD error mo_vsprintf_str(struct str *const dest,
-                                char const *const reference,
-                                char const *const format,
-                                va_list valist) {
-  return svsprintf(dest, reference, format, valist);
-}
-#  endif
-#endif

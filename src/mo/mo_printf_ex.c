@@ -4,8 +4,6 @@
 #include <ovprintf_ex.h>
 #include <ovutf.h>
 
-#ifdef OV_NOSTR
-
 NODISCARD error mo_vsprintf_char(char **const dest,
                                  char const *const reference,
                                  char const *const format,
@@ -85,5 +83,3 @@ NODISCARD error mo_sprintf_wchar(wchar_t **const dest, wchar_t const *const refe
   }
   return eok();
 }
-
-#endif

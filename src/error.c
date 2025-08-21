@@ -14,17 +14,15 @@
 #  include <string.h>
 #endif
 
-#ifdef OV_NOSTR
-#  ifdef _WIN32
-#    define STRLEN wcslen
-#    define STRCPY wcscpy
-#    define STRPH L"%ls"
-#  else
-#    define STRLEN strlen
-#    define STRCPY strcpy
-#    define STRPH "%hs"
-#  endif // _WIN32
-#endif   // OV_NOSTR
+#ifdef _WIN32
+#  define STRLEN wcslen
+#  define STRCPY wcscpy
+#  define STRPH L"%ls"
+#else
+#  define STRLEN strlen
+#  define STRCPY strcpy
+#  define STRPH "%hs"
+#endif // _WIN32
 
 static void write_stderr(NATIVE_CHAR const *const str) {
 #ifdef _WIN32
@@ -95,18 +93,6 @@ static NATIVE_CHAR const *get_generic_error_message(int const code) {
   }
 }
 
-#ifndef OV_NOSTR
-NODISCARD error error_generic_message_mapper(int const type, int const code, struct NATIVE_STR *const dest) {
-  if (!dest) {
-    return errg(err_invalid_arugment);
-  }
-  if (type != err_type_generic) {
-    dest->len = 0;
-    return eok();
-  }
-  return scpy(dest, get_generic_error_message(code));
-}
-#else
 NODISCARD error error_generic_message_mapper(int const type, int const code, NATIVE_CHAR **const dest) {
   if (!dest) {
     return errg(err_invalid_arugment);
@@ -123,25 +109,7 @@ NODISCARD error error_generic_message_mapper(int const type, int const code, NAT
   STRCPY(*dest, msg);
   return err;
 }
-#endif // OV_NOSTR
 
-#ifndef OV_NOSTR
-NODISCARD error error_errno_message_mapper(int const type, int const code, struct NATIVE_STR *const dest) {
-  if (!dest) {
-    return errg(err_invalid_arugment);
-  }
-  if (type != err_type_errno) {
-    dest->len = 0;
-    return eok();
-  }
-  error err = ssprintf(dest, NULL, NSTR("errno = %d"), code);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
-  }
-  return eok();
-}
-#else
 NODISCARD error error_errno_message_mapper(int const type, int const code, NATIVE_CHAR **const dest) {
   if (!dest) {
     return errg(err_invalid_arugment);
@@ -159,57 +127,8 @@ NODISCARD error error_errno_message_mapper(int const type, int const code, NATIV
   STRCPY(*dest, buf);
   return eok();
 }
-#endif // OV_NOSTR
 
 #ifdef _WIN32
-#  ifndef OV_NOSTR
-NODISCARD error error_win32_message_mapper(int const type,
-                                           int const code,
-                                           uint16_t langid,
-                                           struct NATIVE_STR *const dest) {
-  if (!dest) {
-    return errg(err_invalid_arugment);
-  }
-  if (type != err_type_hresult) {
-    dest->len = 0;
-    return eok();
-  }
-  error err = eok();
-  LPWSTR msg = NULL;
-  DWORD msglen = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                                NULL,
-                                (DWORD)code,
-                                (DWORD)langid,
-                                (LPWSTR)&msg,
-                                0,
-                                NULL);
-  if (!msglen) {
-    ereport(errhr(HRESULT_FROM_WIN32(GetLastError())));
-    err = scpy(dest, L"Error messages is not available.");
-    if (efailed(err)) {
-      err = ethru(err);
-      goto cleanup;
-    }
-    goto cleanup;
-  }
-  if (msg[msglen - 1] == L'\r' || msg[msglen - 1] == L'\n') {
-    msg[--msglen] = L'\0';
-    if (msg[msglen - 1] == L'\r' || msg[msglen - 1] == L'\n') {
-      msg[--msglen] = L'\0';
-    }
-  }
-  err = scpy(dest, msg);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-cleanup:
-  if (msg) {
-    LocalFree(msg);
-  }
-  return err;
-}
-#  else
 NODISCARD error error_win32_message_mapper(int const type, int const code, uint16_t langid, NATIVE_CHAR **const dest) {
   if (!dest) {
     return errg(err_invalid_arugment);
@@ -255,34 +174,17 @@ cleanup:
   }
   return err;
 }
-#  endif // OV_NOSTR
 #endif
 
-#ifndef OV_NOSTR
-NODISCARD static error error_default_message_mapper(int const type, int const code, struct NATIVE_STR *const dest) {
-  if (type == err_type_generic) {
-    return error_generic_message_mapper(type, code, dest);
-  }
-#  ifdef _WIN32
-  if (type == err_type_hresult) {
-    return error_win32_message_mapper(type, code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), dest);
-  }
-#  endif
-  if (type == err_type_errno) {
-    return error_errno_message_mapper(type, code, dest);
-  }
-  return scpy(dest, NSTR("Unknown error code."));
-}
-#else
 NODISCARD static error error_default_message_mapper(int const type, int const code, NATIVE_CHAR **const dest) {
   if (type == err_type_generic) {
     return error_generic_message_mapper(type, code, dest);
   }
-#  ifdef _WIN32
+#ifdef _WIN32
   if (type == err_type_hresult) {
     return error_win32_message_mapper(type, code, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), dest);
   }
-#  endif
+#endif
   if (type == err_type_errno) {
     return error_errno_message_mapper(type, code, dest);
   }
@@ -295,54 +197,9 @@ NODISCARD static error error_default_message_mapper(int const type, int const co
   STRCPY(*dest, unknown_msg);
   return err;
 }
-#endif // OV_NOSTR
 
 static error_message_mapper g_error_message_mapper = error_default_message_mapper;
 
-#ifndef OV_NOSTR
-void error_default_reporter(error const e,
-                            struct NATIVE_STR const *const message,
-                            struct ov_filepos const *const filepos) {
-  struct NATIVE_STR errmsg = {0};
-  struct NATIVE_STR line = {0};
-  struct NATIVE_STR msg = {0};
-  error err = error_to_string(e, &errmsg);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  err = scpy(&msg, message->ptr);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  err = ssprintf(&line, NULL, NSTR("(reported at %s:%ld %s())") NEWLINE, filepos->file, filepos->line, filepos->func);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  err = scat(&msg, line.ptr);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  err = scat(&msg, errmsg.ptr);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  write_stderr(msg.ptr);
-
-cleanup:
-  if (efailed(err)) {
-    write_stderr(NSTR("Failed to report error.") NEWLINE);
-    efree(&err);
-  }
-  eignore(sfree(&msg));
-  eignore(sfree(&line));
-  eignore(sfree(&errmsg));
-}
-#else
 void error_default_reporter(error const e, NATIVE_CHAR const *const message, struct ov_filepos const *const filepos) {
   NATIVE_CHAR *errmsg = NULL;
   NATIVE_CHAR buf[1024];
@@ -370,7 +227,6 @@ cleanup:
     OV_ARRAY_DESTROY(&errmsg);
   }
 }
-#endif // OV_NOSTR
 
 static error_message_reporter g_error_reporter = error_default_reporter;
 
@@ -387,31 +243,6 @@ static error find_last_error(error e) {
   return e;
 }
 
-#ifndef OV_NOSTR
-error error_add_(error const parent,
-                 int const type,
-                 int const code,
-                 struct NATIVE_STR const *const msg ERR_FILEPOS_PARAMS) {
-  error new_error = eok();
-  error err = mem_(&new_error, 1, sizeof(struct error) MEM_FILEPOS_VALUES_PASSTHRU);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
-  }
-  *new_error = (struct error){
-      .type = type,
-      .code = code,
-      .msg = msg ? *msg : (struct NATIVE_STR){0},
-      .filepos = *filepos,
-  };
-  error last_error = find_last_error(parent);
-  if (last_error) {
-    last_error->next = new_error;
-    return parent;
-  }
-  return new_error;
-}
-#else
 error error_add_(error const parent, int const type, int const code, NATIVE_CHAR const *const msg ERR_FILEPOS_PARAMS) {
   error new_error = eok();
   error err = mem_(&new_error, 1, sizeof(struct error) MEM_FILEPOS_VALUES_PASSTHRU);
@@ -437,24 +268,6 @@ error error_add_(error const parent, int const type, int const code, NATIVE_CHAR
   }
   return new_error;
 }
-#endif // OV_NOSTR
-
-#ifndef OV_NOSTR
-bool error_free_(error *const e MEM_FILEPOS_PARAMS) {
-  if (!e) {
-    return false;
-  }
-  error ee = *e;
-  while (ee != NULL) {
-    error next = ee->next;
-    array_free_core_((struct array *)&ee->msg MEM_FILEPOS_VALUES_PASSTHRU);
-    mem_core_(&ee, 0 MEM_FILEPOS_VALUES_PASSTHRU);
-    ee = next;
-  }
-  *e = NULL;
-  return true;
-}
-#else
 bool error_free_(error *const e MEM_FILEPOS_PARAMS) {
   if (!e) {
     return false;
@@ -471,36 +284,6 @@ bool error_free_(error *const e MEM_FILEPOS_PARAMS) {
   *e = NULL;
   return true;
 }
-#endif // OV_NOSTR
-
-#ifndef OV_NOSTR
-error error_to_string_short(error e, struct NATIVE_STR *const dest) {
-  if (e == NULL || (e->type == err_type_generic && e->code == err_pass_through)) {
-    return errg(err_invalid_arugment);
-  }
-  struct NATIVE_STR tmp = {0};
-  error err = g_error_message_mapper(e->type, e->code, &tmp);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  if (e->msg.len) {
-    err = scatm(&tmp, NEWLINE, e->msg.ptr);
-    if (efailed(err)) {
-      err = ethru(err);
-      goto cleanup;
-    }
-  }
-  err = scpy(dest, tmp.ptr);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-cleanup:
-  ereport(sfree(&tmp));
-  return err;
-}
-#else
 error error_to_string_short(error e, NATIVE_CHAR **const dest) {
   if (e == NULL || (e->type == err_type_generic && e->code == err_pass_through)) {
     return errg(err_invalid_arugment);
@@ -537,62 +320,7 @@ cleanup:
   }
   return err;
 }
-#endif // OV_NOSTR
 
-#ifndef OV_NOSTR
-error error_to_string(error e, struct NATIVE_STR *const dest) {
-  struct NATIVE_STR msg = {0};
-  struct NATIVE_STR tmp = {0};
-  error err = error_to_string_short(e, &tmp);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  err = ssprintf(&msg,
-                 NULL,
-                 NEWLINE NSTR("(error code: %02X:0x%08X)") NEWLINE NSTR("  %s:%ld %s()"),
-                 e->type,
-                 e->code,
-                 e->filepos.file,
-                 e->filepos.line,
-                 e->filepos.func);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  err = scat(&tmp, msg.ptr);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  for (e = e->next; e != NULL; e = e->next) {
-    if (e->type != err_type_generic || e->code != err_pass_through) {
-      err = emsg(err_type_generic, err_unexpected, &native_unmanaged(NSTR("incorrect error structure.")));
-      goto cleanup;
-    }
-    err = ssprintf(&msg, NULL, NEWLINE NSTR("  %s:%ld %s()"), e->filepos.file, e->filepos.line, e->filepos.func);
-    if (efailed(err)) {
-      err = ethru(err);
-      goto cleanup;
-    }
-    err = scat(&tmp, msg.ptr);
-    if (efailed(err)) {
-      err = ethru(err);
-      goto cleanup;
-    }
-  }
-  err = scpy(dest, tmp.ptr);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-
-cleanup:
-  ereport(sfree(&msg));
-  ereport(sfree(&tmp));
-  return err;
-}
-#else
 error error_to_string(error e, NATIVE_CHAR **const dest) {
   NATIVE_CHAR buf[1024];
   NATIVE_CHAR *tmp = NULL;
@@ -651,17 +379,7 @@ cleanup:
   }
   return err;
 }
-#endif // OV_NOSTR
 
-#ifndef OV_NOSTR
-bool error_report_(error const e, struct NATIVE_STR const *const message ERR_FILEPOS_PARAMS) {
-  if (esucceeded(e)) {
-    return true;
-  }
-  g_error_reporter(e, message ERR_FILEPOS_VALUES_PASSTHRU);
-  return false;
-}
-#else
 bool error_report_(error const e, NATIVE_CHAR const *const message ERR_FILEPOS_PARAMS) {
   if (esucceeded(e)) {
     return true;
@@ -669,17 +387,7 @@ bool error_report_(error const e, NATIVE_CHAR const *const message ERR_FILEPOS_P
   g_error_reporter(e, message ERR_FILEPOS_VALUES_PASSTHRU);
   return false;
 }
-#endif // OV_NOSTR
 
-#ifndef OV_NOSTR
-bool error_report_free_(error e, struct NATIVE_STR const *const message ERR_FILEPOS_PARAMS) {
-  bool r = error_report_(e, message ERR_FILEPOS_VALUES_PASSTHRU);
-  if (!r) {
-    error_free_(&e MEM_FILEPOS_VALUES_PASSTHRU);
-  }
-  return r;
-}
-#else
 bool error_report_free_(error e, NATIVE_CHAR const *const message ERR_FILEPOS_PARAMS) {
   bool r = error_report_(e, message ERR_FILEPOS_VALUES_PASSTHRU);
   if (!r) {
@@ -687,4 +395,3 @@ bool error_report_free_(error e, NATIVE_CHAR const *const message ERR_FILEPOS_PA
   }
   return r;
 }
-#endif // OV_NOSTR

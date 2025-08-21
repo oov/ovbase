@@ -93,14 +93,10 @@ static void test_mo(void) {
 }
 
 static void test_mo_get_preferred_ui_languages(void) {
-#ifndef OV_NOSTR
-  struct NATIVE_STR str = {0};
-#else
-#  ifdef _WIN32
+#ifdef _WIN32
   wchar_t *str = NULL;
-#  else
+#else
   char *str = NULL;
-#  endif
 #endif
 
 #ifndef _WIN32
@@ -119,33 +115,21 @@ static void test_mo_get_preferred_ui_languages(void) {
 #endif
   size_t n = 0;
   size_t pos = 0;
-#ifndef OV_NOSTR
-  while (str.ptr[pos] != NSTR('\0')) {
-#else
   while (str[pos] != NSTR('\0')) {
-#endif
 #ifdef _WIN32
 #  define LEN wcslen
 #else
 #  define LEN strlen
 #endif
-#ifndef OV_NOSTR
-    pos += LEN(str.ptr + pos) + 1;
-#else
     pos += LEN(str + pos) + 1;
-#endif
 #undef LEN
     ++n;
   }
   TEST_CHECK(n > 0);
 cleanup:
-#ifndef OV_NOSTR
-  ereport(sfree(&str));
-#else
   if (str) {
     OV_ARRAY_DESTROY(&str);
   }
-#endif
 }
 
 #ifdef _WIN32
