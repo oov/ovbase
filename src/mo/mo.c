@@ -1,5 +1,7 @@
 #include <ovmo.h>
 
+#include <string.h>
+
 #ifndef _WIN32
 #  include <locale.h>
 #  include <stdio.h>

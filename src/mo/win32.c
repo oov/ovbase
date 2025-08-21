@@ -2,6 +2,10 @@
 #include <ovmo.h>
 
 #ifdef _WIN32
+
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+
 static NODISCARD error mo_get_preferred_ui_languages_core(NATIVE_CHAR **dest, bool const id) {
   error err = eok();
   HMODULE h = LoadLibraryW(L"kernel32.dll");
@@ -173,20 +177,20 @@ cleanup:
 }
 
 NODISCARD error mo_parse_from_resource_ex(struct mo **const mpp,
-                                          HMODULE const hmod,
+                                          void *const hmodule,
                                           wchar_t const *const preferred_languages) {
   HRSRC r = NULL;
-  error err = find_resource(hmod, MAKEINTRESOURCEW(10), L"MO", preferred_languages, &r);
+  error err = find_resource(hmodule, MAKEINTRESOURCEW(10), L"MO", preferred_languages, &r);
   if (efailed(err)) {
     err = ethru(err);
     goto cleanup;
   }
-  HGLOBAL const h = LoadResource(hmod, r);
+  HGLOBAL const h = LoadResource(hmodule, r);
   if (!h) {
     err = errhr(HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
   }
-  size_t const sz = (size_t)(SizeofResource(hmod, r));
+  size_t const sz = (size_t)(SizeofResource(hmodule, r));
   if (!sz) {
     err = errhr(HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
@@ -208,14 +212,14 @@ cleanup:
   return err;
 }
 
-NODISCARD error mo_parse_from_resource(struct mo **const mpp, HMODULE const hmod) {
+NODISCARD error mo_parse_from_resource(struct mo **const mpp, void *const hmodule) {
   NATIVE_CHAR *langs = NULL;
   error err = mo_get_preferred_ui_languages_core(&langs, false);
   if (efailed(err)) {
     err = ethru(err);
     goto cleanup;
   }
-  err = mo_parse_from_resource_ex(mpp, hmod, langs);
+  err = mo_parse_from_resource_ex(mpp, hmodule, langs);
   if (efailed(err)) {
     err = ethru(err);
     goto cleanup;

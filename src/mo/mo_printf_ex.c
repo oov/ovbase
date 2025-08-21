@@ -1,5 +1,7 @@
 #include <ovmo.h>
 
+#include <string.h>
+
 #include <ovarray.h>
 #include <ovprintf_ex.h>
 #include <ovutf.h>

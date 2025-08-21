@@ -2,6 +2,9 @@
 
 #include <ovbase.h>
 
+#define gettext(id) mo_gettext(mo_get_default(), (id))
+#define gettext_noop(id) (id)
+
 struct mo;
 
 NODISCARD error mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen);
@@ -17,12 +20,9 @@ struct mo *mo_get_default(void);
 NODISCARD error mo_get_preferred_ui_languages(NATIVE_CHAR **const dest);
 
 #ifdef _WIN32
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
-
-NODISCARD error mo_parse_from_resource(struct mo **const mpp, HMODULE const hmod);
+NODISCARD error mo_parse_from_resource(struct mo **const mpp, void *const hmodule);
 NODISCARD error mo_parse_from_resource_ex(struct mo **const mpp,
-                                          HMODULE const hmod,
+                                          void *const hmodule,
                                           wchar_t const *const preferred_languages);
 #endif
 
