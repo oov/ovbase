@@ -42,7 +42,7 @@ typedef size_t ov_bitarray;
 NODISCARD error ov_bitarray_alloc(ov_bitarray **const a, size_t const len MEM_FILEPOS_PARAMS);
 
 #define OV_BITARRAY_ALLOC(baptrptr, len) ov_bitarray_alloc((baptrptr), (size_t)(len)MEM_FILEPOS_VALUES)
-#define OV_BITARRAY_FREE(baptrptr) eignore(mem_free((baptrptr)))
+#define OV_BITARRAY_FREE(baptrptr) mem_free((baptrptr))
 
 // growable
 

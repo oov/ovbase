@@ -159,9 +159,9 @@ void mo_free(struct mo **const mpp) {
   }
   struct mo *mp = *mpp;
   if (mp->msg) {
-    ereport(mem_free(&mp->msg));
+    mem_free(&mp->msg);
   }
-  ereport(mem_free(mpp));
+  mem_free(mpp);
 }
 
 static struct mo_msg *find(struct mo const *const mp, char const *const id) {

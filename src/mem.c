@@ -10,10 +10,10 @@ error mem_(void *const pp, size_t const n, size_t const item_size MEM_FILEPOS_PA
   return eok();
 }
 
-error mem_free_(void *const pp MEM_FILEPOS_PARAMS) {
+void mem_free_(void *const pp MEM_FILEPOS_PARAMS) {
   if (!pp) {
-    return errg(err_invalid_arugment);
+    return;
   }
   mem_core_(pp, 0 MEM_FILEPOS_VALUES_PASSTHRU);
-  return eok();
+  return;
 }

@@ -33,12 +33,9 @@ NODISCARD error mem_aligned_alloc_(void *const pp,
   return eok();
 }
 
-NODISCARD error mem_aligned_free_(void *const pp MEM_FILEPOS_PARAMS) {
-  if (!pp) {
-    return errg(err_invalid_arugment);
-  }
-  if (*(void **)pp == NULL) {
-    return errg(err_invalid_arugment);
+void mem_aligned_free_(void *const pp MEM_FILEPOS_PARAMS) {
+  if (!pp || *(void **)pp == NULL) {
+    return;
   }
   mi_free(*(void **)pp);
 #  if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
@@ -48,7 +45,6 @@ NODISCARD error mem_aligned_free_(void *const pp MEM_FILEPOS_PARAMS) {
 #  ifdef ALLOCATE_LOGGER
   (void)filepos;
 #  endif
-  return eok();
 }
 
 #else
@@ -73,19 +69,15 @@ NODISCARD error mem_aligned_alloc_(void *const pp,
   return eok();
 }
 
-NODISCARD error mem_aligned_free_(void *const pp MEM_FILEPOS_PARAMS) {
-  if (!pp) {
-    return errg(err_invalid_arugment);
-  }
-  if (*(void **)pp == NULL) {
-    return errg(err_invalid_arugment);
+void mem_aligned_free_(void *const pp MEM_FILEPOS_PARAMS) {
+  if (!pp || *(void **)pp == NULL) {
+    return;
   }
   uint8_t *p = *(void **)pp;
   size_t offset = (size_t)(*(p - 1));
   p -= offset + 1;
   mem_core_(&p, 0 MEM_FILEPOS_VALUES_PASSTHRU);
   *(void **)pp = NULL;
-  return eok();
 }
 
 #endif

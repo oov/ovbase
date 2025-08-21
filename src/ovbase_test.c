@@ -50,12 +50,12 @@ static void test_mem(void) {
   TEST_SUCCEEDED_F(mem(&p, 8, 1));
   TEST_CHECK(p != NULL);
 
-  TEST_SUCCEEDED_F(mem_free(&p));
+  mem_free(&p);
   TEST_CHECK(p == NULL);
 
   TEST_EISG_F(mem(&p, 1, 0), err_invalid_arugment);
   TEST_EISG_F(mem(NULL, 1, 1), err_invalid_arugment);
-  TEST_EISG_F(mem_free(NULL), err_invalid_arugment);
+  mem_free(NULL);
 }
 
 static void test_mem_aligned_alloc(void) {
@@ -63,14 +63,14 @@ static void test_mem_aligned_alloc(void) {
   TEST_SUCCEEDED_F(mem_aligned_alloc(&p, 8, 1, 16));
   TEST_CHECK(p != NULL);
   TEST_CHECK((((size_t)p) % 16) == 0);
-  TEST_SUCCEEDED_F(mem_aligned_free(&p));
+  mem_aligned_free(&p);
   TEST_CHECK(p == NULL);
 
   TEST_EISG_F(mem_aligned_alloc(&p, 0, 0, 16), err_invalid_arugment);
   TEST_EISG_F(mem_aligned_alloc(&p, 1, 0, 16), err_invalid_arugment);
   TEST_EISG_F(mem_aligned_alloc(&p, 0, 1, 16), err_invalid_arugment);
   TEST_EISG_F(mem_aligned_alloc(NULL, 1, 1, 16), err_invalid_arugment);
-  TEST_EISG_F(mem_aligned_free(NULL), err_invalid_arugment);
+  mem_aligned_free(NULL);
 }
 
 TEST_LIST = {

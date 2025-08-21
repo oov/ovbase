@@ -32,7 +32,7 @@ int mo_vsnprintf_wchar(
     return 0;
   }
   int const r = ov_vsnprintf(buf, buflen, reference, ws, valist);
-  ereport(mem_free(&ws));
+  mem_free(&ws);
   return r;
 }
 
@@ -61,7 +61,7 @@ int mo_vpprintf_wchar(void (*putc)(int c, void *ctx),
     return 0;
   }
   int const r = ov_vpprintf(putc, ctx, reference, ws, valist);
-  ereport(mem_free(&ws));
+  mem_free(&ws);
   return r;
 }
 
