@@ -5,7 +5,7 @@
 #include "../../3rd/hashmap.c/hashmap.h"
 
 struct hmap_udata {
-  struct hmap *hm;
+  struct hmap const *hm;
   struct ov_filepos const *filepos;
 };
 

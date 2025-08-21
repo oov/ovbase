@@ -29,7 +29,7 @@ static void test_hmap_dynamic(void) {
   if (!TEST_CHECK(count == 0)) {
     goto cleanup;
   }
-  struct test_item_dynamic *got = NULL;
+  struct test_item_dynamic const *got = NULL;
   if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_dynamic){.key = (wchar_t *)L"test1"}, &got))) {
     goto cleanup;
   }
@@ -104,7 +104,7 @@ static void test_hmap_static(void) {
   if (!TEST_CHECK(count == 0)) {
     goto cleanup;
   }
-  struct test_item_static *got = NULL;
+  struct test_item_static const *got = NULL;
   if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_static){.key = 123}, &got))) {
     goto cleanup;
   }

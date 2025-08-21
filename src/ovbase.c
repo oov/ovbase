@@ -84,12 +84,12 @@ struct allocated_at {
   struct ov_filepos const filepos;
 };
 
-static uint64_t am_hash(void const *const item, uint64_t const seed0, uint64_t const seed1, void *const udata) {
+static uint64_t am_hash(void const *const item, uint64_t const seed0, uint64_t const seed1, void const *const udata) {
   (void)udata;
   struct allocated_at const *const aa = item;
   return hashmap_sip(&aa->p, sizeof(void *), seed0, seed1);
 }
-static int am_compare(void const *const a, void const *const b, void *udata) {
+static int am_compare(void const *const a, void const *const b, void const *udata) {
   struct allocated_at const *const aa0 = a;
   struct allocated_at const *const aa1 = b;
   (void)udata;
