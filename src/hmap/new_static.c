@@ -5,7 +5,7 @@
 static uint64_t
 hm_hash_static(void const *const item, uint64_t const seed0, uint64_t const seed1, void const *const udata) {
   struct hmap_udata const *const ud = udata;
-  return hashmap_sip(item, ud->hm->size, seed0, seed1);
+  return sip_hash_1_3(item, ud->hm->size, seed0, seed1);
 }
 
 static int hm_compare_static(const void *a, const void *b, void const *const udata) {

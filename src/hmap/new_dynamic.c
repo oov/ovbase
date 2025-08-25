@@ -8,7 +8,7 @@ hm_hash_dynamic(void const *const item, uint64_t const seed0, uint64_t const see
   void const *p = NULL;
   size_t len = 0;
   ud->hm->get_key(item, &p, &len);
-  return hashmap_sip(p, len, seed0, seed1);
+  return sip_hash_1_3(p, len, seed0, seed1);
 }
 
 static int hm_compare_dynamic(void const *const a, void const *const b, void const *const udata) {
