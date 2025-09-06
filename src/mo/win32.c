@@ -6,66 +6,82 @@
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
 
-static NODISCARD error mo_get_preferred_ui_languages_core(NATIVE_CHAR **dest, bool const id) {
-  error err = eok();
-  HMODULE h = LoadLibraryW(L"kernel32.dll");
+static bool mo_get_preferred_ui_languages_core(NATIVE_CHAR **dest, bool const id, struct ov_error *const err) {
+  if (!dest) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return false;
+  }
+
+  NATIVE_CHAR *dest_prev = *dest;
+  HMODULE h = NULL;
+  bool result = false;
+
+  h = LoadLibraryW(L"kernel32.dll");
   if (h == NULL) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
+    OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
   }
-  typedef BOOL(WINAPI * GETHREADPERFERREDUILANGUAGESPROC)(
-      DWORD dwFlags, PULONG pulNumLanguages, PZZWSTR pwszLanguagesBuffer, PULONG pcchLanguagesBuffer);
-  GETHREADPERFERREDUILANGUAGESPROC fn =
-      (GETHREADPERFERREDUILANGUAGESPROC)(void *)GetProcAddress(h, "GetThreadPreferredUILanguages");
-  if (fn == NULL) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
-    goto cleanup;
+  {
+    typedef BOOL(WINAPI * GETHREADPERFERREDUILANGUAGESPROC)(
+        DWORD dwFlags, PULONG pulNumLanguages, PZZWSTR pwszLanguagesBuffer, PULONG pcchLanguagesBuffer);
+    GETHREADPERFERREDUILANGUAGESPROC fn =
+        (GETHREADPERFERREDUILANGUAGESPROC)(void *)GetProcAddress(h, "GetThreadPreferredUILanguages");
+    if (fn == NULL) {
+      OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
+      goto cleanup;
+    }
+    enum {
+      mui_language_id = 0x04,
+      mui_language_name = 0x08,
+      mui_merge_user_fallback = 0x20,
+    };
+    DWORD const flag = id ? mui_language_id : mui_language_name;
+    ULONG n = 0, len = 0;
+    if (!fn(flag, &n, NULL, &len)) {
+      OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
+      goto cleanup;
+    }
+    if (!OV_ARRAY_GROW2(dest, len, err)) {
+      OV_ERROR_TRACE(err);
+      goto cleanup;
+    }
+    if (!fn(flag, &n, *dest, &len)) {
+      OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
+      goto cleanup;
+    }
+    OV_ARRAY_SET_LENGTH(*dest, len);
+    result = true;
   }
-  enum {
-    mui_language_id = 0x04,
-    mui_language_name = 0x08,
-    mui_merge_user_fallback = 0x20,
-  };
-  DWORD const flag = id ? mui_language_id : mui_language_name;
-  ULONG n = 0, len = 0;
-  if (!fn(flag, &n, NULL, &len)) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
-    goto cleanup;
-  }
-  err = OV_ARRAY_GROW(dest, len);
-  if (efailed(err)) {
-    err = ethru(err);
-    goto cleanup;
-  }
-  if (!fn(flag, &n, *dest, &len)) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
-    goto cleanup;
-  }
-  OV_ARRAY_SET_LENGTH(*dest, len);
 cleanup:
+  if (!result && dest_prev == NULL && *dest) {
+    OV_ARRAY_DESTROY(dest);
+  }
   if (h) {
     FreeLibrary(h);
     h = NULL;
   }
-  return err;
+  return result;
 }
 
-NODISCARD error mo_get_preferred_ui_languages(NATIVE_CHAR **dest) {
+bool mo_get_preferred_ui_languages(NATIVE_CHAR **dest, struct ov_error *const err) {
   if (!dest) {
-    return errg(err_invalid_arugment);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return false;
   }
-  error err = mo_get_preferred_ui_languages_core(dest, false);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
+
+  if (!mo_get_preferred_ui_languages_core(dest, false, err)) {
+    OV_ERROR_TRACE(err);
+    return false;
   }
+
   // replace '-' to '_'
   for (size_t i = 0, ln = OV_ARRAY_LENGTH(*dest); i < ln; ++i) {
     if ((*dest)[i] == L'-') {
       (*dest)[i] = L'_';
     }
   }
-  return eok();
+
+  return true;
 }
 
 struct enumlang_context {
@@ -78,7 +94,7 @@ static BOOL CALLBACK enumlang(HMODULE hModule, LPCWSTR lpType, LPCWSTR lpName, W
   (void)hModule;
   (void)lpType;
   (void)lpName;
-  struct enumlang_context *const ctx = (void *)lParam;
+  struct enumlang_context *const ctx = (struct enumlang_context *)lParam;
   if (*ctx->num == ctx->max) {
     return FALSE;
   }
@@ -103,132 +119,168 @@ choose(WORD const *const preferred, size_t const num_preferred, WORD const *cons
   return candidate;
 }
 
-static NODISCARD error find_resource(HMODULE const module,
-                                     wchar_t const *const type,
-                                     wchar_t const *const name,
-                                     wchar_t const *const preferred_languages,
-                                     HRSRC *const dest) {
-  if (type == NULL || name == NULL || preferred_languages == NULL || dest == NULL) {
-    return errg(err_invalid_arugment);
-  }
-  error err = eok();
-  HMODULE h = LoadLibraryW(L"kernel32.dll");
-  if (h == NULL) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
-    goto cleanup;
-  }
-  typedef LCID(WINAPI * LocaleNameToLCIDProc)(LPCWSTR lpName, DWORD dwFlags);
-  LocaleNameToLCIDProc toLCID = (LocaleNameToLCIDProc)(void *)GetProcAddress(h, "LocaleNameToLCID");
-  if (toLCID == NULL) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
-    goto cleanup;
+static HRSRC find_resource(HMODULE const module,
+                           wchar_t const *const type,
+                           wchar_t const *const name,
+                           wchar_t const *const preferred_languages,
+                           struct ov_error *const err) {
+  if (!type || !name || !preferred_languages) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return NULL;
   }
 
-  enum {
-    buf_size = 256,
-  };
+  HMODULE h = NULL;
+  HRSRC result = NULL;
 
-  WORD preferred[buf_size] = {0};
-  size_t num_preferred = 0;
-  for (wchar_t const *l = preferred_languages; *l != L'\0'; l += wcslen(l) + 1) {
-    WORD const lang = LANGIDFROMLCID(toLCID(l, 0));
-    if (lang == 0) {
-      continue;
-    }
-    if (num_preferred == buf_size) {
-      err = errg(err_fail);
+  {
+    h = LoadLibraryW(L"kernel32.dll");
+    if (!h) {
+      OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
       goto cleanup;
     }
-    preferred[num_preferred++] = lang;
+
+    typedef LCID(WINAPI * LocaleNameToLCIDProc)(LPCWSTR lpName, DWORD dwFlags);
+    LocaleNameToLCIDProc toLCID = (LocaleNameToLCIDProc)(void *)GetProcAddress(h, "LocaleNameToLCID");
+    if (!toLCID) {
+      OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
+      goto cleanup;
+    }
+
+    enum {
+      buf_size = 256,
+    };
+
+    WORD preferred[buf_size] = {0};
+    size_t num_preferred = 0;
+    for (wchar_t const *l = preferred_languages; *l != L'\0'; l += wcslen(l) + 1) {
+      WORD const lang = LANGIDFROMLCID(toLCID(l, 0));
+      if (lang == 0) {
+        continue;
+      }
+      if (num_preferred == buf_size) {
+        OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
+        goto cleanup;
+      }
+      preferred[num_preferred++] = lang;
+    }
+
+    WORD resources[buf_size] = {0};
+    size_t num_resources = 0;
+    if (!EnumResourceLanguagesW(
+            module,
+            type,
+            name,
+            enumlang,
+            (LONG_PTR) & (struct enumlang_context){.langs = resources, .num = &num_resources, .max = buf_size})) {
+      OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
+      goto cleanup;
+    }
+    if (num_resources == buf_size) {
+      OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
+      goto cleanup;
+    }
+    WORD const found = choose(preferred, num_preferred, resources, num_resources);
+    if (!found) {
+      OV_ERROR_SET_GENERIC(err, ov_error_generic_not_found);
+      goto cleanup;
+    }
+    result = FindResourceExW(module, type, name, found);
+    if (!result) {
+      OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
+      goto cleanup;
+    }
   }
 
-  WORD resources[buf_size] = {0};
-  size_t num_resources = 0;
-  if (!EnumResourceLanguagesW(
-          module,
-          type,
-          name,
-          enumlang,
-          (LONG_PTR) & (struct enumlang_context){.langs = resources, .num = &num_resources, .max = buf_size})) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
-    goto cleanup;
-  }
-  if (num_resources == buf_size) {
-    err = errg(err_fail);
-    goto cleanup;
-  }
-  WORD const found = choose(preferred, num_preferred, resources, num_resources);
-  if (!found) {
-    err = errg(err_not_found);
-    goto cleanup;
-  }
-  HRSRC r = FindResourceExW(module, type, name, found);
-  if (!r) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
-    goto cleanup;
-  }
-  *dest = r;
 cleanup:
   if (h) {
     FreeLibrary(h);
     h = NULL;
   }
-  return err;
+  return result;
 }
 
-NODISCARD error mo_parse_from_resource_ex(struct mo **const mpp,
-                                          void *const hmodule,
-                                          wchar_t const *const preferred_languages) {
+bool mo_parse_from_resource_ex(struct mo **const mpp,
+                               void *const hmodule,
+                               wchar_t const *const preferred_languages,
+                               struct ov_error *const err) {
+  if (!mpp || !preferred_languages) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return false;
+  }
+
+  bool result = false;
+  HMODULE hmod = (HMODULE)hmodule;
   HRSRC r = NULL;
-  error err = find_resource(hmodule, MAKEINTRESOURCEW(10), L"MO", preferred_languages, &r);
-  if (efailed(err)) {
-    err = ethru(err);
+  HGLOBAL h = NULL;
+  size_t sz = 0;
+  void const *p = NULL;
+
+  r = find_resource(hmod, MAKEINTRESOURCEW(10), L"MO", preferred_languages, err);
+  if (!r) {
+    OV_ERROR_TRACE(err);
     goto cleanup;
   }
-  HGLOBAL const h = LoadResource(hmodule, r);
+
+  h = LoadResource(hmod, r);
   if (!h) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
+    OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
   }
-  size_t const sz = (size_t)(SizeofResource(hmodule, r));
+
+  sz = (size_t)(SizeofResource(hmod, r));
   if (!sz) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
+    OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
   }
+
   if (sz <= 28) {
-    err = errg(err_fail);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
     goto cleanup;
   }
-  void const *const p = LockResource(h);
+
+  p = LockResource(h);
   if (!p) {
-    return errg(err_unexpected);
-  }
-  err = mo_parse(mpp, p, sz);
-  if (efailed(err)) {
-    err = ethru(err);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_unexpected);
     goto cleanup;
   }
+
+  // Call mo_parse using new error system
+  if (!mo_parse(mpp, p, sz, err)) {
+    OV_ERROR_TRACE(err);
+    goto cleanup;
+  }
+  result = true;
+
 cleanup:
-  return err;
+  return result;
 }
 
-NODISCARD error mo_parse_from_resource(struct mo **const mpp, void *const hmodule) {
+bool mo_parse_from_resource(struct mo **const mpp, void *const hmodule, struct ov_error *const err) {
+  if (!mpp) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return false;
+  }
+
   NATIVE_CHAR *langs = NULL;
-  error err = mo_get_preferred_ui_languages_core(&langs, false);
-  if (efailed(err)) {
-    err = ethru(err);
+  bool result = false;
+
+  if (!mo_get_preferred_ui_languages_core(&langs, false, err)) {
+    OV_ERROR_TRACE(err);
     goto cleanup;
   }
-  err = mo_parse_from_resource_ex(mpp, hmodule, langs);
-  if (efailed(err)) {
-    err = ethru(err);
+
+  if (!mo_parse_from_resource_ex(mpp, hmodule, langs, err)) {
+    OV_ERROR_TRACE(err);
     goto cleanup;
   }
+
+  result = true;
+
 cleanup:
   if (langs) {
     OV_ARRAY_DESTROY(&langs);
   }
 
-  return err;
+  return result;
 }
 #endif

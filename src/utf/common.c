@@ -14,13 +14,13 @@ static inline size_t codepoint_to_utf8len(int_fast32_t codepoint) {
 }
 
 enum ov_codepoint_fn_result ovutf_utf8_count(int_fast32_t codepoint, void *ctx) {
-  size_t *n = ctx;
+  size_t *n = (size_t *)ctx;
   *n += codepoint_to_utf8len(codepoint);
   return ov_codepoint_fn_result_continue;
 }
 
 enum ov_codepoint_fn_result ovutf_utf8_write(int_fast32_t const codepoint, void *ctx) {
-  struct ovutf_utf8_write_context *const c = ctx;
+  struct ovutf_utf8_write_context *const c = (struct ovutf_utf8_write_context *)ctx;
   size_t const n = codepoint_to_utf8len(codepoint);
   if ((size_t)(c->end - c->cur) <= n) {
     return ov_codepoint_fn_result_abort;

@@ -29,12 +29,12 @@ struct mo {
 };
 
 static uint32_t read_le(void const *const p) {
-  uint8_t const *const bytes = p;
+  uint8_t const *const bytes = (uint8_t const *)p;
   return ((uint32_t)bytes[0]) | ((uint32_t)bytes[1] << 8) | ((uint32_t)bytes[2] << 16) | ((uint32_t)bytes[3] << 24);
 }
 
 static uint32_t read_be(void const *const p) {
-  uint8_t const *const bytes = p;
+  uint8_t const *const bytes = (uint8_t const *)p;
   return ((uint32_t)bytes[3]) | ((uint32_t)bytes[2] << 8) | ((uint32_t)bytes[1] << 16) | ((uint32_t)bytes[0] << 24);
 }
 
@@ -65,23 +65,30 @@ static bool read_header(char *const dest, size_t const destlen, char const *cons
   return false;
 }
 
-NODISCARD error mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen) {
+bool mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen, struct ov_error *const err) {
   if (!mpp || *mpp || !ptr) {
-    return errg(err_invalid_arugment);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return false;
   }
   if (ptrlen < 28) {
-    return errg(err_fail);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
+    return false;
   }
 
-  uint8_t const *p = ptr;
+  uint8_t const *p = (uint8_t const *)ptr;
   uint32_t (*read)(void const *const) = NULL;
+  struct mo *mp = NULL;
+  uint32_t num_strings = 0;
+  uint32_t orig_offset = 0;
+  uint32_t trans_offset = 0;
 
   {
     uint32_t const magic = read_le(p);
     bool const le = magic == 0x950412de;
     bool const be = magic == 0xde120495;
     if (!le && !be) {
-      return errg(err_fail);
+      OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
+      goto cleanup;
     }
     read = le ? read_le : read_be;
   }
@@ -89,29 +96,28 @@ NODISCARD error mo_parse(struct mo **const mpp, void const *const ptr, size_t co
   {
     uint32_t const version = read(p + 4);
     if (version != 0) {
-      return errg(err_fail);
+      OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
+      goto cleanup;
     }
   }
 
-  uint32_t const num_strings = read(p + 8);
-  uint32_t const orig_offset = read(p + 12);
-  uint32_t const trans_offset = read(p + 16);
+  num_strings = read(p + 8);
+  orig_offset = read(p + 12);
+  trans_offset = read(p + 16);
   if (ptrlen <= orig_offset || ptrlen <= trans_offset) {
-    return errg(err_fail);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
+    goto cleanup;
   }
 
-  struct mo *mp = NULL;
-  error err = mem(mpp, 1, sizeof(struct mo));
-  if (efailed(err)) {
-    err = ethru(err);
+  if (!OV_REALLOC(mpp, 1, sizeof(struct mo), err)) {
+    OV_ERROR_TRACE(err);
     goto cleanup;
   }
   mp = *mpp;
   *mp = (struct mo){0};
 
-  err = mem(&mp->msg, num_strings, sizeof(struct mo_msg));
-  if (efailed(err)) {
-    err = ethru(err);
+  if (!OV_REALLOC(&mp->msg, num_strings, sizeof(struct mo_msg), err)) {
+    OV_ERROR_TRACE(err);
     goto cleanup;
   }
   memset(mp->msg, 0, sizeof(struct mo_msg) * num_strings);
@@ -124,7 +130,7 @@ NODISCARD error mo_parse(struct mo **const mpp, void const *const ptr, size_t co
     size_t const t_len = (size_t)(read(p + trans_offset + i * 8));
     size_t const t_offset = (size_t)(read(p + trans_offset + i * 8 + 4));
     if (o_offset + o_len > ptrlen || t_offset + t_len > ptrlen) {
-      err = errg(err_fail);
+      OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
       goto cleanup;
     }
     msg->id = (char const *)p + o_offset;
@@ -139,7 +145,6 @@ NODISCARD error mo_parse(struct mo **const mpp, void const *const ptr, size_t co
     };
     char plural_form[plural_form_buf_size];
     if (read_header(plural_form, plural_form_buf_size, "Plural-Forms", mp->msg[0].str)) {
-      // TODO: implement plural-form interpreter
       if (strstr(plural_form, "nplurals=1;") == plural_form) {
         mp->plural_form = mo_plural_form_n1;
       } else if (strstr(plural_form, "nplurals=2;") == plural_form) {
@@ -148,11 +153,13 @@ NODISCARD error mo_parse(struct mo **const mpp, void const *const ptr, size_t co
     }
   }
 
+  return true;
+
 cleanup:
-  if (efailed(err)) {
+  if (mp) {
     mo_free(mpp);
   }
-  return err;
+  return false;
 }
 
 void mo_free(struct mo **const mpp) {
@@ -161,9 +168,9 @@ void mo_free(struct mo **const mpp) {
   }
   struct mo *mp = *mpp;
   if (mp->msg) {
-    mem_free(&mp->msg);
+    OV_FREE(&mp->msg);
   }
-  mem_free(mpp);
+  OV_FREE(mpp);
 }
 
 static struct mo_msg *find(struct mo const *const mp, char const *const id) {
@@ -199,9 +206,9 @@ char const *mo_pgettext(struct mo const *const mp, char const *const ctxt, char 
   struct mo_msg *msg = NULL;
   size_t const ctxtlen = strlen(ctxt);
   size_t const idlen = strlen(id);
-  error err = OV_ARRAY_GROW(&tmp, ctxtlen + 1 + idlen + 1);
-  if (efailed(err)) {
-    efree(&err);
+  struct ov_error err = {0};
+  if (!OV_ARRAY_GROW2(&tmp, ctxtlen + 1 + idlen + 1, &err)) {
+    OV_ERROR_DESTROY(&err);
     goto cleanup;
   }
   strcpy(tmp, ctxt);
@@ -221,7 +228,7 @@ static char const *find_plural_form(char const *s, size_t len, unsigned long int
     if (i == n) {
       return s;
     }
-    char const *sep = memchr(s, '\x00', len);
+    char const *sep = (char const *)memchr(s, '\x00', len);
     if (!sep) {
       sep = s + len - 1;
     }
@@ -266,34 +273,42 @@ void mo_set_default(struct mo *const mp) { g_mp = mp; }
 struct mo *mo_get_default(void) { return g_mp; }
 
 #ifndef _WIN32
-NODISCARD error mo_get_preferred_ui_languages(struct NATIVE_STR *const dest) {
+bool mo_get_preferred_ui_languages(NATIVE_CHAR **dest, struct ov_error *const err) {
   if (!dest) {
-    return errg(err_invalid_arugment);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return false;
   }
-  if (dest->len) {
-    dest->len = 0;
-    dest->ptr[0] = NSTR('\0');
-  }
+
   char const *lang = setlocale(LC_MESSAGES, NULL);
   if (!lang) {
     lang = "C";
   }
+
   size_t const langlen = strlen(lang);
-  error err = sgrow(dest, langlen + 2);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
+  if (!OV_ARRAY_GROW2(dest, langlen + 2, err)) {
+    OV_ERROR_TRACE(err);
+    return false;
   }
-  memcpy(dest->ptr, lang, langlen + 1);
-  dest->len = langlen;
-  for (size_t i = langlen - 1; i < langlen; --i) {
-    if (dest->ptr[i] == NSTR('.')) {
-      dest->ptr[i] = NSTR('\0');
-      dest->len = i;
+
+  // Copy language string
+  for (size_t i = 0; i < langlen; ++i) {
+    (*dest)[i] = (NATIVE_CHAR)lang[i];
+  }
+
+  // Remove locale modifier (e.g., "en_US.UTF-8" -> "en_US")
+  size_t final_len = langlen;
+  for (size_t i = 0; i < langlen; ++i) {
+    if ((*dest)[i] == NSTR('.')) {
+      final_len = i;
       break;
     }
   }
-  dest->ptr[++dest->len] = NSTR('\0');
-  return eok();
+
+  // Add null terminator and set length
+  (*dest)[final_len] = NSTR('\0');
+  (*dest)[final_len + 1] = NSTR('\0');
+  OV_ARRAY_SET_LENGTH(*dest, final_len + 2);
+
+  return true;
 }
 #endif

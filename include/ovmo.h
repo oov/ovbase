@@ -7,7 +7,7 @@
 
 struct mo;
 
-NODISCARD error mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen);
+bool mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen, struct ov_error *const err);
 void mo_free(struct mo **const mpp);
 char const *mo_gettext(struct mo const *const mp, char const *const id);
 char const *mo_pgettext(struct mo const *const mp, char const *const ctxt, char const *const id);
@@ -17,13 +17,14 @@ mo_ngettext(struct mo const *const mp, char const *const id, char const *const i
 void mo_set_default(struct mo *const mp);
 struct mo *mo_get_default(void);
 
-NODISCARD error mo_get_preferred_ui_languages(NATIVE_CHAR **const dest);
+bool mo_get_preferred_ui_languages(NATIVE_CHAR **const dest, struct ov_error *const err);
 
 #ifdef _WIN32
-NODISCARD error mo_parse_from_resource(struct mo **const mpp, void *const hmodule);
-NODISCARD error mo_parse_from_resource_ex(struct mo **const mpp,
-                                          void *const hmodule,
-                                          wchar_t const *const preferred_languages);
+bool mo_parse_from_resource(struct mo **const mpp, void *const hmodule, struct ov_error *const err);
+bool mo_parse_from_resource_ex(struct mo **const mpp,
+                               void *const hmodule,
+                               wchar_t const *const preferred_languages,
+                               struct ov_error *const err);
 #endif
 
 int mo_snprintf_char(char *const buf, size_t const buflen, char const *const reference, char const *const format, ...);
@@ -48,14 +49,18 @@ int mo_vpprintf_wchar(void (*putc)(int c, void *ctx),
                       char const *const format,
                       va_list valist);
 
-NODISCARD error mo_sprintf_char(char **const dest, char const *const reference, char const *const format, ...);
-NODISCARD error mo_vsprintf_char(char **const dest,
-                                 char const *const reference,
-                                 char const *const format,
-                                 va_list valist);
+bool mo_sprintf_char(
+    char **const dest, char const *const reference, char const *const format, struct ov_error *const err, ...);
+bool mo_vsprintf_char(char **const dest,
+                      char const *const reference,
+                      char const *const format,
+                      struct ov_error *const err,
+                      va_list valist);
 
-NODISCARD error mo_sprintf_wchar(wchar_t **const dest, wchar_t const *const reference, char const *const format, ...);
-NODISCARD error mo_vsprintf_wchar(wchar_t **const dest,
-                                  wchar_t const *const reference,
-                                  char const *const format,
-                                  va_list valist);
+bool mo_sprintf_wchar(
+    wchar_t **const dest, wchar_t const *const reference, char const *const format, struct ov_error *const err, ...);
+bool mo_vsprintf_wchar(wchar_t **const dest,
+                       wchar_t const *const reference,
+                       char const *const format,
+                       struct ov_error *const err,
+                       va_list valist);

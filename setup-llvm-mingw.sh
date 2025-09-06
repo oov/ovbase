@@ -188,9 +188,9 @@ download_gettext () {
 }
 
 BUSYBOX_VERSION="dfe76d6"
-CMAKE_VERSION="4.1.0"
+CMAKE_VERSION="4.1.1"
 NINJA_VERSION="1.13.1"
-LLVM_MINGW_VERSION="20250709"
+LLVM_MINGW_VERSION="20250826"
 GETTEXT_VERSION="7c5c644"
 
 case "$(uname -s)" in
@@ -199,7 +199,7 @@ case "$(uname -s)" in
     BUSYBOX_URL="https://github.com/oov/busybox/releases/download/build-${BUSYBOX_VERSION}/busybox-linux-x86_64-${BUSYBOX_VERSION}"
     CMAKE_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz"
     NINJA_URL="https://github.com/ninja-build/ninja/releases/download/v${NINJA_VERSION}/ninja-linux.zip"
-    LLVM_MINGW_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-20.04-x86_64.tar.xz"
+    LLVM_MINGW_URL="https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_VERSION}/llvm-mingw-${LLVM_MINGW_VERSION}-ucrt-ubuntu-22.04-x86_64.tar.xz"
     GETTEXT_URL="https://github.com/oov/gettext/releases/download/build-${GETTEXT_VERSION}/gettext-linux-x86_64-${GETTEXT_VERSION}.tar.xz"
     ;;
   MINGW64_NT* | MINGW32_NT*)

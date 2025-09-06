@@ -13,10 +13,16 @@ endif()
 enable_testing()
 
 if(FORMAT_SOURCES)
-  file(GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS "include/*.h" "src/*.h" "src/*.c")
+  file(GLOB_RECURSE sources LIST_DIRECTORIES false CONFIGURE_DEPENDS "include/*.h" "src/*.h" "src/*.c" "src/**/*.h" "src/**/*.c")
   find_program(CLANG_FORMAT_EXE clang-format)
+  
+  # Write source files to a temporary file to avoid long command lines
+  string(JOIN "\n" sources_content ${sources})
+  file(WRITE "${CMAKE_BINARY_DIR}/format_files.txt" "${sources_content}")
+  
   add_custom_target(${PROJECT_NAME}-format ALL
-    COMMAND ${CLANG_FORMAT_EXE} -style=file -i ${sources}
+    COMMAND ${CLANG_FORMAT_EXE} --files=${CMAKE_BINARY_DIR}/format_files.txt -style=file -i
+    VERBATIM
   )
 endif()
 
@@ -42,3 +48,7 @@ if (USE_MIMALLOC)
 endif()
 
 add_subdirectory(src)
+
+if(FORMAT_SOURCES)
+  add_dependencies(ovbase ${PROJECT_NAME}-format)
+endif()

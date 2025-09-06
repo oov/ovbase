@@ -13,6 +13,7 @@ set(is_clang "$<C_COMPILER_ID:Clang>")
 set(v16_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,16>")
 set(v18_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,18>")
 set(v19_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,19>")
+set(v21_or_later "$<VERSION_GREATER_EQUAL:$<C_COMPILER_VERSION>,21>")
 
 add_library(ovbase_intf INTERFACE)
 target_compile_options(ovbase_intf
@@ -27,6 +28,7 @@ INTERFACE
   -pedantic-errors
   -Wno-declaration-after-statement
   -Wno-padded
+  $<$<AND:${is_clang},${v21_or_later}>:-Wno-c++-keyword>
   $<$<AND:${is_clang},${v19_or_later}>:-Wno-pre-c11-compat>
   $<$<AND:${is_clang},${v18_or_later}>:-Wno-switch-default>
   $<$<AND:${is_clang},${v16_or_later}>:-Wno-unsafe-buffer-usage>
@@ -52,6 +54,9 @@ file(MAKE_DIRECTORY ${DESTINATION_INCLUDE_DIR})
 configure_file(${SOURCE_INCLUDE_DIR}/ovarray.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovbase_config.h.in ${DESTINATION_INCLUDE_DIR}/ovbase_config.h @ONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovbase.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovcyrb64.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovrand.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovhashmap.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovmo.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovnum.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovprintf.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
@@ -65,19 +70,18 @@ configure_file(${PROJECT_SOURCE_DIR}/3rd/tinycthread/source/tinycthread.h ${DEST
 # Prepare source file lists
 set(OVBASE_SOURCES
   array2.c
-  error.c
-  error_i18n.c
-  hashmap.c
-  hmap/clear.c
-  hmap/count.c
-  hmap/delete.c
-  hmap/free.c
-  hmap/get.c
-  hmap/iter.c
-  hmap/new_dynamic.c
-  hmap/new_static.c
-  hmap/scan.c
-  hmap/set.c
+  error2.c
+  error2_report.c
+  hashmap/common.c
+  hashmap/clear.c
+  hashmap/count.c
+  hashmap/delete.c
+  hashmap/destroy.c
+  hashmap/get.c
+  hashmap/iter.c
+  hashmap/create_dynamic.c
+  hashmap/create_static.c
+  hashmap/set.c
   mem.c
   mem_aligned.c
   mo/mo.c
@@ -146,6 +150,9 @@ set_property(TARGET ovbase PROPERTY PUBLIC_HEADER
   ${DESTINATION_INCLUDE_DIR}/ovarray.h
   ${DESTINATION_INCLUDE_DIR}/ovbase.h
   ${DESTINATION_INCLUDE_DIR}/ovbase_config.h
+  ${DESTINATION_INCLUDE_DIR}/ovcyrb64.h
+  ${DESTINATION_INCLUDE_DIR}/ovrand.h
+  ${DESTINATION_INCLUDE_DIR}/ovhashmap.h
   ${DESTINATION_INCLUDE_DIR}/ovmo.h
   ${DESTINATION_INCLUDE_DIR}/ovnum.h
   ${DESTINATION_INCLUDE_DIR}/ovprintf.h
@@ -209,10 +216,10 @@ export(EXPORT ovbase-export
 
 add_executable(array2_test array2_test.c)
 list(APPEND tests array2_test)
-add_executable(ovbase_test ovbase_test.c)
-list(APPEND tests ovbase_test)
-add_executable(hmap_test hmap/test.c)
-list(APPEND tests hmap_test)
+add_executable(error2_test error2_test.c)
+list(APPEND tests error2_test)
+add_executable(hashmap_test hashmap/test.c)
+list(APPEND tests hashmap_test)
 add_executable(mo_test mo/test.c $<$<BOOL:${WIN32}>:mo/test_win32/test.rc>)
 list(APPEND tests mo_test)
 add_executable(num_wchar_test num/wchar/test.c)
@@ -227,8 +234,14 @@ add_executable(printf_char_test printf/char_test.c)
 list(APPEND tests printf_char_test)
 add_executable(printf_wchar_test printf/wchar_test.c)
 list(APPEND tests printf_wchar_test)
+add_executable(printf_ex_test printf_ex/test.c)
+list(APPEND tests printf_ex_test)
 add_executable(utf_test utf/test.c)
 list(APPEND tests utf_test)
+add_executable(mem_test mem_test.c)
+list(APPEND tests mem_test)
+add_executable(mem_aligned_test mem_aligned_test.c)
+list(APPEND tests mem_aligned_test)
 
 if(NOT SKIP_OVTHREADS_TEST)
   add_executable(ovthreads_test ovthreads_test.c)

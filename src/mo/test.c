@@ -18,7 +18,9 @@ static struct mo *open_mo(uint8_t *mobuf) {
     return NULL;
   }
   struct mo *mo = NULL;
-  if (!TEST_SUCCEEDED_F(mo_parse(&mo, mobuf, mosize))) {
+  struct ov_error err = {0};
+  if (!TEST_CHECK(mo_parse(&mo, mobuf, mosize, &err))) {
+    OV_ERROR_DESTROY(&err);
     return NULL;
   }
   return mo;
@@ -105,27 +107,33 @@ static void test_mo_get_preferred_ui_languages(void) {
     goto cleanup;
   }
 #endif
-  if (!TEST_SUCCEEDED_F(mo_get_preferred_ui_languages(&str))) {
-    goto cleanup;
+  {
+    struct ov_error err = {0};
+    if (!TEST_CHECK(mo_get_preferred_ui_languages(&str, &err))) {
+      OV_ERROR_DESTROY(&err);
+      goto cleanup;
+    }
   }
 #ifndef _WIN32
   if (!TEST_CHECK(setlocale(LC_ALL, old_locale) != NULL)) {
     goto cleanup;
   }
 #endif
-  size_t n = 0;
-  size_t pos = 0;
-  while (str[pos] != NSTR('\0')) {
+  {
+    size_t n = 0;
+    size_t pos = 0;
+    while (str[pos] != NSTR('\0')) {
 #ifdef _WIN32
 #  define LEN wcslen
 #else
 #  define LEN strlen
 #endif
-    pos += LEN(str + pos) + 1;
+      pos += LEN(str + pos) + 1;
 #undef LEN
-    ++n;
+      ++n;
+    }
+    TEST_CHECK(n > 0);
   }
-  TEST_CHECK(n > 0);
 cleanup:
   if (str) {
     OV_ARRAY_DESTROY(&str);
@@ -135,16 +143,30 @@ cleanup:
 #ifdef _WIN32
 static void test_mo_win32_locale(void) {
   struct mo *mp = NULL;
-  if (!TEST_EIS_F(mo_parse_from_resource_ex(&mp, NULL, L"ko-KR\0en_US\0"), err_type_generic, err_not_found)) {
-    goto cleanup;
+  {
+    struct ov_error err = {0};
+    bool result = mo_parse_from_resource_ex(&mp, NULL, L"ko-KR\0en_US\0", &err);
+    if (!TEST_CHECK(!result && ov_error_is(&err, ov_error_type_generic, ov_error_generic_not_found))) {
+      OV_ERROR_DESTROY(&err);
+      goto cleanup;
+    }
+    OV_ERROR_DESTROY(&err);
   }
-  if (!TEST_SUCCEEDED_F(mo_parse_from_resource_ex(&mp, NULL, L"zh-CN\0"))) {
-    goto cleanup;
+  {
+    struct ov_error err = {0};
+    if (!TEST_CHECK(mo_parse_from_resource_ex(&mp, NULL, L"zh-CN\0", &err))) {
+      OV_ERROR_DESTROY(&err);
+      goto cleanup;
+    }
   }
   TEST_CHECK(strcmp(mo_gettext(mp, "Hello world"), "世界你好") == 0);
   mo_free(&mp);
-  if (!TEST_SUCCEEDED_F(mo_parse_from_resource_ex(&mp, NULL, L"zh-TW\0"))) {
-    goto cleanup;
+  {
+    struct ov_error err = {0};
+    if (!TEST_CHECK(mo_parse_from_resource_ex(&mp, NULL, L"zh-TW\0", &err))) {
+      OV_ERROR_DESTROY(&err);
+      goto cleanup;
+    }
   }
   TEST_CHECK(strcmp(mo_gettext(mp, "Hello world"), "世界你好") == 0);
 cleanup:
@@ -153,8 +175,12 @@ cleanup:
 
 static void test_mo_win32(void) {
   struct mo *mp = NULL;
-  if (!TEST_SUCCEEDED_F(mo_parse_from_resource_ex(&mp, NULL, L"ja-JP\0"))) {
-    return;
+  {
+    struct ov_error err = {0};
+    if (!TEST_CHECK(mo_parse_from_resource_ex(&mp, NULL, L"ja-JP\0", &err))) {
+      OV_ERROR_DESTROY(&err);
+      return;
+    }
   }
 
   TEST_CHECK(strcmp(mo_gettext(mp, "Hello world"), "ハローワールド") == 0);

@@ -6,82 +6,90 @@
 #include <ovprintf_ex.h>
 #include <ovutf.h>
 
-NODISCARD error mo_vsprintf_char(char **const dest,
-                                 char const *const reference,
-                                 char const *const format,
-                                 va_list valist) {
+bool mo_vsprintf_char(char **const dest,
+                      char const *const reference,
+                      char const *const format,
+                      struct ov_error *const err,
+                      va_list valist) {
   if (!dest || !format) {
-    return errg(err_invalid_arugment);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return false;
   }
 
-  return ov_vsprintf_char(dest, reference, format, valist);
+  return ov_vsprintf_char(dest, reference, format, err, valist);
 }
 
-NODISCARD error mo_sprintf_char(char **const dest, char const *const reference, char const *const format, ...) {
+bool mo_sprintf_char(
+    char **const dest, char const *const reference, char const *const format, struct ov_error *const err, ...) {
   va_list valist;
-  va_start(valist, format);
-  error err = mo_vsprintf_char(dest, reference, format, valist);
+  va_start(valist, err);
+  bool ok = mo_vsprintf_char(dest, reference, format, err, valist);
   va_end(valist);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
+  if (!ok) {
+    OV_ERROR_TRACE(err);
+    return false;
   }
-  return eok();
+  return true;
 }
 
-NODISCARD error mo_vsprintf_wchar(wchar_t **const dest,
-                                  wchar_t const *const reference,
-                                  char const *const format,
-                                  va_list valist) {
+bool mo_vsprintf_wchar(wchar_t **const dest,
+                       wchar_t const *const reference,
+                       char const *const format,
+                       struct ov_error *const err,
+                       va_list valist) {
   if (!dest || !format) {
-    return errg(err_invalid_arugment);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return false;
   }
 
   wchar_t *wformat = NULL;
-  error err = eok();
+  bool result = false;
 
   size_t const format_len = strlen(format);
   size_t const wformat_len = ov_utf8_to_wchar_len(format, format_len);
   if (wformat_len == SIZE_MAX) {
-    err = errg(err_fail);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
     goto cleanup;
   }
 
-  err = OV_ARRAY_GROW(&wformat, wformat_len + 1);
-  if (efailed(err)) {
-    err = ethru(err);
+  if (!OV_ARRAY_GROW2(&wformat, wformat_len + 1, err)) {
+    OV_ERROR_TRACE(err);
     goto cleanup;
   }
 
-  size_t converted = ov_utf8_to_wchar(format, format_len, wformat, wformat_len, NULL);
-  if (converted == 0) {
-    err = errg(err_fail);
-    goto cleanup;
+  {
+    size_t const converted = ov_utf8_to_wchar(format, format_len, wformat, wformat_len, NULL);
+    if (converted == 0) {
+      OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
+      goto cleanup;
+    }
+    wformat[converted] = L'\0';
+    OV_ARRAY_SET_LENGTH(wformat, converted);
   }
-  wformat[converted] = L'\0';
-  OV_ARRAY_SET_LENGTH(wformat, converted);
 
-  err = ov_vsprintf_wchar(dest, reference, wformat, valist);
-  if (efailed(err)) {
-    err = ethru(err);
+  if (!ov_vsprintf_wchar(dest, reference, wformat, err, valist)) {
+    OV_ERROR_TRACE(err);
     goto cleanup;
   }
+
+  result = true;
 
 cleanup:
   if (wformat) {
     OV_ARRAY_DESTROY(&wformat);
   }
-  return err;
+  return result;
 }
 
-NODISCARD error mo_sprintf_wchar(wchar_t **const dest, wchar_t const *const reference, char const *const format, ...) {
+bool mo_sprintf_wchar(
+    wchar_t **const dest, wchar_t const *const reference, char const *const format, struct ov_error *const err, ...) {
   va_list valist;
-  va_start(valist, format);
-  error err = mo_vsprintf_wchar(dest, reference, format, valist);
+  va_start(valist, err);
+  bool ok = mo_vsprintf_wchar(dest, reference, format, err, valist);
   va_end(valist);
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
+  if (!ok) {
+    OV_ERROR_TRACE(err);
+    return false;
   }
-  return eok();
+  return true;
 }

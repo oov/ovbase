@@ -5,19 +5,19 @@
 #include <ovprintf.h>
 #include <ovutf.h>
 
-static NODISCARD error convert_format(char const *const format, wchar_t **const ws) {
+static bool convert_format(char const *const format, wchar_t **const ws, struct ov_error *const err) {
   if (!format || !ws) {
-    return errg(err_invalid_arugment);
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
+    return false;
   }
   size_t const formatlen = strlen(format);
   size_t const wslen = ov_utf8_to_wchar_len(format, formatlen) + 1;
-  error err = mem(ws, wslen, sizeof(wchar_t));
-  if (efailed(err)) {
-    err = ethru(err);
-    return err;
+  if (!OV_REALLOC(ws, wslen, sizeof(wchar_t), err)) {
+    OV_ERROR_TRACE(err);
+    return false;
   }
   ov_utf8_to_wchar(format, formatlen, *ws, wslen, NULL);
-  return eok();
+  return true;
 }
 
 int mo_vsnprintf_wchar(
@@ -26,15 +26,16 @@ int mo_vsnprintf_wchar(
     return 0;
   }
   wchar_t *ws = NULL;
-  error err = convert_format(format, &ws);
-  if (efailed(err)) {
-    err = ethru(err);
-    ereport(err);
+  int r = 0;
+  if (!convert_format(format, &ws, NULL)) {
     buf[0] = L'\0';
-    return 0;
+    goto cleanup;
   }
-  int const r = ov_vsnprintf(buf, buflen, reference, ws, valist);
-  mem_free(&ws);
+  r = ov_vsnprintf(buf, buflen, reference, ws, valist);
+cleanup:
+  if (ws) {
+    OV_FREE(&ws);
+  }
   return r;
 }
 
@@ -56,14 +57,15 @@ int mo_vpprintf_wchar(void (*putc)(int c, void *ctx),
                       char const *const format,
                       va_list valist) {
   wchar_t *ws = NULL;
-  error err = convert_format(format, &ws);
-  if (efailed(err)) {
-    err = ethru(err);
-    ereport(err);
-    return 0;
+  int r = 0;
+  if (!convert_format(format, &ws, NULL)) {
+    goto cleanup;
   }
-  int const r = ov_vpprintf(putc, ctx, reference, ws, valist);
-  mem_free(&ws);
+  r = ov_vpprintf(putc, ctx, reference, ws, valist);
+cleanup:
+  if (ws) {
+    OV_FREE(&ws);
+  }
   return r;
 }
 
