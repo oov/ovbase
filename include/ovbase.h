@@ -346,7 +346,7 @@ typedef bool (*ov_error_autofill_hook_func)(int type, int code, char const **mes
  * @example
  *   static bool my_error_hook(int type, int code, char const **message_out, struct ov_error *err) {
  *     if (type == MY_CUSTOM_ERROR_TYPE) {
- *       // For dynamic messages, use OV_ARRAY_GROW2
+ *       // For dynamic messages, use OV_ARRAY_GROW
  *       char *msg = NULL;
  *       if (!get_custom_error_message(code, &msg, err)) {
  *         return false;

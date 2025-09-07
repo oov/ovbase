@@ -15,10 +15,10 @@ struct ov_array_header {
 
 static inline size_t zumax(size_t const a, size_t const b) { return a > b ? a : b; }
 
-NODISCARD bool ov_array_grow2(void **const a,
-                              size_t const itemsize,
-                              size_t const newcap,
-                              struct ov_error *const err MEM_FILEPOS_PARAMS) {
+NODISCARD bool ov_array_grow(void **const a,
+                             size_t const itemsize,
+                             size_t const newcap,
+                             struct ov_error *const err MEM_FILEPOS_PARAMS) {
   assert(a != NULL);
   if (!a || !itemsize || !newcap) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
@@ -75,9 +75,9 @@ void ov_array_set_length(void *const a, size_t const newlen) {
 NODISCARD size_t ov_array_capacity(void const *const a) { return a ? OV_ARRAY_HEADER_CONST(a)->cap : 0; }
 
 NODISCARD bool
-ov_array_prepare_for_push2(void **const a, size_t const itemsize, struct ov_error *const err MEM_FILEPOS_PARAMS) {
+ov_array_prepare_for_push(void **const a, size_t const itemsize, struct ov_error *const err MEM_FILEPOS_PARAMS) {
   size_t const new_len = ov_array_length(*a) + 1;
-  if (!ov_array_grow2(a, itemsize, new_len, err MEM_FILEPOS_VALUES_PASSTHRU)) {
+  if (!ov_array_grow(a, itemsize, new_len, err MEM_FILEPOS_VALUES_PASSTHRU)) {
     return false;
   }
   ov_array_set_length(*a, new_len);
@@ -89,7 +89,7 @@ size_t ov_array_length_decrement(void *const a) {
 }
 
 NODISCARD bool
-ov_bitarray_grow2(ov_bitarray **const a, size_t const newcap, struct ov_error *const err MEM_FILEPOS_PARAMS) {
+ov_bitarray_grow(ov_bitarray **const a, size_t const newcap, struct ov_error *const err MEM_FILEPOS_PARAMS) {
   assert(a != NULL);
   if (!a || !newcap) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
@@ -123,7 +123,7 @@ cleanup:
 }
 
 NODISCARD bool
-ov_bitarray_alloc2(ov_bitarray **const a, size_t const len, struct ov_error *const err MEM_FILEPOS_PARAMS) {
+ov_bitarray_alloc(ov_bitarray **const a, size_t const len, struct ov_error *const err MEM_FILEPOS_PARAMS) {
   if (!a) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;

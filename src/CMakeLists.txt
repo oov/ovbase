@@ -69,9 +69,9 @@ configure_file(${PROJECT_SOURCE_DIR}/3rd/tinycthread/source/tinycthread.h ${DEST
 
 # Prepare source file lists
 set(OVBASE_SOURCES
-  array2.c
-  error2.c
-  error2_report.c
+  array.c
+  error.c
+  error_report.c
   hashmap/common.c
   hashmap/clear.c
   hashmap/count.c
@@ -214,10 +214,10 @@ install(EXPORT ovbase-export
 export(EXPORT ovbase-export
        FILE "${CMAKE_BINARY_DIR}/ovbase-config.cmake")
 
-add_executable(array2_test array2_test.c)
-list(APPEND tests array2_test)
-add_executable(error2_test error2_test.c)
-list(APPEND tests error2_test)
+add_executable(array_test array_test.c)
+list(APPEND tests array_test)
+add_executable(error_test error_test.c)
+list(APPEND tests error_test)
 add_executable(hashmap_test hashmap/test.c)
 list(APPEND tests hashmap_test)
 add_executable(mo_test mo/test.c $<$<BOOL:${WIN32}>:mo/test_win32/test.rc>)

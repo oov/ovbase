@@ -348,13 +348,13 @@ static void test_ov_error_string_conversion(void) {
   // Test both basic and stack trace conversion
   TEST_CHECK(ov_error_to_string(&target, &str, false, NULL));
   TEST_CHECK(str != NULL && strstr(str, "[01:0x00000001] Test message"));
-  TEST_CHECK(str != NULL && !strstr(str, "  error2_test.c:"));
+  TEST_CHECK(str != NULL && !strstr(str, "  error_test.c:"));
   TEST_CHECK(str != NULL && !strstr(str, "[01:0x00000001] Test parent message"));
   OV_ARRAY_DESTROY(&str);
 
   TEST_CHECK(ov_error_to_string(&target, &str, true, NULL));
   TEST_CHECK(str != NULL && strstr(str, "[01:0x00000001] Test message"));
-  TEST_CHECK(str != NULL && strstr(str, "  error2_test.c:"));
+  TEST_CHECK(str != NULL && strstr(str, "  error_test.c:"));
   TEST_CHECK(str != NULL && strstr(str, "[01:0x00000001] Test parent message"));
   OV_ARRAY_DESTROY(&str);
   OV_ERROR_DESTROY(&target);
@@ -369,10 +369,10 @@ static bool test_hook_success(int type, int code, char const **message_out, stru
     return true;
   }
   if (type == 999 && code == 123) {
-    // Use dynamic allocation with OV_ARRAY_GROW2 for variable messages
+    // Use dynamic allocation with OV_ARRAY_GROW for variable messages
     char *custom_msg = NULL;
     char const msg[] = "Custom error type handled by hook";
-    if (!OV_ARRAY_GROW2(&custom_msg, sizeof(msg), err)) {
+    if (!OV_ARRAY_GROW(&custom_msg, sizeof(msg), err)) {
       return false;
     }
     strcpy(custom_msg, msg);
@@ -491,7 +491,7 @@ static void test_output_hook_capture(char const *str) {
     size_t existing_len = g_captured_output ? strlen(g_captured_output) : 0;
     size_t new_len = existing_len + len;
 
-    if (!OV_ARRAY_GROW2(&g_captured_output, new_len + 1, NULL)) {
+    if (!OV_ARRAY_GROW(&g_captured_output, new_len + 1, NULL)) {
       return; // Failed to allocate
     }
 
@@ -527,7 +527,7 @@ static void test_ov_error_output_hook(void) {
   // Check that output was captured by hook
   TEST_CHECK(g_captured_output != NULL);
   TEST_CHECK(strstr(g_captured_output, "[ERROR] Hook test message") != NULL);
-  TEST_CHECK(strstr(g_captured_output, "reported at error2_test.c:") != NULL);
+  TEST_CHECK(strstr(g_captured_output, "reported at error_test.c:") != NULL);
 
   // Reset captured output
   if (g_captured_output) {

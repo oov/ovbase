@@ -59,10 +59,10 @@ static bool push(struct ov_error *const target,
     size_t const len = OV_ARRAY_LENGTH(target->stack_extended);
     size_t const cap = OV_ARRAY_CAPACITY(target->stack_extended);
     if (len >= cap) {
-      if (!ov_array_grow2((void **)&target->stack_extended,
-                          sizeof(struct ov_error_stack),
-                          cap + 4,
-                          err MEM_FILEPOS_VALUES_PASSTHRU)) {
+      if (!ov_array_grow((void **)&target->stack_extended,
+                         sizeof(struct ov_error_stack),
+                         cap + 4,
+                         err MEM_FILEPOS_VALUES_PASSTHRU)) {
         OV_ERROR_TRACE(err);
         goto cleanup;
       }

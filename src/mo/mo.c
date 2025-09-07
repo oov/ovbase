@@ -207,7 +207,7 @@ char const *mo_pgettext(struct mo const *const mp, char const *const ctxt, char 
   size_t const ctxtlen = strlen(ctxt);
   size_t const idlen = strlen(id);
   struct ov_error err = {0};
-  if (!OV_ARRAY_GROW2(&tmp, ctxtlen + 1 + idlen + 1, &err)) {
+  if (!OV_ARRAY_GROW(&tmp, ctxtlen + 1 + idlen + 1, &err)) {
     OV_ERROR_DESTROY(&err);
     goto cleanup;
   }
@@ -285,7 +285,7 @@ bool mo_get_preferred_ui_languages(NATIVE_CHAR **dest, struct ov_error *const er
   }
 
   size_t const langlen = strlen(lang);
-  if (!OV_ARRAY_GROW2(dest, langlen + 2, err)) {
+  if (!OV_ARRAY_GROW(dest, langlen + 2, err)) {
     OV_ERROR_TRACE(err);
     return false;
   }

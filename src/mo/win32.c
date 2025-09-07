@@ -41,7 +41,7 @@ static bool mo_get_preferred_ui_languages_core(NATIVE_CHAR **dest, bool const id
       OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
       goto cleanup;
     }
-    if (!OV_ARRAY_GROW2(dest, len, err)) {
+    if (!OV_ARRAY_GROW(dest, len, err)) {
       OV_ERROR_TRACE(err);
       goto cleanup;
     }

@@ -19,7 +19,7 @@ static void put_char(int c, void *ctx) {
   size_t const current_cap = *pcctx->dest ? OV_ARRAY_CAPACITY(*pcctx->dest) : 0;
   if (pcctx->pos >= current_cap) {
     size_t const new_cap = current_cap < 32 ? 64 : current_cap * 2;
-    if (!OV_ARRAY_GROW2(pcctx->dest, new_cap, pcctx->err)) {
+    if (!OV_ARRAY_GROW(pcctx->dest, new_cap, pcctx->err)) {
       pcctx->failed = true;
       OV_ERROR_TRACE(pcctx->err);
       return;

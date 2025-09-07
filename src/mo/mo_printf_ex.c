@@ -52,7 +52,7 @@ bool mo_vsprintf_wchar(wchar_t **const dest,
     goto cleanup;
   }
 
-  if (!OV_ARRAY_GROW2(&wformat, wformat_len + 1, err)) {
+  if (!OV_ARRAY_GROW(&wformat, wformat_len + 1, err)) {
     OV_ERROR_TRACE(err);
     goto cleanup;
   }
