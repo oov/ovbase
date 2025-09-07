@@ -619,12 +619,24 @@ static void output(char const *const str) {
     }
   }
 #else
+#  ifdef __GNUC__
+#    ifndef __has_warning
+#      define __has_warning(x) 0
+#    endif
+#    pragma GCC diagnostic push
+#    if __has_warning("-Wdisabled-macro-expansion")
+#      pragma GCC diagnostic ignored "-Wdisabled-macro-expansion"
+#    endif
+#  endif
   if (fputs(str, stderr) == EOF) {
     goto cleanup;
   }
   if (fputs("\n", stderr) == EOF) {
     goto cleanup;
   }
+#  ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#  endif // __GNUC__
 #endif
 
 cleanup:
