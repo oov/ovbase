@@ -135,7 +135,11 @@ void ov_error_set(struct ov_error *const target, struct ov_error_info const *con
     // Force heap allocation to ensure leak detection works properly
     bool const r = ov_array_grow(
         (void **)&target->stack_extended, sizeof(struct ov_error_stack), 8, NULL MEM_FILEPOS_VALUES_PASSTHRU);
+#  ifdef NDEBUG
+    (void)r;
+#  else
     assert(r);
+#  endif
   }
 #endif
 }
