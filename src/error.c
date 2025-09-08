@@ -120,6 +120,7 @@ void ov_error_set(struct ov_error *const target, struct ov_error_info const *con
     return;
   }
   assert(info->type != ov_error_type_invalid && "error type must be valid");
+  assert(target->stack[0].info.type == ov_error_type_invalid && "error is already set - use OV_ERROR_DESTROY first");
   // In release mode, handle invalid error type by using generic error
   int error_type = info->type;
   if (error_type == ov_error_type_invalid) {
@@ -152,11 +153,8 @@ void ov_error_setf(struct ov_error *const target,
     return;
   }
   assert(info->context != NULL && "Format string is required for ov_error_setf");
-  if (!info->context) {
-    ov_error_destroy(target MEM_FILEPOS_VALUES_PASSTHRU);
-    ov_error_set(target, &(struct ov_error_info){info->type, info->code, NULL} ERR_FILEPOS_VALUES_PASSTHRU);
-    return;
-  }
+  assert(target->stack[0].info.type == ov_error_type_invalid && "error is already set - use OV_ERROR_DESTROY first");
+
   ov_error_destroy(target MEM_FILEPOS_VALUES_PASSTHRU);
 
   va_list valist;

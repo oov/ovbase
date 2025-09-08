@@ -47,11 +47,13 @@ static void test_ov_error_core_functionality(void) {
   OV_ERROR_DESTROY(&err);
   verify_clean_state(&err);
 
-  // Test formatted error and error overwriting
+  // Test formatted error and proper error replacement
   OV_ERROR_SETF(&err, ov_error_type_generic, ov_error_generic_invalid_argument, NULL, "%1$s", "Test message");
   verify_error_state(&err, ov_error_type_generic, ov_error_generic_invalid_argument, "Test message");
 
-  OV_ERROR_SET_GENERIC(&err, ov_error_generic_fail); // Overwrite
+  // Proper way to replace an error: destroy first, then set new one
+  OV_ERROR_DESTROY(&err);
+  OV_ERROR_SET_GENERIC(&err, ov_error_generic_fail);
   verify_error_state(&err, ov_error_type_generic, ov_error_generic_fail, NULL);
 
   OV_ERROR_DESTROY(&err);
