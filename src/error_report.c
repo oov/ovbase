@@ -469,11 +469,9 @@ format_error_message(char *const dest, struct ov_error const *const src_copy, bo
       }
       pos += format_stack_entry(dest, pos, &src_copy->stack[i]);
     }
-    if (src_copy->stack_extended) {
-      size_t const ext_count = OV_ARRAY_LENGTH(src_copy->stack_extended);
-      for (size_t i = 0; i < ext_count; i++) {
-        pos += format_stack_entry(dest, pos, &src_copy->stack_extended[i]);
-      }
+    size_t const ext_count = OV_ARRAY_LENGTH(src_copy->stack_extended);
+    for (size_t i = 0; i < ext_count; i++) {
+      pos += format_stack_entry(dest, pos, &src_copy->stack_extended[i]);
     }
   }
 
@@ -504,18 +502,20 @@ bool ov_error_to_string(struct ov_error const *const src,
       goto cleanup;
     }
   }
-  if (src->stack_extended) {
+  {
     size_t const ext_count = OV_ARRAY_LENGTH(src->stack_extended);
-    src_copy.stack_extended = NULL;
-    if (!OV_ARRAY_GROW(&src_copy.stack_extended, ext_count, err)) {
-      OV_ERROR_TRACE(err);
-      goto cleanup;
-    }
-    for (size_t i = 0; i < ext_count; i++) {
-      src_copy.stack_extended[i] = src->stack_extended[i];
-      if (!ov_error_autofill_message(&src_copy.stack_extended[i], err)) {
+    if (ext_count > 0) {
+      src_copy.stack_extended = NULL;
+      if (!OV_ARRAY_GROW(&src_copy.stack_extended, ext_count, err)) {
         OV_ERROR_TRACE(err);
         goto cleanup;
+      }
+      for (size_t i = 0; i < ext_count; i++) {
+        src_copy.stack_extended[i] = src->stack_extended[i];
+        if (!ov_error_autofill_message(&src_copy.stack_extended[i], err)) {
+          OV_ERROR_TRACE(err);
+          goto cleanup;
+        }
       }
     }
   }
@@ -548,14 +548,14 @@ cleanup:
       OV_ARRAY_DESTROY(ov_deconster_(&src_copy.stack[i].info.context));
     }
   }
-  if (src_copy.stack_extended) {
-    size_t const ext_count = OV_ARRAY_LENGTH(src_copy.stack_extended);
-    for (size_t i = 0; i < ext_count; i++) {
-      if (src_copy.stack_extended[i].info.context &&
-          src_copy.stack_extended[i].info.context != src->stack_extended[i].info.context) {
-        OV_ARRAY_DESTROY(ov_deconster_(&src_copy.stack_extended[i].info.context));
-      }
+  size_t const ext_count = OV_ARRAY_LENGTH(src_copy.stack_extended);
+  for (size_t i = 0; i < ext_count; i++) {
+    if (src_copy.stack_extended[i].info.context &&
+        src_copy.stack_extended[i].info.context != src->stack_extended[i].info.context) {
+      OV_ARRAY_DESTROY(ov_deconster_(&src_copy.stack_extended[i].info.context));
     }
+  }
+  if (src_copy.stack_extended != src->stack_extended) {
     OV_ARRAY_DESTROY(&src_copy.stack_extended);
   }
   return result;

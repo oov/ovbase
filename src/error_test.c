@@ -102,6 +102,8 @@ static void test_ov_error_define_string_macro(void) {
   TEST_CHECK(err.stack[0].info.type == ov_error_type_generic);
   TEST_CHECK(err.stack[0].info.code == ov_error_generic_fail);
   TEST_CHECK(err.stack[0].info.context == test_error_msg.context);
+
+  OV_ERROR_DESTROY(&err);
 }
 
 static void test_ov_error_filepos_tracking(void) {
@@ -217,7 +219,13 @@ static void test_ov_error_push_call_stack_overflow(void) {
   for (size_t i = 0; i < stack_size; i++) {
     TEST_CHECK(err.stack[i].filepos.file != NULL);
   }
+#if defined(LEAK_DETECTOR) || defined(ALLOCATE_LOGGER)
+  // When leak detection is enabled, stack_extended is always allocated for tracking
+  TEST_CHECK(err.stack_extended != NULL);
+  TEST_CHECK(OV_ARRAY_LENGTH(err.stack_extended) == 0);
+#else
   TEST_CHECK(err.stack_extended == NULL);
+#endif
 
   // Next push should go to call_stack_extended
   OV_ERROR_TRACE(&err);

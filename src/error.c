@@ -43,7 +43,7 @@ static bool push(struct ov_error *const target,
 
   struct ov_error_stack *s = NULL;
 
-  if (!target->stack_extended) {
+  if (OV_ARRAY_LENGTH(target->stack_extended) == 0) {
     // If call_stack_extended is not created yet, we need to find an empty slot in call_stack
     size_t const call_stack_size = sizeof(target->stack) / sizeof(target->stack[0]);
     for (size_t i = 0; i < call_stack_size; i++) {
@@ -130,6 +130,14 @@ void ov_error_set(struct ov_error *const target, struct ov_error_info const *con
       .filepos = *filepos,
       .info = {.type = error_type, .code = info->code, .context = info->context},
   };
+#if defined(LEAK_DETECTOR) || defined(ALLOCATE_LOGGER)
+  {
+    // Force heap allocation to ensure leak detection works properly
+    bool const r = ov_array_grow(
+        (void **)&target->stack_extended, sizeof(struct ov_error_stack), 8, NULL MEM_FILEPOS_VALUES_PASSTHRU);
+    assert(r);
+  }
+#endif
 }
 
 void ov_error_setf(struct ov_error *const target,
@@ -223,9 +231,6 @@ bool ov_error_is(struct ov_error const *const target, int const type, int const 
   if (find_entry(target->stack, fixed_stack_size, type, code) != SIZE_MAX) {
     return true;
   }
-  if (!target->stack_extended) {
-    return false;
-  }
   size_t const ext_count = OV_ARRAY_LENGTH(target->stack_extended);
   if (find_entry(target->stack_extended, ext_count, type, code) != SIZE_MAX) {
     return true;
@@ -258,10 +263,6 @@ bool ov_error_get_code(struct ov_error const *const target, int const type, int 
   if (entry_idx != SIZE_MAX) {
     *code = target->stack[entry_idx].info.code;
     return true;
-  }
-
-  if (!target->stack_extended) {
-    return false; // Not found
   }
 
   size_t const ext_count = OV_ARRAY_LENGTH(target->stack_extended);
