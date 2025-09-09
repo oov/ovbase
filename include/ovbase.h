@@ -236,7 +236,7 @@ struct ov_error_stack {
  * @see ov_error_is, ov_error_get_code for error inspection
  */
 struct ov_error {
-  struct ov_error_stack stack[8];
+  struct ov_error_stack stack[4];
   struct ov_error_stack *stack_extended;
 };
 
