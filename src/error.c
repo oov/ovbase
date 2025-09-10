@@ -12,16 +12,24 @@ void ov_error_destroy(struct ov_error *const target MEM_FILEPOS_PARAMS) {
     return;
   }
   for (size_t i = 0; i < sizeof(target->stack) / sizeof(target->stack[0]); i++) {
-    if (target->stack[i].info.context && !target->stack[i].info.flag_context_is_static) {
-      ov_array_destroy((void **)ov_deconster_(&target->stack[i].info.context) MEM_FILEPOS_VALUES_PASSTHRU);
+    if (target->stack[i].info.context) {
+      if (target->stack[i].info.flag_context_is_static) {
+        target->stack[i].info.context = NULL;
+      } else {
+        ov_array_destroy((void **)ov_deconster_(&target->stack[i].info.context) MEM_FILEPOS_VALUES_PASSTHRU);
+      }
     }
     target->stack[i] = (struct ov_error_stack){0};
   }
   if (target->stack_extended) {
     size_t const ext_count = OV_ARRAY_LENGTH(target->stack_extended);
     for (size_t i = 0; i < ext_count; i++) {
-      if (target->stack_extended[i].info.context && !target->stack_extended[i].info.flag_context_is_static) {
-        ov_array_destroy((void **)ov_deconster_(&target->stack_extended[i].info.context) MEM_FILEPOS_VALUES_PASSTHRU);
+      if (target->stack_extended[i].info.context) {
+        if (target->stack_extended[i].info.flag_context_is_static) {
+          target->stack_extended[i].info.context = NULL;
+        } else {
+          ov_array_destroy((void **)ov_deconster_(&target->stack_extended[i].info.context) MEM_FILEPOS_VALUES_PASSTHRU);
+        }
       }
       target->stack_extended[i] = (struct ov_error_stack){0};
     }
@@ -122,21 +130,16 @@ void ov_error_set(struct ov_error *const target, struct ov_error_info const *con
   }
   assert(info->type != ov_error_type_invalid && "error type must be valid");
   assert(target->stack[0].info.type == ov_error_type_invalid && "error is already set - use OV_ERROR_DESTROY first");
-  // In release mode, handle invalid error type by using generic error
-  int error_type = info->type;
-  if (error_type == ov_error_type_invalid) {
-    error_type = ov_error_type_generic;
-  }
   ov_error_destroy(target MEM_FILEPOS_VALUES_PASSTHRU);
   target->stack[0] = (struct ov_error_stack){
       .filepos = *filepos,
-      .info = {.type = error_type, .code = info->code, .context = info->context},
+      .info = *info,
   };
 #if defined(LEAK_DETECTOR) || defined(ALLOCATE_LOGGER)
   {
     // Force heap allocation to ensure leak detection works properly
     bool const r = ov_array_grow(
-        (void **)&target->stack_extended, sizeof(struct ov_error_stack), 8, NULL MEM_FILEPOS_VALUES_PASSTHRU);
+        (void **)&target->stack_extended, sizeof(struct ov_error_stack), 4, NULL MEM_FILEPOS_VALUES_PASSTHRU);
 #  ifdef NDEBUG
     (void)r;
 #  else

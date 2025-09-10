@@ -316,24 +316,23 @@ void ov_error_pushf(struct ov_error *const target,
  * This callback allows customization of error messages for any error type/code combination.
  * The hook is called before the standard message generation to provide custom handling.
  *
- * @param type Error type (e.g., ov_error_type_generic, ov_error_type_hresult, ov_error_type_errno)
- * @param code Error code (e.g., ov_error_generic_fail, HRESULT, errno value)
- * @param message_out Pointer to store the custom message string. Set to NULL if no custom message available.
+ * @param target Target error stack entry to modify with custom message
  * @param err Pointer to struct ov_error for error information if message generation fails
  * @return true on success (including when no custom message available), false on failure
  *
  * @example
- * static bool my_hook(int type, int code, char const **message_out, struct ov_error *err) {
- *   if (type == ov_error_type_generic && code == ov_error_generic_fail) {
- *     OV_ERROR_DEFINE(custom_msg, ov_error_type_generic, ov_error_generic_fail, "Custom failure message");
- *     *message_out = custom_msg.context;
+ * static bool my_hook(struct ov_error_stack *target, struct ov_error *err) {
+ *   if (target->info.type == ov_error_type_generic && target->info.code == ov_error_generic_fail) {
+ *     static char const custom_msg[] = "Custom failure message";
+ *     target->info.context = custom_msg;
+ *     target->info.flag_context_is_static = -1;
  *     return true;
  *   }
- *   *message_out = NULL; // No custom message, use default
+ *   // No custom message - let default handling continue
  *   return true;
  * }
  */
-typedef bool (*ov_error_autofill_hook_func)(int type, int code, char const **message_out, struct ov_error *err);
+typedef bool (*ov_error_autofill_hook_func)(struct ov_error_stack *target, struct ov_error *err);
 
 /**
  * Set custom hook function for error message autofilling
@@ -485,20 +484,7 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  *
  * @see OV_ERROR_SET for usage example
  */
-#define OV_ERROR_DEFINE(name, type, code, str)                                                                         \
-  static struct __attribute__((__packed__)) {                                                                          \
-    struct {                                                                                                           \
-      size_t len;                                                                                                      \
-      size_t cap;                                                                                                      \
-    } header;                                                                                                          \
-    char const buf[sizeof(str)];                                                                                       \
-  } const name##_str = {{.len = sizeof(str) - 1}, str};                                                                \
-  static struct ov_error_info const name = {                                                                           \
-      (type),                                                                                                          \
-      -1,                                                                                                              \
-      (code),                                                                                                          \
-      name##_str.buf,                                                                                                  \
-  }
+#define OV_ERROR_DEFINE(name, type, code, str) static struct ov_error_info const name = {(type), -1, (code), (str)}
 
 /**
  * @brief Set error using predefined static error

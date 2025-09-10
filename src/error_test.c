@@ -325,8 +325,13 @@ static void test_ov_error_message_autofill(void) {
   TEST_CHECK(target.info.context != NULL);
   TEST_CHECK(strcmp(target.info.context, "operation failed") == 0);
 
-  if (target.info.context && !target.info.flag_context_is_static) {
-    OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+  if (target.info.context) {
+    if (target.info.flag_context_is_static) {
+      target.info.context = NULL;
+      target.info.flag_context_is_static = 0;
+    } else {
+      OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+    }
   }
 
   // Test autofill preserves existing message
@@ -334,6 +339,7 @@ static void test_ov_error_message_autofill(void) {
   target.info.type = ov_error_type_generic;
   target.info.code = ov_error_generic_fail;
   target.info.context = "Custom message";
+  target.info.flag_context_is_static = -1;
 
   TEST_CHECK(ov_error_autofill_message(&target, NULL));
   TEST_CHECK(target.info.context != NULL);
@@ -366,35 +372,33 @@ static void test_ov_error_string_conversion(void) {
 }
 
 // Test hook functions for autofill hook testing
-static bool test_hook_success(int type, int code, char const **message_out, struct ov_error *err) {
-  if (type == ov_error_type_generic && code == ov_error_generic_fail) {
-    // Use OV_ERROR_DEFINE for static messages
-    OV_ERROR_DEFINE(custom_hook_msg, ov_error_type_generic, ov_error_generic_fail, "Custom hook message");
-    *message_out = custom_hook_msg.context;
+static bool test_hook_success(struct ov_error_stack *target, struct ov_error *err) {
+  if (target->info.type == ov_error_type_generic && target->info.code == ov_error_generic_fail) {
+    // Use static string for custom message
+    static char const custom_hook_msg[] = "Custom hook message";
+    target->info.context = custom_hook_msg;
+    target->info.flag_context_is_static = -1;
     return true;
   }
-  if (type == 999 && code == 123) {
-    // Use dynamic allocation with OV_ARRAY_GROW for variable messages
+  if (target->info.type == 999 && target->info.code == 123) {
+    // Use dynamic allocation for variable messages
     char *custom_msg = NULL;
     char const msg[] = "Custom error type handled by hook";
     if (!OV_ARRAY_GROW(&custom_msg, sizeof(msg), err)) {
       return false;
     }
     strcpy(custom_msg, msg);
-    *message_out = custom_msg;
+    target->info.context = custom_msg;
+    target->info.flag_context_is_static = 0;
     return true;
   }
-  *message_out = NULL;
+  // No custom message - let default handling continue
   return true;
 }
 
-static bool test_hook_failure(int type, int code, char const **message_out, struct ov_error *err) {
-  (void)type;
-  (void)code;
-  (void)message_out;
-  if (err) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
-  }
+static bool test_hook_failure(struct ov_error_stack *target, struct ov_error *err) {
+  (void)target;
+  OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
   return false;
 }
 
@@ -412,8 +416,13 @@ static void test_ov_error_autofill_hook(void) {
   TEST_CHECK(target.info.context != NULL);
   TEST_CHECK(strcmp(target.info.context, "operation failed") == 0);
 
-  if (target.info.context && !target.info.flag_context_is_static) {
-    OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+  if (target.info.context) {
+    if (target.info.flag_context_is_static) {
+      target.info.context = NULL;
+      target.info.flag_context_is_static = 0;
+    } else {
+      OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+    }
   }
 
   // Test hook providing custom message
@@ -440,8 +449,13 @@ static void test_ov_error_autofill_hook(void) {
   TEST_CHECK(strcmp(target.info.context, "Custom error type handled by hook") == 0);
 
   // Cleanup dynamic message from hook
-  if (target.info.context && !target.info.flag_context_is_static) {
-    OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+  if (target.info.context) {
+    if (target.info.flag_context_is_static) {
+      target.info.context = NULL;
+      target.info.flag_context_is_static = 0;
+    } else {
+      OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+    }
   }
 
   // Test hook fallback to default
@@ -454,8 +468,13 @@ static void test_ov_error_autofill_hook(void) {
   TEST_CHECK(target.info.context != NULL);
   TEST_CHECK(strcmp(target.info.context, "out of memory") == 0);
 
-  if (target.info.context && !target.info.flag_context_is_static) {
-    OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+  if (target.info.context) {
+    if (target.info.flag_context_is_static) {
+      target.info.context = NULL;
+      target.info.flag_context_is_static = 0;
+    } else {
+      OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+    }
   }
 
   // Test hook failure
@@ -482,8 +501,13 @@ static void test_ov_error_autofill_hook(void) {
   TEST_CHECK(target.info.context != NULL);
   TEST_CHECK(strcmp(target.info.context, "operation failed") == 0);
 
-  if (target.info.context && !target.info.flag_context_is_static) {
-    OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+  if (target.info.context) {
+    if (target.info.flag_context_is_static) {
+      target.info.context = NULL;
+      target.info.flag_context_is_static = 0;
+    } else {
+      OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
+    }
   }
 }
 
@@ -499,12 +523,7 @@ static void test_output_hook_capture(char const *str) {
     if (!OV_ARRAY_GROW(&g_captured_output, new_len + 1, NULL)) {
       return; // Failed to allocate
     }
-
-    if (existing_len == 0) {
-      strcpy(g_captured_output, str);
-    } else {
-      strcat(g_captured_output, str);
-    }
+    strcpy(g_captured_output + existing_len, str);
   }
 }
 
@@ -530,9 +549,10 @@ static void test_ov_error_output_hook(void) {
   verify_clean_state(&err);
 
   // Check that output was captured by hook
-  TEST_CHECK(g_captured_output != NULL);
-  TEST_CHECK(strstr(g_captured_output, "[ERROR] Hook test message") != NULL);
-  TEST_CHECK(strstr(g_captured_output, "reported at error_test.c:") != NULL);
+  if (TEST_CHECK(g_captured_output != NULL)) {
+    TEST_CHECK(strstr(g_captured_output, "[ERROR] Hook test message") != NULL);
+    TEST_CHECK(strstr(g_captured_output, "reported at error_test.c:") != NULL);
+  }
 
   // Reset captured output
   if (g_captured_output) {
@@ -577,20 +597,22 @@ static void test_ov_error_reporting(void) {
   verify_clean_state(&err);
 }
 
-TEST_LIST = {{"ov_error_core_functionality", test_ov_error_core_functionality},
-             {"ov_error_null_safety", test_ov_error_null_safety},
-             {"ov_error_different_types", test_ov_error_different_types},
-             {"ov_error_define_string_macro", test_ov_error_define_string_macro},
-             {"ov_error_filepos_tracking", test_ov_error_filepos_tracking},
-             {"ov_error_lifecycle_management", test_ov_error_lifecycle_management},
-             {"ov_error_push_basic", test_ov_error_push_basic},
-             {"ov_error_push_multiple_levels", test_ov_error_push_multiple_levels},
-             {"ov_error_push_call_stack_overflow", test_ov_error_push_call_stack_overflow},
-             {"ov_error_formatting", test_ov_error_formatting},
-             {"ov_error_static_errors", test_ov_error_static_errors},
-             {"ov_error_message_autofill", test_ov_error_message_autofill},
-             {"ov_error_autofill_hook", test_ov_error_autofill_hook},
-             {"ov_error_output_hook", test_ov_error_output_hook},
-             {"ov_error_string_conversion", test_ov_error_string_conversion},
-             {"ov_error_reporting", test_ov_error_reporting},
-             {NULL, NULL}};
+TEST_LIST = {
+    {"ov_error_core_functionality", test_ov_error_core_functionality},
+    {"ov_error_null_safety", test_ov_error_null_safety},
+    {"ov_error_different_types", test_ov_error_different_types},
+    {"ov_error_define_string_macro", test_ov_error_define_string_macro},
+    {"ov_error_filepos_tracking", test_ov_error_filepos_tracking},
+    {"ov_error_lifecycle_management", test_ov_error_lifecycle_management},
+    {"ov_error_push_basic", test_ov_error_push_basic},
+    {"ov_error_push_multiple_levels", test_ov_error_push_multiple_levels},
+    {"ov_error_push_call_stack_overflow", test_ov_error_push_call_stack_overflow},
+    {"ov_error_formatting", test_ov_error_formatting},
+    {"ov_error_static_errors", test_ov_error_static_errors},
+    {"ov_error_message_autofill", test_ov_error_message_autofill},
+    {"ov_error_autofill_hook", test_ov_error_autofill_hook},
+    {"ov_error_output_hook", test_ov_error_output_hook},
+    {"ov_error_string_conversion", test_ov_error_string_conversion},
+    {"ov_error_reporting", test_ov_error_reporting},
+    {NULL, NULL},
+};

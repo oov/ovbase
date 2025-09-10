@@ -188,128 +188,106 @@ cleanup:
   return written;
 }
 
-#define DEFINE_STATIC_STR(name, str)                                                                                   \
-  static struct __attribute__((__packed__)) {                                                                          \
-    struct {                                                                                                           \
-      size_t len;                                                                                                      \
-      size_t cap;                                                                                                      \
-    } header;                                                                                                          \
-    char const buf[sizeof(str)];                                                                                       \
-  } const name##_str = {{.len = sizeof(str) - 1}, str};                                                                \
-  static char const *const name = name##_str.buf
-
-static char const *set_generic_message(int const code, struct ov_error *const err) {
+static bool set_generic_message(struct ov_error_stack *const target, struct ov_error *const err) {
   (void)err;
-
-  DEFINE_STATIC_STR(success_msg, "success");
-  DEFINE_STATIC_STR(fail_msg, "operation failed");
-  DEFINE_STATIC_STR(abort_msg, "operation aborted");
-  DEFINE_STATIC_STR(unexpected_msg, "unexpected error occurred");
-  DEFINE_STATIC_STR(invalid_arg_msg, "invalid argument provided");
-  DEFINE_STATIC_STR(out_of_memory_msg, "out of memory");
-  DEFINE_STATIC_STR(not_implemented_msg, "feature not implemented yet");
-  DEFINE_STATIC_STR(not_found_msg, "target not found");
-  DEFINE_STATIC_STR(unknown_msg, "unknown error occurred");
-
-  switch (code) {
+  char const *message = NULL;
+  switch (target->info.code) {
   case ov_error_generic_success:
-    return success_msg;
+    message = "success";
+    break;
   case ov_error_generic_fail:
-    return fail_msg;
+    message = "operation failed";
+    break;
   case ov_error_generic_abort:
-    return abort_msg;
+    message = "operation aborted";
+    break;
   case ov_error_generic_unexpected:
-    return unexpected_msg;
+    message = "unexpected error occurred";
+    break;
   case ov_error_generic_invalid_argument:
-    return invalid_arg_msg;
+    message = "invalid argument provided";
+    break;
   case ov_error_generic_out_of_memory:
-    return out_of_memory_msg;
+    message = "out of memory";
+    break;
   case ov_error_generic_not_implemented_yet:
-    return not_implemented_msg;
+    message = "feature not implemented yet";
+    break;
   case ov_error_generic_not_found:
-    return not_found_msg;
+    message = "target not found";
+    break;
   case ov_error_generic_trace:
-    return NULL; // trace entries don't get default messages
+    return true; // trace entries don't get default messages
   default:
-    return unknown_msg;
+    message = "unknown error occurred";
+    break;
   }
+  target->info.context = message;
+  target->info.flag_context_is_static = -1;
+  return true;
 }
 
-static char const *set_errno_message(int const code, struct ov_error *const err) {
-  DEFINE_STATIC_STR(unknown_errno_msg, "unknown errno.");
-  char *new_msg = NULL;
-  char const *result = NULL;
-  {
-    char const *errno_msg = strerror(code);
-    if (!errno_msg) {
-      result = unknown_errno_msg;
-      goto cleanup;
-    }
-
-    size_t const msg_len = strlen(errno_msg);
-    if (!OV_ARRAY_GROW(&new_msg, msg_len + 1, err)) {
-      OV_ERROR_TRACE(err);
-      goto cleanup;
-    }
-
-    strcpy(new_msg, errno_msg);
-    result = new_msg;
-    new_msg = NULL;
+static bool set_errno_message(struct ov_error_stack *const target, struct ov_error *const err) {
+  (void)err;
+  target->info.context = strerror(target->info.code);
+  if (!target->info.context) {
+    target->info.context = "unknown errno.";
   }
-cleanup:
-  if (new_msg) {
-    OV_ARRAY_DESTROY(&new_msg);
-  }
-  return result;
+  target->info.flag_context_is_static = -1;
+  return true;
 }
 
 #ifdef _WIN32
-static char const *set_hresult_message(int const code, struct ov_error *const err) {
-  DEFINE_STATIC_STR(unavailable_msg, "Windows error message is not available.");
-
+static bool set_hresult_message(struct ov_error_stack *const target, struct ov_error *const err) {
   LPWSTR msg = NULL;
   char *new_msg = NULL;
-  char const *result = NULL;
-  {
-    DWORD msglen = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                                  NULL,
-                                  (DWORD)code,
-                                  MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-                                  (LPWSTR)&msg,
-                                  0,
-                                  NULL);
-    if (!msglen || !msg) {
-      result = unavailable_msg;
-      goto cleanup;
-    }
+  bool result = false;
+  DWORD msglen = 0;
+  int utf8_len = 0;
 
-    if (msg[msglen - 1] == L'\r' || msg[msglen - 1] == L'\n') {
-      msg[--msglen] = L'\0';
-      if (msglen > 0 && (msg[msglen - 1] == L'\r' || msg[msglen - 1] == L'\n')) {
-        msg[--msglen] = L'\0';
-      }
-    }
-
-    int utf8_len = WideCharToMultiByte(CP_UTF8, 0, msg, (int)msglen, NULL, 0, NULL, NULL);
-    if (utf8_len <= 0) {
-      OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
-      goto cleanup;
-    }
-
-    if (!OV_ARRAY_GROW(&new_msg, (size_t)utf8_len + 1, err)) {
-      OV_ERROR_TRACE(err);
-      goto cleanup;
-    }
-
-    if (WideCharToMultiByte(CP_UTF8, 0, msg, (int)msglen, new_msg, utf8_len, NULL, NULL) != utf8_len) {
-      OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
-      goto cleanup;
-    }
-
-    new_msg[utf8_len] = '\0';
-    result = new_msg;
-    new_msg = NULL;
+  msglen = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                          NULL,
+                          (DWORD)target->info.code,
+                          MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+                          (LPWSTR)&msg,
+                          0,
+                          NULL);
+  if (!msglen || !msg) {
+    target->info.context = "Windows error message is not available.";
+    target->info.flag_context_is_static = -1;
+    result = true;
+    goto cleanup;
   }
+
+  if (msg[msglen - 1] == L'\r' || msg[msglen - 1] == L'\n') {
+    msg[--msglen] = L'\0';
+    if (msglen > 0 && (msg[msglen - 1] == L'\r' || msg[msglen - 1] == L'\n')) {
+      msg[--msglen] = L'\0';
+    }
+  }
+
+  utf8_len = WideCharToMultiByte(CP_UTF8, 0, msg, (int)msglen, NULL, 0, NULL, NULL);
+  if (utf8_len <= 0) {
+    OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
+    goto cleanup;
+  }
+
+  if (!OV_ARRAY_GROW(&new_msg, (size_t)utf8_len + 1, err)) {
+    OV_ERROR_TRACE(err);
+    goto cleanup;
+  }
+
+  if (WideCharToMultiByte(CP_UTF8, 0, msg, (int)msglen, new_msg, utf8_len, NULL, NULL) != utf8_len) {
+    OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
+    goto cleanup;
+  }
+
+  new_msg[utf8_len] = '\0';
+  target->info.context = new_msg;
+  target->info.flag_context_is_static = 0;
+  new_msg = NULL;
+  result = true;
+
 cleanup:
   if (new_msg) {
     OV_ARRAY_DESTROY(&new_msg);
@@ -326,20 +304,17 @@ bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_er
     return true;
   }
 
-  DEFINE_STATIC_STR(unknown_type_msg, "unknown error type.");
-  char const *message = NULL;
   bool result = false;
 
   // Try custom hook first if available
   if (g_autofill_hook) {
-    if (!g_autofill_hook(target->info.type, target->info.code, &message, err)) {
+    if (!g_autofill_hook(target, err)) {
       // Hook failed
       OV_ERROR_TRACE(err);
       goto cleanup;
     }
-    // Hook succeeded - if message is provided, use it and return
-    if (message) {
-      target->info.context = message;
+    // Hook succeeded - if context was set by hook, return
+    if (target->info.context) {
       return true;
     }
     // Hook succeeded but no custom message - continue with default handling
@@ -348,39 +323,31 @@ bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_er
   // Fall back to default message generation
   switch (target->info.type) {
   case ov_error_type_generic:
-    message = set_generic_message(target->info.code, err);
-    if (!message) {
-      // For trace entries, NULL message is expected and valid
-      if (target->info.code == ov_error_generic_trace) {
-        result = true;
-        goto cleanup;
-      }
+    if (!set_generic_message(target, err)) {
       OV_ERROR_TRACE(err);
       goto cleanup;
     }
     break;
   case ov_error_type_errno:
-    message = set_errno_message(target->info.code, err);
-    if (!message) {
+    if (!set_errno_message(target, err)) {
       OV_ERROR_TRACE(err);
       goto cleanup;
     }
     break;
 #ifdef _WIN32
   case ov_error_type_hresult:
-    message = set_hresult_message(target->info.code, err);
-    if (!message) {
+    if (!set_hresult_message(target, err)) {
       OV_ERROR_TRACE(err);
       goto cleanup;
     }
     break;
 #endif
   default:
-    message = unknown_type_msg;
+    target->info.context = "unknown error type.";
+    target->info.flag_context_is_static = -1;
     break;
   }
 
-  target->info.context = message;
   result = true;
 
 cleanup:
@@ -512,6 +479,7 @@ bool ov_error_to_string(struct ov_error const *const src,
         OV_ERROR_TRACE(err);
         goto cleanup;
       }
+      OV_ARRAY_SET_LENGTH(src_copy.stack_extended, ext_count);
       for (size_t i = 0; i < ext_count; i++) {
         src_copy.stack_extended[i] = src->stack_extended[i];
         if (!ov_error_autofill_message(&src_copy.stack_extended[i], err)) {
@@ -546,17 +514,23 @@ cleanup:
     if (src_copy.stack[i].info.type == ov_error_type_invalid) {
       break;
     }
-    if (src_copy.stack[i].info.context && src_copy.stack[i].info.context != src->stack[i].info.context &&
-        !src_copy.stack[i].info.flag_context_is_static) {
-      OV_ARRAY_DESTROY(ov_deconster_(&src_copy.stack[i].info.context));
+    if (src_copy.stack[i].info.context && src_copy.stack[i].info.context != src->stack[i].info.context) {
+      if (src_copy.stack[i].info.flag_context_is_static) {
+        src_copy.stack[i].info.context = NULL;
+      } else {
+        OV_ARRAY_DESTROY(ov_deconster_(&src_copy.stack[i].info.context));
+      }
     }
   }
   size_t const ext_count = OV_ARRAY_LENGTH(src_copy.stack_extended);
   for (size_t i = 0; i < ext_count; i++) {
     if (src_copy.stack_extended[i].info.context &&
-        src_copy.stack_extended[i].info.context != src->stack_extended[i].info.context &&
-        !src_copy.stack_extended[i].info.flag_context_is_static) {
-      OV_ARRAY_DESTROY(ov_deconster_(&src_copy.stack_extended[i].info.context));
+        src_copy.stack_extended[i].info.context != src->stack_extended[i].info.context) {
+      if (src_copy.stack_extended[i].info.flag_context_is_static) {
+        src_copy.stack_extended[i].info.context = NULL;
+      } else {
+        OV_ARRAY_DESTROY(ov_deconster_(&src_copy.stack_extended[i].info.context));
+      }
     }
   }
   if (src_copy.stack_extended != src->stack_extended) {
@@ -569,7 +543,6 @@ bool ov_error_report_and_destroy(struct ov_error *const target, char const *cons
   if (!target || target->stack[0].info.type == ov_error_type_invalid) {
     return true;
   }
-
   {
     char temp[512];
     char filepos_str[filepos_str_size];
