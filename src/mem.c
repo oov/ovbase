@@ -30,9 +30,12 @@
 #endif
 
 #include "../3rd/hashmap.c/hashmap.h"
+#include <ovprintf.h>
 #include <ovrand.h>
 #include <ovthreads.h>
 #include <stdatomic.h>
+
+#include "output.h"
 
 // mem
 
@@ -106,17 +109,16 @@ static bool report_leaks_iterate(void const *const item, void *const udata) {
   ++*n;
   struct allocated_at const *const aa = (struct allocated_at const *)item;
   {
-    struct ov_error err = {0};
-    OV_ERROR_SETF(&err,
-                  ov_error_type_generic,
-                  ov_error_generic_unexpected,
-                  NULL,
-                  "Leak found #%zu: %s:%ld %s()",
-                  *n,
-                  aa->filepos.file,
-                  aa->filepos.line,
-                  aa->filepos.func);
-    OV_ERROR_REPORT(&err, NULL);
+    char buffer[512];
+    ov_snprintf(buffer,
+                sizeof(buffer),
+                NULL,
+                "Leak found #%zu: %s:%ld %s()\n",
+                *n,
+                aa->filepos.file,
+                aa->filepos.line,
+                aa->filepos.func);
+    output(buffer);
   }
   return true;
 }
@@ -161,9 +163,9 @@ void report_allocated_count(void) {
     return;
   }
   {
-    struct ov_error err = {0};
-    OV_ERROR_SETF(&err, ov_error_type_generic, ov_error_generic_unexpected, NULL, "Not freed memory blocks: %ld", n);
-    OV_ERROR_REPORT(&err, NULL);
+    char buffer[256];
+    ov_snprintf(buffer, sizeof(buffer), NULL, "Not freed memory blocks: %ld\n", n);
+    output(buffer);
   }
 }
 #endif
@@ -210,10 +212,15 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
       bool const found_double_free = allocated_remove(*(void **)pp);
       mtx_unlock(&g_mem_mtx);
       if (found_double_free) {
-        struct ov_error err = {0};
-        OV_ERROR_DEFINE(double_free_msg, ov_error_type_generic, ov_error_generic_unexpected, "double free detected");
-        OV_ERROR_SET(&err, &double_free_msg);
-        OV_ERROR_REPORT(&err, NULL);
+        char buffer[256];
+        ov_snprintf(buffer,
+                    sizeof(buffer),
+                    NULL,
+                    "double free detected at %s:%ld %s()\n",
+                    filepos->file,
+                    filepos->line,
+                    filepos->func);
+        output(buffer);
       }
     }
 #endif
@@ -235,11 +242,15 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
       bool const failed_allocate = allocated_put(np MEM_FILEPOS_VALUES_PASSTHRU);
       mtx_unlock(&g_mem_mtx);
       if (failed_allocate) {
-        struct ov_error err = {0};
-        OV_ERROR_DEFINE(
-            alloc_record_msg, ov_error_type_generic, ov_error_generic_unexpected, "failed to record allocated memory");
-        OV_ERROR_SET(&err, &alloc_record_msg);
-        OV_ERROR_REPORT(&err, NULL);
+        char buffer[256];
+        ov_snprintf(buffer,
+                    sizeof(buffer),
+                    NULL,
+                    "failed to record allocated memory at %s:%ld %s()\n",
+                    filepos->file,
+                    filepos->line,
+                    filepos->func);
+        output(buffer);
       }
     }
 #endif
@@ -250,17 +261,26 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
     bool const failed_allocate = allocated_put(np MEM_FILEPOS_VALUES_PASSTHRU);
     mtx_unlock(&g_mem_mtx);
     if (found_double_free) {
-      struct ov_error err = {0};
-      OV_ERROR_DEFINE(double_free_msg2, ov_error_type_generic, ov_error_generic_unexpected, "double free detected");
-      OV_ERROR_SET(&err, &double_free_msg2);
-      OV_ERROR_REPORT(&err, NULL);
+      char buffer[256];
+      ov_snprintf(buffer,
+                  sizeof(buffer),
+                  NULL,
+                  "double free detected at %s:%ld %s()\n",
+                  filepos->file,
+                  filepos->line,
+                  filepos->func);
+      output(buffer);
     }
     if (failed_allocate) {
-      struct ov_error err = {0};
-      OV_ERROR_DEFINE(
-          alloc_record_msg2, ov_error_type_generic, ov_error_generic_unexpected, "failed to record allocated memory");
-      OV_ERROR_SET(&err, &alloc_record_msg2);
-      OV_ERROR_REPORT(&err, NULL);
+      char buffer[256];
+      ov_snprintf(buffer,
+                  sizeof(buffer),
+                  NULL,
+                  "failed to record allocated memory at %s:%ld %s()\n",
+                  filepos->file,
+                  filepos->line,
+                  filepos->func);
+      output(buffer);
     }
 #endif
   }
