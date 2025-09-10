@@ -90,7 +90,6 @@ static inline void *ov_deconster_(void const *const ptr) {
 // error
 
 enum ov_error_type {
-  ov_error_type_trace = -1,
   ov_error_type_invalid = 0,
   ov_error_type_generic = 1,
   ov_error_type_hresult = 2,
@@ -98,6 +97,7 @@ enum ov_error_type {
 };
 
 enum ov_error_generic {
+  ov_error_generic_trace = -1, // special value for stack trace entries
   ov_error_generic_success = 0,
   ov_error_generic_fail = 1,
   ov_error_generic_abort = 2,
@@ -655,7 +655,9 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  *   }
  */
 #define OV_ERROR_TRACE(err_ptr)                                                                                        \
-  (ov_error_push((err_ptr), (&(struct ov_error_info const){.type = ov_error_type_trace}) ERR_FILEPOS_VALUES))
+  (ov_error_push((err_ptr),                                                                                            \
+                 (&(struct ov_error_info const){.type = ov_error_type_generic, .code = ov_error_generic_trace})        \
+                     ERR_FILEPOS_VALUES))
 
 /**
  * @brief Add formatted stack trace information to existing error with printf-like formatting
@@ -676,7 +678,8 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  */
 #define OV_ERROR_TRACEF(err_ptr, reference, format, ...)                                                               \
   (ov_error_pushf((err_ptr),                                                                                           \
-                  (&(struct ov_error_info const){.type = ov_error_type_trace, .code = 0, .context = (format)}),        \
+                  (&(struct ov_error_info const){                                                                      \
+                      .type = ov_error_type_generic, .code = ov_error_generic_trace, .context = (format)}),            \
                   (reference)ERR_FILEPOS_VALUES,                                                                       \
                   __VA_ARGS__))
 

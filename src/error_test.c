@@ -3,10 +3,8 @@
 #include <ovbase.h>
 
 // Helper functions to reduce code duplication
-static void verify_error_state(struct ov_error *err,
-                               enum ov_error_type expected_type,
-                               int expected_code,
-                               const char *expected_context) {
+static void
+verify_error_state(struct ov_error *err, int expected_type, int expected_code, const char *expected_context) {
   TEST_CHECK(err->stack[0].info.type == expected_type);
   TEST_CHECK(err->stack[0].info.code == expected_code);
   if (expected_context) {
@@ -23,10 +21,7 @@ static void verify_clean_state(struct ov_error *err) {
   TEST_CHECK(err->stack[0].info.context == NULL);
 }
 
-static void test_and_cleanup(struct ov_error *err,
-                             enum ov_error_type expected_type,
-                             int expected_code,
-                             const char *expected_context) {
+static void test_and_cleanup(struct ov_error *err, int expected_type, int expected_code, const char *expected_context) {
   verify_error_state(err, expected_type, expected_code, expected_context);
   OV_ERROR_DESTROY(err);
   verify_clean_state(err);

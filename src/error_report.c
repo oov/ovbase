@@ -231,6 +231,8 @@ static char const *set_generic_message(int const code, struct ov_error *const er
     return not_implemented_msg;
   case ov_error_generic_not_found:
     return not_found_msg;
+  case ov_error_generic_trace:
+    return NULL; // trace entries don't get default messages
   default:
     return unknown_msg;
   }
@@ -351,6 +353,11 @@ bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_er
   case ov_error_type_generic:
     message = set_generic_message(target->info.code, err);
     if (!message) {
+      // For trace entries, NULL message is expected and valid
+      if (target->info.code == ov_error_generic_trace) {
+        result = true;
+        goto cleanup;
+      }
       OV_ERROR_TRACE(err);
       goto cleanup;
     }
@@ -371,8 +378,6 @@ bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_er
     }
     break;
 #endif
-  case ov_error_type_trace:
-    break;
   default:
     message = unknown_type_msg;
     break;
@@ -405,7 +410,7 @@ static size_t format_stack_entry(char *const dest, size_t const dest_pos, struct
     char filepos_str[filepos_str_size];
     written += append(dest, written, filepos_str, filepos_to_str(dest ? filepos_str : NULL, &entry->filepos));
   }
-  if (entry->info.type != ov_error_type_trace) {
+  if (!(entry->info.type == ov_error_type_generic && entry->info.code == ov_error_generic_trace)) {
     char code_str[error_code_str_size];
     written += append(dest, written, " ", 1);
     written +=

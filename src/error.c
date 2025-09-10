@@ -178,7 +178,7 @@ void ov_error_push(struct ov_error *const target, struct ov_error_info const *co
     return; // Not in error state
   }
   if (!push(target,
-            info ? info : &(struct ov_error_info){ov_error_type_trace, 0, NULL},
+            info ? info : &(struct ov_error_info){ov_error_type_generic, ov_error_generic_trace, NULL},
             NULL ERR_FILEPOS_VALUES_PASSTHRU)) {
     // TODO: report error
     return;
