@@ -112,6 +112,7 @@ set(OVBASE_SOURCES
   num/wchar/ftoa.c
   num/wchar/itoa.c
   num/wchar/utoa.c
+  output.c
   ovbase.c
   ovthreads.c
   printf/char.c
