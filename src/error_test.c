@@ -325,7 +325,7 @@ static void test_ov_error_message_autofill(void) {
   TEST_CHECK(target.info.context != NULL);
   TEST_CHECK(strcmp(target.info.context, "operation failed") == 0);
 
-  if (target.info.context) {
+  if (target.info.context && !target.info.flag_context_is_static) {
     OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
   }
 
@@ -412,7 +412,7 @@ static void test_ov_error_autofill_hook(void) {
   TEST_CHECK(target.info.context != NULL);
   TEST_CHECK(strcmp(target.info.context, "operation failed") == 0);
 
-  if (target.info.context) {
+  if (target.info.context && !target.info.flag_context_is_static) {
     OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
   }
 
@@ -440,7 +440,7 @@ static void test_ov_error_autofill_hook(void) {
   TEST_CHECK(strcmp(target.info.context, "Custom error type handled by hook") == 0);
 
   // Cleanup dynamic message from hook
-  if (target.info.context) {
+  if (target.info.context && !target.info.flag_context_is_static) {
     OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
   }
 
@@ -454,7 +454,7 @@ static void test_ov_error_autofill_hook(void) {
   TEST_CHECK(target.info.context != NULL);
   TEST_CHECK(strcmp(target.info.context, "out of memory") == 0);
 
-  if (target.info.context) {
+  if (target.info.context && !target.info.flag_context_is_static) {
     OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
   }
 
@@ -482,7 +482,7 @@ static void test_ov_error_autofill_hook(void) {
   TEST_CHECK(target.info.context != NULL);
   TEST_CHECK(strcmp(target.info.context, "operation failed") == 0);
 
-  if (target.info.context) {
+  if (target.info.context && !target.info.flag_context_is_static) {
     OV_ARRAY_DESTROY(ov_deconster_(&target.info.context));
   }
 }

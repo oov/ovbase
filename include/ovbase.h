@@ -122,7 +122,8 @@ enum ov_error_generic {
  * @see OV_ERROR_SET, OV_ERROR_DEFINE, OV_ERROR_SETF for user-facing interfaces
  */
 struct ov_error_info {
-  int type;
+  int type : sizeof(int) * 8 - 1;
+  int flag_context_is_static : 1;
   int code;
   char const *context;
 };
@@ -493,8 +494,9 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
     char const buf[sizeof(str)];                                                                                       \
   } const name##_str = {{.len = sizeof(str) - 1}, str};                                                                \
   static struct ov_error_info const name = {                                                                           \
-      type,                                                                                                            \
-      code,                                                                                                            \
+      (type),                                                                                                          \
+      -1,                                                                                                              \
+      (code),                                                                                                          \
       name##_str.buf,                                                                                                  \
   }
 
@@ -655,9 +657,9 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  *   }
  */
 #define OV_ERROR_TRACE(err_ptr)                                                                                        \
-  (ov_error_push((err_ptr),                                                                                            \
-                 (&(struct ov_error_info const){.type = ov_error_type_generic, .code = ov_error_generic_trace})        \
-                     ERR_FILEPOS_VALUES))
+  (ov_error_push(                                                                                                      \
+      (err_ptr),                                                                                                       \
+      (&(struct ov_error_info const){ov_error_type_generic, 0, ov_error_generic_trace, NULL})ERR_FILEPOS_VALUES))
 
 /**
  * @brief Add formatted stack trace information to existing error with printf-like formatting
@@ -678,8 +680,7 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  */
 #define OV_ERROR_TRACEF(err_ptr, reference, format, ...)                                                               \
   (ov_error_pushf((err_ptr),                                                                                           \
-                  (&(struct ov_error_info const){                                                                      \
-                      .type = ov_error_type_generic, .code = ov_error_generic_trace, .context = (format)}),            \
+                  (&(struct ov_error_info const){ov_error_type_generic, 0, ov_error_generic_trace, (format)}),         \
                   (reference)ERR_FILEPOS_VALUES,                                                                       \
                   __VA_ARGS__))
 

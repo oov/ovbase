@@ -12,7 +12,7 @@ void ov_error_destroy(struct ov_error *const target MEM_FILEPOS_PARAMS) {
     return;
   }
   for (size_t i = 0; i < sizeof(target->stack) / sizeof(target->stack[0]); i++) {
-    if (target->stack[i].info.context) {
+    if (target->stack[i].info.context && !target->stack[i].info.flag_context_is_static) {
       ov_array_destroy((void **)ov_deconster_(&target->stack[i].info.context) MEM_FILEPOS_VALUES_PASSTHRU);
     }
     target->stack[i] = (struct ov_error_stack){0};
@@ -20,7 +20,7 @@ void ov_error_destroy(struct ov_error *const target MEM_FILEPOS_PARAMS) {
   if (target->stack_extended) {
     size_t const ext_count = OV_ARRAY_LENGTH(target->stack_extended);
     for (size_t i = 0; i < ext_count; i++) {
-      if (target->stack_extended[i].info.context) {
+      if (target->stack_extended[i].info.context && !target->stack_extended[i].info.flag_context_is_static) {
         ov_array_destroy((void **)ov_deconster_(&target->stack_extended[i].info.context) MEM_FILEPOS_VALUES_PASSTHRU);
       }
       target->stack_extended[i] = (struct ov_error_stack){0};
@@ -105,7 +105,8 @@ static bool pushfv(struct ov_error *const target,
     OV_ERROR_PUSH(err, &format_error);
     goto cleanup;
   }
-  if (!push(target, &(struct ov_error_info const){info->type, info->code, context}, err ERR_FILEPOS_VALUES_PASSTHRU)) {
+  if (!push(
+          target, &(struct ov_error_info const){info->type, 0, info->code, context}, err ERR_FILEPOS_VALUES_PASSTHRU)) {
     OV_ERROR_TRACE(err);
     goto cleanup;
   }
@@ -165,7 +166,7 @@ void ov_error_setf(struct ov_error *const target,
 
   if (!success) {
     // If pushfv failed, set basic error info using safe method
-    ov_error_set(target, &(struct ov_error_info){info->type, info->code, NULL} ERR_FILEPOS_VALUES_PASSTHRU);
+    ov_error_set(target, &(struct ov_error_info){info->type, 0, info->code, NULL} ERR_FILEPOS_VALUES_PASSTHRU);
     OV_ERROR_DESTROY(&local_err);
   }
 }
@@ -178,7 +179,7 @@ void ov_error_push(struct ov_error *const target, struct ov_error_info const *co
     return; // Not in error state
   }
   if (!push(target,
-            info ? info : &(struct ov_error_info){ov_error_type_generic, ov_error_generic_trace, NULL},
+            info ? info : &(struct ov_error_info){ov_error_type_generic, 0, ov_error_generic_trace, NULL},
             NULL ERR_FILEPOS_VALUES_PASSTHRU)) {
     // TODO: report error
     return;

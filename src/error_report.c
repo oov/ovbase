@@ -549,14 +549,16 @@ cleanup:
     if (src_copy.stack[i].info.type == ov_error_type_invalid) {
       break;
     }
-    if (src_copy.stack[i].info.context && src_copy.stack[i].info.context != src->stack[i].info.context) {
+    if (src_copy.stack[i].info.context && src_copy.stack[i].info.context != src->stack[i].info.context &&
+        !src_copy.stack[i].info.flag_context_is_static) {
       OV_ARRAY_DESTROY(ov_deconster_(&src_copy.stack[i].info.context));
     }
   }
   size_t const ext_count = OV_ARRAY_LENGTH(src_copy.stack_extended);
   for (size_t i = 0; i < ext_count; i++) {
     if (src_copy.stack_extended[i].info.context &&
-        src_copy.stack_extended[i].info.context != src->stack_extended[i].info.context) {
+        src_copy.stack_extended[i].info.context != src->stack_extended[i].info.context &&
+        !src_copy.stack_extended[i].info.flag_context_is_static) {
       OV_ARRAY_DESTROY(ov_deconster_(&src_copy.stack_extended[i].info.context));
     }
   }
