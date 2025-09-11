@@ -241,74 +241,18 @@ struct ov_error {
   struct ov_error_stack *stack_extended;
 };
 
-/**
- * @brief Low-level implementation for OV_ERROR_DESTROY
- *
- * Use OV_ERROR_DESTROY macro instead of calling this function directly.
- *
- * @param target Pointer to struct ov_error to destroy
- *
- * @see OV_ERROR_DESTROY
- */
 void ov_error_destroy(struct ov_error *const target MEM_FILEPOS_PARAMS);
-
-/**
- * @brief Low-level implementation for OV_ERROR_SET
- *
- * Use OV_ERROR_SET macro instead of calling this function directly.
- *
- * @param target Pointer to struct ov_error
- * @param info Pointer to error information
- *
- * @see OV_ERROR_SET
- */
 void ov_error_set(struct ov_error *const target, struct ov_error_info const *const info ERR_FILEPOS_PARAMS);
-
-/**
- * @brief Low-level implementation for OV_ERROR_SETF
- *
- * Use OV_ERROR_SETF macro instead of calling this function directly.
- *
- * @param target Pointer to struct ov_error
- * @param info Pointer to error information
- * @param reference Reference format string
- * @param ... Format arguments
- *
- * @see OV_ERROR_SETF
- */
 void ov_error_setf(struct ov_error *const target,
                    struct ov_error_info const *const info,
                    char const *const reference ERR_FILEPOS_PARAMS,
                    ...);
-
-/**
- * @brief Low-level implementation for OV_ERROR_PUSH
- *
- * Use OV_ERROR_PUSH macro instead of calling this function directly.
- *
- * @param target Pointer to struct ov_error with existing error
- * @param info Pointer to error information to add
- *
- * @see OV_ERROR_PUSH
- */
 void ov_error_push(struct ov_error *const target, struct ov_error_info const *const info ERR_FILEPOS_PARAMS);
-
-/**
- * @brief Low-level implementation for OV_ERROR_PUSHF
- *
- * Use OV_ERROR_PUSHF macro instead of calling this function directly.
- *
- * @param target Pointer to struct ov_error with existing error
- * @param info Pointer to error information
- * @param reference Reference format string
- * @param ... Format arguments
- *
- * @see OV_ERROR_PUSHF
- */
 void ov_error_pushf(struct ov_error *const target,
                     struct ov_error_info const *const info,
                     char const *const reference ERR_FILEPOS_PARAMS,
                     ...);
+bool ov_error_report_and_destroy(struct ov_error *const target, char const *const message ERR_FILEPOS_PARAMS);
 
 /**
  * Hook function type for custom error message generation
@@ -413,12 +357,44 @@ void ov_error_set_output_hook(ov_error_output_hook_func hook_func);
  */
 bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_error *const err);
 
+/**
+ * @brief Convert error structure to formatted string representation
+ *
+ * Converts an error structure into a human-readable string format. The function automatically
+ * fills in missing error messages using ov_error_autofill_message and formats the output
+ * with error codes, messages, and optionally stack trace information.
+ *
+ * The output format includes:
+ * - Error code in bracketed format [type:0xcode]
+ * - Error message (auto-generated if not provided)
+ * - File position information (file:line function())
+ * - Optional stack trace with all error entries
+ *
+ * @param src Source error structure to convert. Must not be NULL and must contain at least
+ *            one valid error entry (stack[0].info.type != ov_error_type_invalid).
+ * @param dest Pointer to destination string pointer. The string will be allocated using
+ *             OV_ARRAY_GROW and should be freed with OV_ARRAY_DESTROY. If *dest is not NULL,
+ *             the existing buffer may be reused if large enough.
+ * @param include_stack_trace If true, includes full stack trace with all error entries and
+ *                            file position information. If false, only shows the main error.
+ * @param err Pointer to struct ov_error for error information. Can be NULL.
+ * @return true on success, false on failure (check err for details)
+ *
+ * @example
+ *   struct ov_error error = {0};
+ *   OV_ERROR_SET(&error, ov_error_type_generic, ov_error_generic_fail, "Operation failed");
+ *   
+ *   char *error_msg = NULL;
+ *   if (ov_error_to_string(&error, &error_msg, true, NULL)) {
+ *     printf("Error: %s", error_msg);
+ *     OV_ARRAY_DESTROY(&error_msg);
+ *   }
+ *   OV_ERROR_DESTROY(&error);
+ */
 bool ov_error_to_string(struct ov_error const *const src,
                         char **const dest,
                         bool const include_stack_trace,
                         struct ov_error *const err);
-
-bool ov_error_report_and_destroy(struct ov_error *const target, char const *const message ERR_FILEPOS_PARAMS);
 
 /**
  * Check if error matches specific type and code
@@ -677,58 +653,11 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
 long ov_mem_get_allocated_count(void);
 #endif
 
-/**
- * @brief Low-level implementation for OV_REALLOC
- *
- * Use OV_REALLOC macro instead of calling this function directly.
- *
- * @param pp Pointer to the pointer to memory (will be updated)
- * @param n Number of items to allocate
- * @param item_size Size of each item in bytes
- * @param err Pointer to struct ov_error for error information
- * @return true on success, false on failure (check err for details)
- *
- * @see OV_REALLOC
- */
 NODISCARD bool
 ov_mem_realloc(void *const pp, size_t const n, size_t const item_size, struct ov_error *const err MEM_FILEPOS_PARAMS);
-
-/**
- * @brief Low-level implementation for OV_FREE
- *
- * Use OV_FREE macro instead of calling this function directly.
- *
- * @param pp Pointer to the pointer to memory (will be set to NULL)
- *
- * @see OV_FREE
- */
 void ov_mem_free(void *const pp MEM_FILEPOS_PARAMS);
-
-/**
- * @brief Low-level implementation for OV_ALIGNED_ALLOC
- *
- * Use OV_ALIGNED_ALLOC macro instead of calling this function directly.
- *
- * @param pp Pointer to the pointer to memory (must be NULL initially, will be updated)
- * @param n Number of items to allocate
- * @param item_size Size of each item in bytes
- * @param align Alignment boundary (power of 2, max 256 bytes)
- * @return true on success, false on failure
- *
- * @see OV_ALIGNED_ALLOC
- */
 NODISCARD bool
 ov_mem_aligned_alloc(void *const pp, size_t const n, size_t const item_size, size_t const align MEM_FILEPOS_PARAMS);
-
-/**
- * @brief Low-level implementation for OV_ALIGNED_FREE
- *
- * Use OV_ALIGNED_FREE macro instead of calling this function directly.
- *
- * @param pp Pointer to the pointer to aligned memory (will be set to NULL)
- *
- * @see OV_ALIGNED_FREE
- */
 void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
 
 /**
