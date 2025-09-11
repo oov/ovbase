@@ -471,35 +471,29 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
 #define OV_ERROR_DESTROY(err_ptr) (ov_error_destroy((err_ptr)MEM_FILEPOS_VALUES))
 
 /**
- * @brief Define a complete static error with type, code, and message
+ * @brief Set error with direct parameters
  *
- * Creates a compile-time constant error structure with proper memory management headers.
- * Use this macro to define complete error information that can be safely used with
- * OV_ERROR_SET for optimal performance without memory allocation.
- *
- * @param name Variable name for the static error
- * @param type Error type (e.g., ov_error_type_generic)
- * @param code Error code (e.g., ov_error_generic_fail)
- * @param str String literal for the error message
- *
- * @see OV_ERROR_SET for usage example
- */
-#define OV_ERROR_DEFINE(name, type, code, str) static struct ov_error_info const name = {(type), -1, (code), (str)}
-
-/**
- * @brief Set error using predefined static error
- *
- * Use with OV_ERROR_DEFINE only for compile-time type safety.
- * This macro provides optimal performance with no memory allocation or string copying.
+ * Convenience macro for setting errors with direct type, code and message specification.
  *
  * @param err_ptr Pointer to struct ov_error. If NULL, the operation is silently ignored.
- * @param info_ptr Pointer to static error defined with OV_ERROR_DEFINE
+ * @param error_type Error type (e.g., ov_error_type_generic)
+ * @param error_code Error code (e.g., ov_error_generic_fail)
+ * @param message Static error message string, can be NULL.
+ *                The message is not copied, so the pointer must remain valid until
+ *                the error object is destroyed.
  *
  * @example
- *   OV_ERROR_DEFINE(my_error, ov_error_type_generic, ov_error_generic_fail, "Something went wrong");
- *   OV_ERROR_SET(&err, &my_error);
+ *   OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Something went wrong");
+ *   OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, gettext("Something went wrong"));
  */
-#define OV_ERROR_SET(err_ptr, info_ptr) (ov_error_set((err_ptr), (info_ptr)ERR_FILEPOS_VALUES))
+#define OV_ERROR_SET(err_ptr, error_type, error_code, message)                                                         \
+  (ov_error_set((err_ptr),                                                                                             \
+                &(struct ov_error_info const){                                                                         \
+                    .type = (error_type),                                                                              \
+                    .flag_context_is_static = -1,                                                                      \
+                    .code = (error_code),                                                                              \
+                    .context = (message),                                                                              \
+                } ERR_FILEPOS_VALUES))
 
 /**
  * @brief Set generic error with message
@@ -513,12 +507,7 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  * @example
  *   OV_ERROR_SET_GENERIC(&err, ov_error_generic_invalid_argument);
  */
-#define OV_ERROR_SET_GENERIC(err_ptr, error_code)                                                                      \
-  (ov_error_set((err_ptr),                                                                                             \
-                &(struct ov_error_info const){                                                                         \
-                    .type = ov_error_type_generic,                                                                     \
-                    .code = (error_code),                                                                              \
-                } ERR_FILEPOS_VALUES))
+#define OV_ERROR_SET_GENERIC(err_ptr, error_code) OV_ERROR_SET((err_ptr), ov_error_type_generic, (error_code), NULL)
 
 /**
  * @brief Set errno-based error
@@ -533,12 +522,7 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  * @example
  *   OV_ERROR_SET_ERRNO(&err, ENOENT);
  */
-#define OV_ERROR_SET_ERRNO(err_ptr, errno)                                                                             \
-  (ov_error_set((err_ptr),                                                                                             \
-                &(struct ov_error_info const){                                                                         \
-                    .type = ov_error_type_errno,                                                                       \
-                    .code = (errno),                                                                                   \
-                } ERR_FILEPOS_VALUES))
+#define OV_ERROR_SET_ERRNO(err_ptr, errno) OV_ERROR_SET((err_ptr), ov_error_type_errno, (errno), NULL)
 
 #ifdef _WIN32
 /**
@@ -555,12 +539,7 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  *   HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
  *   OV_ERROR_SET_HRESULT(&err, hr);
  */
-#  define OV_ERROR_SET_HRESULT(err_ptr, hresult)                                                                       \
-    (ov_error_set((err_ptr),                                                                                           \
-                  &(struct ov_error_info const){                                                                       \
-                      .type = ov_error_type_hresult,                                                                   \
-                      .code = (hresult),                                                                               \
-                  } ERR_FILEPOS_VALUES))
+#  define OV_ERROR_SET_HRESULT(err_ptr, hresult) OV_ERROR_SET((err_ptr), ov_error_type_hresult, (hresult), NULL)
 #endif
 
 /**
@@ -581,7 +560,12 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  */
 #define OV_ERROR_SETF(err_ptr, error_type, error_code, reference, format, ...)                                         \
   (ov_error_setf((err_ptr),                                                                                            \
-                 (&(struct ov_error_info const){.type = (error_type), .code = (error_code), .context = (format)}),     \
+                 (&(struct ov_error_info const){                                                                       \
+                     .type = (error_type),                                                                             \
+                     .flag_context_is_static = 0,                                                                      \
+                     .code = (error_code),                                                                             \
+                     .context = (format),                                                                              \
+                 }),                                                                                                   \
                  (reference)ERR_FILEPOS_VALUES,                                                                        \
                  __VA_ARGS__))
 
@@ -592,16 +576,26 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  * error chains. Allows adding meaningful context at each level of the call stack.
  *
  * @param err_ptr Pointer to struct ov_error with existing error. If NULL, the operation is silently ignored.
- * @param info_ptr Pointer to static error defined with OV_ERROR_DEFINE
+ * @param error_type Error type (e.g., ov_error_type_generic)
+ * @param error_code Error code (e.g., ov_error_generic_fail)
+ * @param message Static error message string, can be NULL.
+ *                The message is not copied, so the pointer must remain valid until
+ *                the error object is destroyed.
  *
  * @example
- *   OV_ERROR_DEFINE(file_error, ov_error_type_generic, ov_error_generic_fail, "Failed to process file");
  *   if (!some_func(&err)) {
- *     OV_ERROR_PUSH(&err, &file_error); // Add context to existing error
+ *     OV_ERROR_PUSH(&err, ov_error_type_generic, ov_error_generic_fail, "Failed to process file");
  *     goto cleanup;
  *   }
  */
-#define OV_ERROR_PUSH(err_ptr, info_ptr) (ov_error_push((err_ptr), (info_ptr)ERR_FILEPOS_VALUES))
+#define OV_ERROR_PUSH(err_ptr, error_type, error_code, message)                                                        \
+  (ov_error_push((err_ptr),                                                                                            \
+                 &(struct ov_error_info const){                                                                        \
+                     .type = (error_type),                                                                             \
+                     .flag_context_is_static = -1,                                                                     \
+                     .code = (error_code),                                                                             \
+                     .context = (message),                                                                             \
+                 } ERR_FILEPOS_VALUES))
 
 /**
  * @brief Add formatted error information to existing error with printf-like formatting
@@ -624,7 +618,12 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  */
 #define OV_ERROR_PUSHF(err_ptr, error_type, error_code, reference, format, ...)                                        \
   (ov_error_pushf((err_ptr),                                                                                           \
-                  (&(struct ov_error_info const){.type = (error_type), .code = (error_code), .context = (format)}),    \
+                  (&(struct ov_error_info const){                                                                      \
+                      .type = (error_type),                                                                            \
+                      .flag_context_is_static = 0,                                                                     \
+                      .code = (error_code),                                                                            \
+                      .context = (format),                                                                             \
+                  }),                                                                                                  \
                   (reference)ERR_FILEPOS_VALUES,                                                                       \
                   __VA_ARGS__))
 /**

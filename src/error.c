@@ -103,14 +103,12 @@ static bool pushfv(struct ov_error *const target,
     return false;
   }
 
-  OV_ERROR_DEFINE(format_error, ov_error_type_generic, ov_error_generic_fail, "failed to generate error message");
-
   char *context = NULL;
   bool result = false;
 
   bool const b = ov_vsprintf_char(&context, reference, info->context, err, valist);
   if (!b) {
-    OV_ERROR_PUSH(err, &format_error);
+    OV_ERROR_PUSH(err, ov_error_type_generic, ov_error_generic_fail, "failed to generate error message");
     goto cleanup;
   }
   if (!push(

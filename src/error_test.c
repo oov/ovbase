@@ -90,15 +90,14 @@ static void test_ov_error_different_types(void) {
 #endif
 }
 
-static void test_ov_error_define_string_macro(void) {
+static void test_ov_error_set_macro(void) {
   struct ov_error err = {0};
 
-  // Test that OV_ERROR_DEFINE creates proper constant strings
-  OV_ERROR_DEFINE(test_error_msg, ov_error_type_generic, ov_error_generic_fail, "This is a test error message");
-  OV_ERROR_SET(&err, &test_error_msg);
+  // Test that OV_ERROR_SET creates proper error structures
+  OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "This is a test error message");
   TEST_CHECK(err.stack[0].info.type == ov_error_type_generic);
   TEST_CHECK(err.stack[0].info.code == ov_error_generic_fail);
-  TEST_CHECK(err.stack[0].info.context == test_error_msg.context);
+  TEST_CHECK(strcmp(err.stack[0].info.context, "This is a test error message") == 0);
 
   OV_ERROR_DESTROY(&err);
 }
@@ -288,27 +287,27 @@ static void test_ov_error_formatting(void) {
 #endif
 }
 
-static void test_ov_error_static_errors(void) {
+static void test_ov_error_direct_parameters(void) {
   struct ov_error err = {0};
 
-  // Test static error setting with predefined message
-  OV_ERROR_DEFINE(predefined_error, ov_error_type_generic, ov_error_generic_fail, "Test error message 1");
-  OV_ERROR_SET(&err, &predefined_error);
+  // Test error setting with direct parameters
+  OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test error message 1");
 
-  TEST_CHECK(err.stack[0].info.type == ov_error_type_generic);
-  TEST_CHECK(err.stack[0].info.code == ov_error_generic_fail);
-  TEST_CHECK(err.stack[0].info.context != NULL);
-  TEST_CHECK(strcmp(err.stack[0].info.context, "Test error message 1") == 0);
-  // With static, the pointer should point directly to the static string's buffer
-  TEST_CHECK(err.stack[0].info.context == predefined_error.context);
+  // Use public API to verify error state
+  TEST_CHECK(ov_error_is(&err, ov_error_type_generic, ov_error_generic_fail));
+
+  // Test string conversion to verify message
+  char *str = NULL;
+  TEST_CHECK(ov_error_to_string(&err, &str, false, NULL));
+  TEST_CHECK(str != NULL);
+  TEST_CHECK(strstr(str, "Test error message 1") != NULL);
+  OV_ARRAY_DESTROY(&str);
 
   OV_ERROR_DESTROY(&err);
 
-  // Test with NULL static error (should not create error state)
-  OV_ERROR_SET(&err, NULL);
-  TEST_CHECK(err.stack[0].info.type == ov_error_type_invalid);
-  TEST_CHECK(err.stack[0].info.code == 0);
-  TEST_CHECK(err.stack[0].info.context == NULL);
+  // Test with NULL message
+  OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, NULL);
+  TEST_CHECK(ov_error_is(&err, ov_error_type_generic, ov_error_generic_fail));
 
   OV_ERROR_DESTROY(&err);
 }
@@ -350,11 +349,9 @@ static void test_ov_error_string_conversion(void) {
   struct ov_error target = {0};
   char *str = NULL;
 
-  OV_ERROR_DEFINE(test_error, ov_error_type_generic, ov_error_generic_fail, "Test message");
-  OV_ERROR_DEFINE(test_parent_error, ov_error_type_generic, ov_error_generic_fail, "Test parent message");
-  OV_ERROR_SET(&target, &test_error);
+  OV_ERROR_SET(&target, ov_error_type_generic, ov_error_generic_fail, "Test message");
   OV_ERROR_TRACE(&target);
-  OV_ERROR_PUSH(&target, &test_parent_error);
+  OV_ERROR_PUSH(&target, ov_error_type_generic, ov_error_generic_fail, "Test parent message");
 
   // Test both basic and stack trace conversion
   TEST_CHECK(ov_error_to_string(&target, &str, false, NULL));
@@ -435,8 +432,6 @@ static void test_ov_error_autofill_hook(void) {
   TEST_CHECK(ov_error_autofill_message(&target, NULL));
   TEST_CHECK(target.info.context != NULL);
   TEST_CHECK(strcmp(target.info.context, "Custom hook message") == 0);
-
-  // Static message from OV_ERROR_DEFINE doesn't need cleanup
 
   // Test hook for unknown error type
   target = (struct ov_error_stack){0};
@@ -543,8 +538,7 @@ static void test_ov_error_output_hook(void) {
   ov_error_set_output_hook(test_output_hook_capture);
 
   // Test error reporting with hook
-  OV_ERROR_DEFINE(test_error, ov_error_type_generic, ov_error_generic_fail, "Test hook output");
-  OV_ERROR_SET(&err, &test_error);
+  OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test hook output");
   TEST_CHECK(OV_ERROR_REPORT(&err, "Hook test message"));
   verify_clean_state(&err);
 
@@ -562,7 +556,7 @@ static void test_ov_error_output_hook(void) {
   // Test suppression hook
   ov_error_set_output_hook(test_output_hook_suppress);
 
-  OV_ERROR_SET(&err, &test_error);
+  OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test error");
   TEST_CHECK(OV_ERROR_REPORT(&err, "Suppressed message"));
   verify_clean_state(&err);
 
@@ -573,7 +567,7 @@ static void test_ov_error_output_hook(void) {
   ov_error_set_output_hook(NULL);
 
   // Test that hook is properly reset (this would output to stderr by default)
-  OV_ERROR_SET(&err, &test_error);
+  OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test error");
   TEST_CHECK(OV_ERROR_REPORT(&err, "Default output test"));
   verify_clean_state(&err);
 
@@ -587,8 +581,7 @@ static void test_ov_error_reporting(void) {
   struct ov_error err = {0};
 
   // Test error reporting and cleanup
-  OV_ERROR_DEFINE(test_error, ov_error_type_generic, ov_error_generic_fail, "Test error");
-  OV_ERROR_SET(&err, &test_error);
+  OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test error");
   TEST_CHECK(OV_ERROR_REPORT(&err, "Test operation failed"));
   verify_clean_state(&err);
 
@@ -601,14 +594,14 @@ TEST_LIST = {
     {"ov_error_core_functionality", test_ov_error_core_functionality},
     {"ov_error_null_safety", test_ov_error_null_safety},
     {"ov_error_different_types", test_ov_error_different_types},
-    {"ov_error_define_string_macro", test_ov_error_define_string_macro},
+    {"ov_error_set_macro", test_ov_error_set_macro},
     {"ov_error_filepos_tracking", test_ov_error_filepos_tracking},
     {"ov_error_lifecycle_management", test_ov_error_lifecycle_management},
     {"ov_error_push_basic", test_ov_error_push_basic},
     {"ov_error_push_multiple_levels", test_ov_error_push_multiple_levels},
     {"ov_error_push_call_stack_overflow", test_ov_error_push_call_stack_overflow},
     {"ov_error_formatting", test_ov_error_formatting},
-    {"ov_error_static_errors", test_ov_error_static_errors},
+    {"ov_error_direct_parameters", test_ov_error_direct_parameters},
     {"ov_error_message_autofill", test_ov_error_message_autofill},
     {"ov_error_autofill_hook", test_ov_error_autofill_hook},
     {"ov_error_output_hook", test_ov_error_output_hook},
