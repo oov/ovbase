@@ -713,16 +713,12 @@ void ov_mem_free(void *const pp MEM_FILEPOS_PARAMS);
  * @param n Number of items to allocate
  * @param item_size Size of each item in bytes
  * @param align Alignment boundary (power of 2, max 256 bytes)
- * @param err Pointer to struct ov_error for error information
- * @return true on success, false on failure (check err for details)
+ * @return true on success, false on failure
  *
  * @see OV_ALIGNED_ALLOC
  */
-NODISCARD bool ov_mem_aligned_alloc(void *const pp,
-                                    size_t const n,
-                                    size_t const item_size,
-                                    size_t const align,
-                                    struct ov_error *const err MEM_FILEPOS_PARAMS);
+NODISCARD bool
+ov_mem_aligned_alloc(void *const pp, size_t const n, size_t const item_size, size_t const align MEM_FILEPOS_PARAMS);
 
 /**
  * @brief Low-level implementation for OV_ALIGNED_FREE
@@ -798,15 +794,13 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
  * @param n Number of items to allocate
  * @param item_size Size of each item in bytes
  * @param align Alignment boundary (power of 2, max 256 bytes)
- * @param err Pointer to struct ov_error for error information
- * @return true on success, false on failure (check err for details)
+ * @return true on success, false on failure
  *
  * @example
  *   void *aligned_ptr = NULL;
- *   struct ov_error err = {0};
  *
  *   // Allocate 10 integers aligned to 32-byte boundary
- *   if (!OV_ALIGNED_ALLOC(&aligned_ptr, 10, sizeof(int), 32, &err)) {
+ *   if (!OV_ALIGNED_ALLOC(&aligned_ptr, 10, sizeof(int), 32)) {
  *     // Handle error
  *   }
  *
@@ -814,8 +808,8 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
  *
  *   OV_ALIGNED_FREE(&aligned_ptr);  // aligned_ptr becomes NULL
  */
-#define OV_ALIGNED_ALLOC(pp, n, item_size, align, err)                                                                 \
-  ov_mem_aligned_alloc((pp), (n), (item_size), (align), (err)MEM_FILEPOS_VALUES)
+#define OV_ALIGNED_ALLOC(pp, n, item_size, align)                                                                      \
+  ov_mem_aligned_alloc((pp), (n), (item_size), (align)MEM_FILEPOS_VALUES)
 
 /**
  * @brief Free aligned memory allocated with OV_ALIGNED_ALLOC
@@ -825,15 +819,6 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
  * the original pointer before freeing. The pointer is automatically set to NULL after freeing.
  *
  * @param pp Pointer to the pointer to aligned memory (will be set to NULL)
- *
- * @example
- *   void *aligned_ptr = NULL;
- *   struct ov_error err = {0};
- *
- *   OV_ALIGNED_ALLOC(&aligned_ptr, 10, sizeof(int), 32, &err);
- *
- *   // Free the aligned memory
- *   OV_ALIGNED_FREE(&aligned_ptr);  // aligned_ptr is now NULL
  */
 #define OV_ALIGNED_FREE(pp) ov_mem_aligned_free((pp)MEM_FILEPOS_VALUES)
 

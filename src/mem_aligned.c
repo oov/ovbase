@@ -18,19 +18,15 @@
 bool ov_mem_aligned_alloc(void *const pp,
                           size_t const n,
                           size_t const item_size,
-                          size_t const align,
-                          struct ov_error *const err MEM_FILEPOS_PARAMS) {
+                          size_t const align MEM_FILEPOS_PARAMS) {
   if (!pp || !n || !item_size || align > 256) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
   }
   if (*(void **)pp != NULL) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
   }
   *(void **)pp = mi_malloc_aligned(n * item_size, align);
   if (*(void **)pp == NULL) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     return false;
   }
 #  if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
@@ -58,19 +54,15 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS) {
 bool ov_mem_aligned_alloc(void *const pp,
                           size_t const n,
                           size_t const item_size,
-                          size_t const align,
-                          struct ov_error *const err MEM_FILEPOS_PARAMS) {
+                          size_t const align MEM_FILEPOS_PARAMS) {
   if (!pp || !n || !item_size || align > 256) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
   }
   if (*(void **)pp != NULL) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
   }
   uint8_t *p = NULL;
   if (!mem_core_(&p, n * item_size + align MEM_FILEPOS_VALUES_PASSTHRU)) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     return false;
   }
   size_t const offset = align - (((size_t)p) % align);
