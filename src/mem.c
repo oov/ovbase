@@ -288,16 +288,11 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
   return true;
 }
 
-bool ov_mem_realloc(void *const pp,
-                    size_t const n,
-                    size_t const item_size,
-                    struct ov_error *const err MEM_FILEPOS_PARAMS) {
+bool ov_mem_realloc(void *const pp, size_t const n, size_t const item_size MEM_FILEPOS_PARAMS) {
   if (!pp || !item_size) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
   }
   if (!mem_core_(pp, n * item_size MEM_FILEPOS_VALUES_PASSTHRU)) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     return false;
   }
   return true;

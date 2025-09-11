@@ -49,7 +49,7 @@ struct ov_hashmap *ov_hashmap_create_dynamic(size_t const item_size,
   struct ov_hashmap *result = NULL;
   struct ov_hashmap *hm = NULL;
 
-  if (!ov_mem_realloc(&hm, 1, sizeof(*hm), NULL MEM_FILEPOS_VALUES_PASSTHRU)) {
+  if (!ov_mem_realloc(&hm, 1, sizeof(*hm) MEM_FILEPOS_VALUES_PASSTHRU)) {
     goto cleanup;
   }
 

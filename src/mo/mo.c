@@ -109,15 +109,15 @@ bool mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen,
     goto cleanup;
   }
 
-  if (!OV_REALLOC(mpp, 1, sizeof(struct mo), err)) {
-    OV_ERROR_TRACE(err);
+  if (!OV_REALLOC(mpp, 1, sizeof(struct mo))) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     goto cleanup;
   }
   mp = *mpp;
   *mp = (struct mo){0};
 
-  if (!OV_REALLOC(&mp->msg, num_strings, sizeof(struct mo_msg), err)) {
-    OV_ERROR_TRACE(err);
+  if (!OV_REALLOC(&mp->msg, num_strings, sizeof(struct mo_msg))) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     goto cleanup;
   }
   memset(mp->msg, 0, sizeof(struct mo_msg) * num_strings);

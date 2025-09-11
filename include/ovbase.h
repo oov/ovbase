@@ -381,15 +381,15 @@ bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_er
  * @return true on success, false on failure (check err for details)
  *
  * @example
- *   struct ov_error error = {0};
- *   OV_ERROR_SET(&error, ov_error_type_generic, ov_error_generic_fail, "Operation failed");
- *   
- *   char *error_msg = NULL;
- *   if (ov_error_to_string(&error, &error_msg, true, NULL)) {
- *     printf("Error: %s", error_msg);
- *     OV_ARRAY_DESTROY(&error_msg);
+ *   struct ov_error err = {0};
+ *   OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Operation failed");
+ *
+ *   char *msg = NULL;
+ *   if (ov_error_to_string(&err, &msg, true, NULL)) {
+ *     printf("Error: %s", msg);
+ *     OV_ARRAY_DESTROY(&msg);
  *   }
- *   OV_ERROR_DESTROY(&error);
+ *   OV_ERROR_DESTROY(&err);
  */
 bool ov_error_to_string(struct ov_error const *const src,
                         char **const dest,
@@ -653,8 +653,7 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
 long ov_mem_get_allocated_count(void);
 #endif
 
-NODISCARD bool
-ov_mem_realloc(void *const pp, size_t const n, size_t const item_size, struct ov_error *const err MEM_FILEPOS_PARAMS);
+NODISCARD bool ov_mem_realloc(void *const pp, size_t const n, size_t const item_size MEM_FILEPOS_PARAMS);
 void ov_mem_free(void *const pp MEM_FILEPOS_PARAMS);
 NODISCARD bool
 ov_mem_aligned_alloc(void *const pp, size_t const n, size_t const item_size, size_t const align MEM_FILEPOS_PARAMS);
@@ -670,24 +669,22 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
  * @param pp Pointer to the pointer to memory (will be updated)
  * @param n Number of items to allocate
  * @param item_size Size of each item in bytes
- * @param err_ptr Pointer to struct ov_error for error information
- * @return true on success, false on failure (check err_ptr for details)
+ * @return true on success, false on failure
  *
  * @example
  *   void *ptr = NULL;
- *   struct ov_error err = {0};
  *
  *   // Allocate memory for 10 integers
- *   if (!OV_REALLOC(&ptr, 10, sizeof(int), &err)) {
+ *   if (!OV_REALLOC(&ptr, 10, sizeof(int))) {
  *     // Handle error
  *   }
  *
  *   // Resize to 20 integers
- *   if (!OV_REALLOC(&ptr, 20, sizeof(int), &err)) {
+ *   if (!OV_REALLOC(&ptr, 20, sizeof(int))) {
  *     // Handle error
  *   }
  */
-#define OV_REALLOC(pp, n, item_size, err_ptr) (ov_mem_realloc((pp), (n), (item_size), (err_ptr)MEM_FILEPOS_VALUES))
+#define OV_REALLOC(pp, n, item_size) (ov_mem_realloc((pp), (n), (item_size)MEM_FILEPOS_VALUES))
 
 /**
  * @brief Free memory allocated with OV_REALLOC
@@ -699,10 +696,9 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
  *
  * @example
  *   void *ptr = NULL;
- *   struct ov_error err = {0};
  *
  *   // Allocate memory
- *   OV_REALLOC(&ptr, 10, sizeof(int), &err);
+ *   OV_REALLOC(&ptr, 10, sizeof(int));
  *
  *   // Free memory
  *   OV_FREE(&ptr);  // ptr becomes NULL
