@@ -85,9 +85,6 @@ set(OVBASE_SOURCES
   mem.c
   mem_aligned.c
   mo/mo.c
-  mo/mo_printf_ex.c
-  mo/char.c
-  mo/wchar.c
   num/char/atoi.c
   num/char/atof.c
   num/char/atou.c
