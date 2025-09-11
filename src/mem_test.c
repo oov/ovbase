@@ -1,4 +1,3 @@
-#include <ovbase.h>
 #include <ovtest.h>
 
 static void test_ov_realloc_basic(void) {

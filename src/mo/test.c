@@ -1,6 +1,7 @@
 #include "mo.c"
-#include <ovarray.h>
 #include <ovtest.h>
+
+#include <ovarray.h>
 
 #include <stdio.h>
 #ifndef _WIN32

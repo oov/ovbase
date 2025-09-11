@@ -1,6 +1,6 @@
-#include <ovarray.h>
-#include <ovhashmap.h>
 #include <ovtest.h>
+
+#include <ovhashmap.h>
 
 #include <inttypes.h>
 

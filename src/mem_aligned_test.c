@@ -1,4 +1,3 @@
-#include <ovbase.h>
 #include <ovtest.h>
 
 static bool is_aligned(void *ptr, size_t alignment) { return ((uintptr_t)ptr % alignment) == 0; }

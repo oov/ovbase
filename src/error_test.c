@@ -1,6 +1,6 @@
 #include <ovtest.h>
 
-#include <ovbase.h>
+#include <ovarray.h>
 
 // Helper functions to reduce code duplication
 static void

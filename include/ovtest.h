@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <ovarray.h>
 #include <ovbase.h>
 
 #ifdef __GNUC__

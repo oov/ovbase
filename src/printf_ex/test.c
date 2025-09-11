@@ -1,7 +1,7 @@
-#include <ovprintf_ex.h>
+#include <ovtest.h>
 
 #include <ovarray.h>
-#include <ovtest.h>
+#include <ovprintf_ex.h>
 
 #include <wchar.h>
 
