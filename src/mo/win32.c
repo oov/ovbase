@@ -70,7 +70,7 @@ bool mo_get_preferred_ui_languages(NATIVE_CHAR **dest, struct ov_error *const er
   }
 
   if (!mo_get_preferred_ui_languages_core(dest, false, err)) {
-    OV_ERROR_TRACE(err);
+    OV_ERROR_ADD_TRACE(err);
     return false;
   }
 
@@ -217,7 +217,7 @@ bool mo_parse_from_resource_ex(struct mo **const mpp,
 
   r = find_resource(hmod, MAKEINTRESOURCEW(10), L"MO", preferred_languages, err);
   if (!r) {
-    OV_ERROR_TRACE(err);
+    OV_ERROR_ADD_TRACE(err);
     goto cleanup;
   }
 
@@ -246,7 +246,7 @@ bool mo_parse_from_resource_ex(struct mo **const mpp,
 
   // Call mo_parse using new error system
   if (!mo_parse(mpp, p, sz, err)) {
-    OV_ERROR_TRACE(err);
+    OV_ERROR_ADD_TRACE(err);
     goto cleanup;
   }
   result = true;
@@ -265,12 +265,12 @@ bool mo_parse_from_resource(struct mo **const mpp, void *const hmodule, struct o
   bool result = false;
 
   if (!mo_get_preferred_ui_languages_core(&langs, false, err)) {
-    OV_ERROR_TRACE(err);
+    OV_ERROR_ADD_TRACE(err);
     goto cleanup;
   }
 
   if (!mo_parse_from_resource_ex(mpp, hmodule, langs, err)) {
-    OV_ERROR_TRACE(err);
+    OV_ERROR_ADD_TRACE(err);
     goto cleanup;
   }
 

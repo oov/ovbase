@@ -142,7 +142,7 @@ struct ov_error_info {
  * managed automatically by the error system.
  *
  * @see struct ov_error for the user-facing error container
- * @see OV_ERROR_TRACE, OV_ERROR_PUSH for stack manipulation
+ * @see OV_ERROR_ADD_TRACE, OV_ERROR_PUSH for stack manipulation
  */
 struct ov_error_stack {
   struct ov_error_info info;
@@ -177,7 +177,7 @@ struct ov_error_stack {
  *
  *   // Use goto cleanup pattern instead of early returns
  *   if (!some_func(&ptr, err)) {
- *     OV_ERROR_TRACE(err); // Add stack trace if not generating new error
+ *     OV_ERROR_ADD_TRACE(err); // Add stack trace if not generating new error
  *     goto cleanup;
  *   }
  *
@@ -199,7 +199,7 @@ struct ov_error_stack {
  *       OV_ERROR_DESTROY(err); // Clean up error for success case
  *       goto cleanup; // Treat as success
  *     }
- *     OV_ERROR_TRACE(err);
+ *     OV_ERROR_ADD_TRACE(err);
  *     goto cleanup;
  *   }
  *
@@ -225,14 +225,14 @@ struct ov_error_stack {
  * - Always initialize to {0}: `struct ov_error err = {0};`
  * - Initialize result variable to false at the beginning
  * - Use goto cleanup pattern to avoid resource leaks
- * - Add OV_ERROR_TRACE() when passing errors up without modification
+ * - Add OV_ERROR_ADD_TRACE() when passing errors up without modification
  * - Use OV_ERROR_DESTROY() to clean up error memory when needed
  * - Never use early returns before cleanup
  * - Set result = true only when all operations succeed, just before cleanup
  * - NEVER check error contents directly (err->type == 0, etc.) as err might be NULL
  *
  * @see OV_ERROR_SET, OV_ERROR_SET_GENERIC, OV_ERROR_SETF for setting errors
- * @see OV_ERROR_TRACE, OV_ERROR_PUSH for adding stack context
+ * @see OV_ERROR_ADD_TRACE, OV_ERROR_PUSH for adding stack context
  * @see OV_ERROR_DESTROY for cleanup
  * @see ov_error_is, ov_error_get_code for error inspection
  */
@@ -613,11 +613,11 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  *
  * @example
  *   if (!some_func(&err)) {
- *     OV_ERROR_TRACE(&err); // Add current location to stack trace
+ *     OV_ERROR_ADD_TRACE(&err); // Add current location to stack trace
  *     goto cleanup;
  *   }
  */
-#define OV_ERROR_TRACE(err_ptr)                                                                                        \
+#define OV_ERROR_ADD_TRACE(err_ptr)                                                                                    \
   (ov_error_push(                                                                                                      \
       (err_ptr),                                                                                                       \
       (&(struct ov_error_info const){ov_error_type_generic, 0, ov_error_generic_trace, NULL})ERR_FILEPOS_VALUES))
@@ -625,7 +625,7 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
 /**
  * @brief Add formatted stack trace information to existing error with printf-like formatting
  *
- * Similar to OV_ERROR_TRACE but allows adding formatted messages to the stack trace.
+ * Similar to OV_ERROR_ADD_TRACE but allows adding formatted messages to the stack trace.
  * Used when you want to add contextual information to the trace without changing error type/code.
  *
  * @param err_ptr Pointer to existing error to add trace information to
@@ -635,11 +635,11 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  *
  * @example
  *   if (!some_func(&err)) {
- *     OV_ERROR_TRACEF(&err, NULL, "Processing item %d of %d", current, total);
+ *     OV_ERROR_ADD_TRACEF(&err, NULL, "Processing item %d of %d", current, total);
  *     goto cleanup;
  *   }
  */
-#define OV_ERROR_TRACEF(err_ptr, reference, format, ...)                                                               \
+#define OV_ERROR_ADD_TRACEF(err_ptr, reference, format, ...)                                                           \
   (ov_error_pushf((err_ptr),                                                                                           \
                   (&(struct ov_error_info const){ov_error_type_generic, 0, ov_error_generic_trace, (format)}),         \
                   (reference)ERR_FILEPOS_VALUES,                                                                       \

@@ -310,7 +310,7 @@ bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_er
   if (g_autofill_hook) {
     if (!g_autofill_hook(target, err)) {
       // Hook failed
-      OV_ERROR_TRACE(err);
+      OV_ERROR_ADD_TRACE(err);
       goto cleanup;
     }
     // Hook succeeded - if context was set by hook, return
@@ -324,20 +324,20 @@ bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_er
   switch (target->info.type) {
   case ov_error_type_generic:
     if (!set_generic_message(target, err)) {
-      OV_ERROR_TRACE(err);
+      OV_ERROR_ADD_TRACE(err);
       goto cleanup;
     }
     break;
   case ov_error_type_errno:
     if (!set_errno_message(target, err)) {
-      OV_ERROR_TRACE(err);
+      OV_ERROR_ADD_TRACE(err);
       goto cleanup;
     }
     break;
 #ifdef _WIN32
   case ov_error_type_hresult:
     if (!set_hresult_message(target, err)) {
-      OV_ERROR_TRACE(err);
+      OV_ERROR_ADD_TRACE(err);
       goto cleanup;
     }
     break;
@@ -467,7 +467,7 @@ bool ov_error_to_string(struct ov_error const *const src,
       break;
     }
     if (!ov_error_autofill_message(&src_copy.stack[i], err)) {
-      OV_ERROR_TRACE(err);
+      OV_ERROR_ADD_TRACE(err);
       goto cleanup;
     }
   }
@@ -483,7 +483,7 @@ bool ov_error_to_string(struct ov_error const *const src,
       for (size_t i = 0; i < ext_count; i++) {
         src_copy.stack_extended[i] = src->stack_extended[i];
         if (!ov_error_autofill_message(&src_copy.stack_extended[i], err)) {
-          OV_ERROR_TRACE(err);
+          OV_ERROR_ADD_TRACE(err);
           goto cleanup;
         }
       }

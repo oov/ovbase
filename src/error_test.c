@@ -68,8 +68,8 @@ static void test_ov_error_null_safety(void) {
   // Should not crash when err is NULL for OV_ERROR_DESTROY
   OV_ERROR_DESTROY(NULL);
 
-  // Should not crash when err is NULL for OV_ERROR_TRACE (tested later in stack tests)
-  OV_ERROR_TRACE(NULL);
+  // Should not crash when err is NULL for OV_ERROR_ADD_TRACE (tested later in stack tests)
+  OV_ERROR_ADD_TRACE(NULL);
 
   // All tests pass if we don't crash
 }
@@ -145,14 +145,14 @@ static void level3_function(struct ov_error *err) { OV_ERROR_SET_GENERIC(err, ov
 static void level2_function(struct ov_error *err) {
   level3_function(err);
   if (err->stack[0].info.type != ov_error_type_invalid) {
-    OV_ERROR_TRACE(err);
+    OV_ERROR_ADD_TRACE(err);
   }
 }
 
 static void level1_function(struct ov_error *err) {
   level2_function(err);
   if (err->stack[0].info.type != ov_error_type_invalid) {
-    OV_ERROR_TRACE(err);
+    OV_ERROR_ADD_TRACE(err);
   }
 }
 
@@ -165,16 +165,16 @@ static void test_ov_error_push_basic(void) {
   TEST_CHECK(err.stack[0].filepos.file != NULL);
   TEST_CHECK(err.stack[1].filepos.file == NULL);
 
-  OV_ERROR_TRACE(&err);
+  OV_ERROR_ADD_TRACE(&err);
   TEST_CHECK(err.stack[1].filepos.file != NULL);
   TEST_CHECK(err.stack[2].filepos.file == NULL);
 
   OV_ERROR_DESTROY(&err);
 
   // Test NULL safety and non-error state
-  OV_ERROR_TRACE(NULL); // Should not crash
+  OV_ERROR_ADD_TRACE(NULL); // Should not crash
   verify_clean_state(&err);
-  OV_ERROR_TRACE(&err); // Should not modify clean state
+  OV_ERROR_ADD_TRACE(&err); // Should not modify clean state
   verify_clean_state(&err);
 }
 
@@ -207,7 +207,7 @@ static void test_ov_error_push_call_stack_overflow(void) {
   // Fill up the call_stack array (first one already used)
   size_t const stack_size = sizeof(err.stack) / sizeof(err.stack[0]);
   for (size_t i = 1; i < stack_size; i++) {
-    OV_ERROR_TRACE(&err);
+    OV_ERROR_ADD_TRACE(&err);
     TEST_CHECK(err.stack[i].filepos.file != NULL);
   }
 
@@ -224,12 +224,12 @@ static void test_ov_error_push_call_stack_overflow(void) {
 #endif
 
   // Next push should go to call_stack_extended
-  OV_ERROR_TRACE(&err);
+  OV_ERROR_ADD_TRACE(&err);
   TEST_CHECK(err.stack_extended != NULL);
   TEST_CHECK(OV_ARRAY_LENGTH(err.stack_extended) == 1);
 
   // Add one more to extended with formatted message (heap allocation)
-  OV_ERROR_TRACEF(&err, NULL, "Extended stack trace with number %d", 42);
+  OV_ERROR_ADD_TRACEF(&err, NULL, "Extended stack trace with number %d", 42);
   TEST_CHECK(OV_ARRAY_LENGTH(err.stack_extended) == 2);
   TEST_CHECK(err.stack_extended[1].info.context != NULL);
   TEST_CHECK(strstr(err.stack_extended[1].info.context, "42") != NULL);
@@ -350,7 +350,7 @@ static void test_ov_error_string_conversion(void) {
   char *str = NULL;
 
   OV_ERROR_SET(&target, ov_error_type_generic, ov_error_generic_fail, "Test message");
-  OV_ERROR_TRACE(&target);
+  OV_ERROR_ADD_TRACE(&target);
   OV_ERROR_PUSH(&target, ov_error_type_generic, ov_error_generic_fail, "Test parent message");
 
   // Test both basic and stack trace conversion

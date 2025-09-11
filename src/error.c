@@ -111,7 +111,7 @@ static bool pushfv(struct ov_error *const target,
   }
   if (!push(
           target, &(struct ov_error_info const){info->type, 0, info->code, context}, err ERR_FILEPOS_VALUES_PASSTHRU)) {
-    OV_ERROR_TRACE(err);
+    OV_ERROR_ADD_TRACE(err);
     goto cleanup;
   }
   result = true;
