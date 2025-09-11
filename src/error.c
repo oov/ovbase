@@ -106,9 +106,9 @@ static bool pushfv(struct ov_error *const target,
   char *context = NULL;
   bool result = false;
 
-  bool const b = ov_vsprintf_char(&context, reference, info->context, err, valist);
+  bool const b = ov_vsprintf_char(&context, reference, info->context, valist);
   if (!b) {
-    OV_ERROR_PUSH(err, ov_error_type_generic, ov_error_generic_fail, "failed to generate error message");
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
     goto cleanup;
   }
   if (!push(
