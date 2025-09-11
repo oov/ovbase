@@ -33,42 +33,36 @@ wchar_t *ov_itoa_wchar(int64_t const v, wchar_t buf[32]);
 wchar_t *ov_utoa_wchar(uint64_t const v, wchar_t buf[32]);
 wchar_t *ov_ftoa_wchar(double const d, size_t const frac_len, wchar_t const dot, wchar_t buf[64]);
 
-#ifndef OV_GENERIC_CASE
-#  define OV_GENERIC_CASE(typ, fn)                                                                                     \
-  typ:                                                                                                                 \
-    fn
-#endif
-
 #define ov_atoi(char_const_ptr, dest, strict)                                                                          \
   _Generic((char_const_ptr),                                                                                           \
-      OV_GENERIC_CASE(char *, ov_atoi_char),                                                                           \
-      OV_GENERIC_CASE(char const *, ov_atoi_char),                                                                     \
-      OV_GENERIC_CASE(wchar_t *, ov_atoi_wchar),                                                                       \
-      OV_GENERIC_CASE(wchar_t const *, ov_atoi_wchar))((char_const_ptr), (dest), (strict))
+      char *: ov_atoi_char,                                                                                            \
+      char const *: ov_atoi_char,                                                                                      \
+      wchar_t *: ov_atoi_wchar,                                                                                        \
+      wchar_t const *: ov_atoi_wchar)((char_const_ptr), (dest), (strict))
 #define ov_atou(char_const_ptr, dest, strict)                                                                          \
   _Generic((char_const_ptr),                                                                                           \
-      OV_GENERIC_CASE(char *, ov_atou_char),                                                                           \
-      OV_GENERIC_CASE(char const *, ov_atou_char),                                                                     \
-      OV_GENERIC_CASE(wchar_t *, ov_atou_wchar),                                                                       \
-      OV_GENERIC_CASE(wchar_t const *, ov_atou_wchar))((char_const_ptr), (dest), (strict))
+      char *: ov_atou_char,                                                                                            \
+      char const *: ov_atou_char,                                                                                      \
+      wchar_t *: ov_atou_wchar,                                                                                        \
+      wchar_t const *: ov_atou_wchar)((char_const_ptr), (dest), (strict))
 
 #define ov_itoa(int64_t, char_array_32)                                                                                \
   _Generic(&*(char_array_32),                                                                                          \
-      OV_GENERIC_CASE(char *, ov_itoa_char),                                                                           \
-      OV_GENERIC_CASE(char const *, ov_itoa_char),                                                                     \
-      OV_GENERIC_CASE(wchar_t *, ov_itoa_wchar),                                                                       \
-      OV_GENERIC_CASE(wchar_t const *, ov_itoa_wchar))((int64_t), (char_array_32))
+      char *: ov_itoa_char,                                                                                            \
+      char const *: ov_itoa_char,                                                                                      \
+      wchar_t *: ov_itoa_wchar,                                                                                        \
+      wchar_t const *: ov_itoa_wchar)((int64_t), (char_array_32))
 
 #define ov_utoa(uint64_t, char_array_32)                                                                               \
   _Generic(&*(char_array_32),                                                                                          \
-      OV_GENERIC_CASE(char *, ov_utoa_char),                                                                           \
-      OV_GENERIC_CASE(char const *, ov_utoa_char),                                                                     \
-      OV_GENERIC_CASE(wchar_t *, ov_utoa_wchar),                                                                       \
-      OV_GENERIC_CASE(wchar_t const *, ov_utoa_wchar))((uint64_t), (char_array_32))
+      char *: ov_utoa_char,                                                                                            \
+      char const *: ov_utoa_char,                                                                                      \
+      wchar_t *: ov_utoa_wchar,                                                                                        \
+      wchar_t const *: ov_utoa_wchar)((uint64_t), (char_array_32))
 
 #define ov_ftoa(double, frac_len, dot, char_array_64)                                                                  \
   _Generic(&*(char_array_64),                                                                                          \
-      OV_GENERIC_CASE(char *, ov_ftoa_char),                                                                           \
-      OV_GENERIC_CASE(char const *, ov_ftoa_char),                                                                     \
-      OV_GENERIC_CASE(wchar_t *, ov_ftoa_wchar),                                                                       \
-      OV_GENERIC_CASE(wchar_t const *, ov_ftoa_wchar))((double), (frac_len), (dot), (char_array_64))
+      char *: ov_ftoa_char,                                                                                            \
+      char const *: ov_ftoa_char,                                                                                      \
+      wchar_t *: ov_ftoa_wchar,                                                                                        \
+      wchar_t const *: ov_ftoa_wchar)((double), (frac_len), (dot), (char_array_64))
