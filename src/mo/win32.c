@@ -41,8 +41,8 @@ static bool mo_get_preferred_ui_languages_core(NATIVE_CHAR **dest, bool const id
       OV_ERROR_SET_HRESULT(err, HRESULT_FROM_WIN32(GetLastError()));
       goto cleanup;
     }
-    if (!OV_ARRAY_GROW(dest, len, err)) {
-      OV_ERROR_TRACE(err);
+    if (!OV_ARRAY_GROW(dest, len)) {
+      OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
       goto cleanup;
     }
     if (!fn(flag, &n, *dest, &len)) {

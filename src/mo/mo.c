@@ -206,9 +206,7 @@ char const *mo_pgettext(struct mo const *const mp, char const *const ctxt, char 
   struct mo_msg *msg = NULL;
   size_t const ctxtlen = strlen(ctxt);
   size_t const idlen = strlen(id);
-  struct ov_error err = {0};
-  if (!OV_ARRAY_GROW(&tmp, ctxtlen + 1 + idlen + 1, &err)) {
-    OV_ERROR_DESTROY(&err);
+  if (!OV_ARRAY_GROW(&tmp, ctxtlen + 1 + idlen + 1)) {
     goto cleanup;
   }
   strcpy(tmp, ctxt);
@@ -285,8 +283,8 @@ bool mo_get_preferred_ui_languages(NATIVE_CHAR **dest, struct ov_error *const er
   }
 
   size_t const langlen = strlen(lang);
-  if (!OV_ARRAY_GROW(dest, langlen + 2, err)) {
-    OV_ERROR_TRACE(err);
+  if (!OV_ARRAY_GROW(dest, langlen + 2)) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     return false;
   }
 

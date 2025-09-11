@@ -67,11 +67,9 @@ static bool push(struct ov_error *const target,
     size_t const len = OV_ARRAY_LENGTH(target->stack_extended);
     size_t const cap = OV_ARRAY_CAPACITY(target->stack_extended);
     if (len >= cap) {
-      if (!ov_array_grow((void **)&target->stack_extended,
-                         sizeof(struct ov_error_stack),
-                         cap + 4,
-                         err MEM_FILEPOS_VALUES_PASSTHRU)) {
-        OV_ERROR_TRACE(err);
+      if (!ov_array_grow(
+              (void **)&target->stack_extended, sizeof(struct ov_error_stack), cap + 4 MEM_FILEPOS_VALUES_PASSTHRU)) {
+        OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
         goto cleanup;
       }
     }
@@ -136,8 +134,8 @@ void ov_error_set(struct ov_error *const target, struct ov_error_info const *con
 #if defined(LEAK_DETECTOR) || defined(ALLOCATE_LOGGER)
   {
     // Force heap allocation to ensure leak detection works properly
-    bool const r = ov_array_grow(
-        (void **)&target->stack_extended, sizeof(struct ov_error_stack), 4, NULL MEM_FILEPOS_VALUES_PASSTHRU);
+    bool const r =
+        ov_array_grow((void **)&target->stack_extended, sizeof(struct ov_error_stack), 4 MEM_FILEPOS_VALUES_PASSTHRU);
 #  ifdef NDEBUG
     (void)r;
 #  else

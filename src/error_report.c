@@ -272,8 +272,8 @@ static bool set_hresult_message(struct ov_error_stack *const target, struct ov_e
     goto cleanup;
   }
 
-  if (!OV_ARRAY_GROW(&new_msg, (size_t)utf8_len + 1, err)) {
-    OV_ERROR_TRACE(err);
+  if (!OV_ARRAY_GROW(&new_msg, (size_t)utf8_len + 1)) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     goto cleanup;
   }
 
@@ -475,8 +475,8 @@ bool ov_error_to_string(struct ov_error const *const src,
     size_t const ext_count = OV_ARRAY_LENGTH(src->stack_extended);
     if (ext_count > 0) {
       src_copy.stack_extended = NULL;
-      if (!OV_ARRAY_GROW(&src_copy.stack_extended, ext_count, err)) {
-        OV_ERROR_TRACE(err);
+      if (!OV_ARRAY_GROW(&src_copy.stack_extended, ext_count)) {
+        OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
         goto cleanup;
       }
       OV_ARRAY_SET_LENGTH(src_copy.stack_extended, ext_count);
@@ -494,8 +494,8 @@ bool ov_error_to_string(struct ov_error const *const src,
     // Calculate total string length
     size_t const len = format_error_message(NULL, &src_copy, include_stack_trace);
 
-    if (!OV_ARRAY_GROW(dest, len + 1, err)) {
-      OV_ERROR_TRACE(err);
+    if (!OV_ARRAY_GROW(dest, len + 1)) {
+      OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
       goto cleanup;
     }
 

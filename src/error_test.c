@@ -370,6 +370,7 @@ static void test_ov_error_string_conversion(void) {
 
 // Test hook functions for autofill hook testing
 static bool test_hook_success(struct ov_error_stack *target, struct ov_error *err) {
+  (void)err;
   if (target->info.type == ov_error_type_generic && target->info.code == ov_error_generic_fail) {
     // Use static string for custom message
     static char const custom_hook_msg[] = "Custom hook message";
@@ -381,7 +382,7 @@ static bool test_hook_success(struct ov_error_stack *target, struct ov_error *er
     // Use dynamic allocation for variable messages
     char *custom_msg = NULL;
     char const msg[] = "Custom error type handled by hook";
-    if (!OV_ARRAY_GROW(&custom_msg, sizeof(msg), err)) {
+    if (!OV_ARRAY_GROW(&custom_msg, sizeof(msg))) {
       return false;
     }
     strcpy(custom_msg, msg);
@@ -515,7 +516,7 @@ static void test_output_hook_capture(char const *str) {
     size_t existing_len = g_captured_output ? strlen(g_captured_output) : 0;
     size_t new_len = existing_len + len;
 
-    if (!OV_ARRAY_GROW(&g_captured_output, new_len + 1, NULL)) {
+    if (!OV_ARRAY_GROW(&g_captured_output, new_len + 1)) {
       return; // Failed to allocate
     }
     strcpy(g_captured_output + existing_len, str);
