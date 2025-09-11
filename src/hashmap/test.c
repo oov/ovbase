@@ -17,10 +17,9 @@ static void test_ov_hashmap_dynamic_get_key(void const *const item, void const *
 
 static void test_ov_hashmap_dynamic(void) {
   struct ov_hashmap *hm = NULL;
-  struct ov_error err = {0};
   struct test_item_dynamic const *got = NULL;
 
-  hm = OV_HASHMAP_CREATE_DYNAMIC(sizeof(struct test_item_dynamic), 0, test_ov_hashmap_dynamic_get_key, &err);
+  hm = OV_HASHMAP_CREATE_DYNAMIC(sizeof(struct test_item_dynamic), 0, test_ov_hashmap_dynamic_get_key);
   if (!TEST_CHECK(hm != NULL)) {
     goto cleanup;
   }
@@ -89,7 +88,6 @@ static void test_ov_hashmap_dynamic(void) {
 
 cleanup:
   OV_HASHMAP_DESTROY(&hm);
-  OV_ERROR_DESTROY(&err);
 }
 
 static void test_ov_hashmap_static(void) {
@@ -100,10 +98,9 @@ static void test_ov_hashmap_static(void) {
   };
 
   struct ov_hashmap *hm = NULL;
-  struct ov_error err = {0};
   struct test_item_static const *got = NULL;
 
-  hm = OV_HASHMAP_CREATE_STATIC(sizeof(struct test_item_static), 0, sizeof(int64_t), &err);
+  hm = OV_HASHMAP_CREATE_STATIC(sizeof(struct test_item_static), 0, sizeof(int64_t));
   if (!TEST_CHECK(hm != NULL)) {
     goto cleanup;
   }
@@ -163,7 +160,6 @@ static void test_ov_hashmap_static(void) {
 
 cleanup:
   OV_HASHMAP_DESTROY(&hm);
-  OV_ERROR_DESTROY(&err);
 }
 
 TEST_LIST = {

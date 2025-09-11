@@ -28,20 +28,16 @@ static int compare(void const *const a, void const *const b, void const *const u
   return memcmp(a, b, hm->key_bytes);
 }
 
-struct ov_hashmap *ov_hashmap_create_static(size_t const item_size,
-                                            size_t const cap,
-                                            size_t const key_bytes,
-                                            struct ov_error *const err MEM_FILEPOS_PARAMS) {
+struct ov_hashmap *
+ov_hashmap_create_static(size_t const item_size, size_t const cap, size_t const key_bytes MEM_FILEPOS_PARAMS) {
   if (key_bytes == 0) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return NULL;
   }
 
   struct ov_hashmap *result = NULL;
   struct ov_hashmap *hm = NULL;
 
-  if (!ov_mem_realloc(&hm, 1, sizeof(*hm), err MEM_FILEPOS_VALUES_PASSTHRU)) {
-    OV_ERROR_TRACE(err);
+  if (!ov_mem_realloc(&hm, 1, sizeof(*hm), NULL MEM_FILEPOS_VALUES_PASSTHRU)) {
     goto cleanup;
   }
 
@@ -61,7 +57,6 @@ struct ov_hashmap *ov_hashmap_create_static(size_t const item_size,
     hm->map =
         hashmap_new_with_allocator(ov_hm_realloc, ov_hm_free, item_size, cap, s0, s1, calc_hash, compare, NULL, hm);
     if (!hm->map) {
-      OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
       goto cleanup;
     }
   }

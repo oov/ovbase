@@ -8,12 +8,9 @@ typedef void (*ov_hashmap_get_key_func)(void const *const item, void const **con
 
 NODISCARD struct ov_hashmap *ov_hashmap_create_dynamic(size_t const item_size,
                                                        size_t const cap,
-                                                       ov_hashmap_get_key_func const get_key,
-                                                       struct ov_error *const err MEM_FILEPOS_PARAMS);
-NODISCARD struct ov_hashmap *ov_hashmap_create_static(size_t const item_size,
-                                                      size_t const cap,
-                                                      size_t const key_bytes,
-                                                      struct ov_error *const err MEM_FILEPOS_PARAMS);
+                                                       ov_hashmap_get_key_func const get_key MEM_FILEPOS_PARAMS);
+NODISCARD struct ov_hashmap *
+ov_hashmap_create_static(size_t const item_size, size_t const cap, size_t const key_bytes MEM_FILEPOS_PARAMS);
 void ov_hashmap_destroy(struct ov_hashmap **const hmp MEM_FILEPOS_PARAMS);
 void ov_hashmap_clear(struct ov_hashmap *const hm);
 NODISCARD size_t ov_hashmap_count(struct ov_hashmap const *const hm);
@@ -22,12 +19,12 @@ NODISCARD bool ov_hashmap_set(struct ov_hashmap *const hm, void const *const ite
 void const *ov_hashmap_delete(struct ov_hashmap *const hm, void const *const key_item);
 NODISCARD bool ov_hashmap_iter(struct ov_hashmap *const hm, size_t *const i, void **const item);
 
-#define OV_HASHMAP_CREATE_DYNAMIC(item_size, cap, get_key_fn, err)                                                     \
-  ov_hashmap_create_dynamic((item_size), (cap), (get_key_fn), (err)MEM_FILEPOS_VALUES)
-#define OV_HASHMAP_CREATE_STATIC(item_size, cap, key_size, err)                                                        \
-  ov_hashmap_create_static((item_size), (cap), (key_size), (err)MEM_FILEPOS_VALUES)
-#define OV_HASHMAP_CREATE(item_size, cap, key, err)                                                                    \
-  _Generic((key), size_t: ov_hashmap_create_static, default: ov_hashmap_create_dynamic)(item_size, cap, key, err)
+#define OV_HASHMAP_CREATE_DYNAMIC(item_size, cap, get_key_fn)                                                          \
+  ov_hashmap_create_dynamic((item_size), (cap), (get_key_fn)MEM_FILEPOS_VALUES)
+#define OV_HASHMAP_CREATE_STATIC(item_size, cap, key_size)                                                             \
+  ov_hashmap_create_static((item_size), (cap), (key_size)MEM_FILEPOS_VALUES)
+#define OV_HASHMAP_CREATE(item_size, cap, key)                                                                         \
+  _Generic((key), size_t: ov_hashmap_create_static, default: ov_hashmap_create_dynamic)(item_size, cap, key)
 #define OV_HASHMAP_DESTROY(hmp) ov_hashmap_destroy((hmp)MEM_FILEPOS_VALUES)
 #define OV_HASHMAP_CLEAR(hmp) ov_hashmap_clear(hmp)
 #define OV_HASHMAP_COUNT(hmp) ov_hashmap_count(hmp)
