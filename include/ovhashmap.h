@@ -2,23 +2,6 @@
 
 #include <ovbase.h>
 
-struct ov_hashmap;
-
-typedef void (*ov_hashmap_get_key_func)(void const *const item, void const **const key, size_t *const key_bytes);
-
-NODISCARD struct ov_hashmap *ov_hashmap_create_dynamic(size_t const item_size,
-                                                       size_t const cap,
-                                                       ov_hashmap_get_key_func const get_key MEM_FILEPOS_PARAMS);
-NODISCARD struct ov_hashmap *
-ov_hashmap_create_static(size_t const item_size, size_t const cap, size_t const key_bytes MEM_FILEPOS_PARAMS);
-void ov_hashmap_destroy(struct ov_hashmap **const hmp MEM_FILEPOS_PARAMS);
-void ov_hashmap_clear(struct ov_hashmap *const hm);
-NODISCARD size_t ov_hashmap_count(struct ov_hashmap const *const hm);
-NODISCARD void const *ov_hashmap_get(struct ov_hashmap const *const hm, void const *const key_item);
-NODISCARD bool ov_hashmap_set(struct ov_hashmap *const hm, void const *const item MEM_FILEPOS_PARAMS);
-void const *ov_hashmap_delete(struct ov_hashmap *const hm, void const *const key_item);
-NODISCARD bool ov_hashmap_iter(struct ov_hashmap *const hm, size_t *const i, void **const item);
-
 /**
  * @brief Create a dynamic hashmap with custom key extraction
  *
@@ -180,3 +163,20 @@ NODISCARD bool ov_hashmap_iter(struct ov_hashmap *const hm, size_t *const i, voi
  *   }
  */
 #define OV_HASHMAP_ITER(hmp, size_t_ptr, item_ptr_ptr) ov_hashmap_iter((hmp), (size_t_ptr), (void **)(item_ptr_ptr))
+
+struct ov_hashmap;
+
+typedef void (*ov_hashmap_get_key_func)(void const *const item, void const **const key, size_t *const key_bytes);
+
+NODISCARD struct ov_hashmap *ov_hashmap_create_dynamic(size_t const item_size,
+                                                       size_t const cap,
+                                                       ov_hashmap_get_key_func const get_key MEM_FILEPOS_PARAMS);
+NODISCARD struct ov_hashmap *
+ov_hashmap_create_static(size_t const item_size, size_t const cap, size_t const key_bytes MEM_FILEPOS_PARAMS);
+void ov_hashmap_destroy(struct ov_hashmap **const hmp MEM_FILEPOS_PARAMS);
+void ov_hashmap_clear(struct ov_hashmap *const hm);
+NODISCARD size_t ov_hashmap_count(struct ov_hashmap const *const hm);
+NODISCARD void const *ov_hashmap_get(struct ov_hashmap const *const hm, void const *const key_item);
+NODISCARD bool ov_hashmap_set(struct ov_hashmap *const hm, void const *const item MEM_FILEPOS_PARAMS);
+void const *ov_hashmap_delete(struct ov_hashmap *const hm, void const *const key_item);
+NODISCARD bool ov_hashmap_iter(struct ov_hashmap *const hm, size_t *const i, void **const item);
