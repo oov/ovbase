@@ -65,7 +65,7 @@ static void *am_realloc(void *p, size_t const s, void *const udata) {
   return REALLOC(p, s);
 }
 
-static void mem_simple_free(void *p, void *const udata) {
+static void am_free(void *p, void *const udata) {
   (void)udata;
   FREE(p);
 }
@@ -77,7 +77,7 @@ void allocate_logger_init(void) {
   hash = ov_rand_splitmix64_next(hash);
   uint64_t const s1 = ov_rand_splitmix64(hash);
   g_allocated = hashmap_new_with_allocator(
-      am_realloc, mem_simple_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+      am_realloc, am_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!g_allocated) {
     abort();
   }
@@ -130,7 +130,7 @@ size_t report_leaks(void) {
   hash = ov_rand_splitmix64_next(hash);
   uint64_t const s1 = ov_rand_splitmix64(hash);
   struct hashmap *dummy = hashmap_new_with_allocator(
-      am_realloc, mem_simple_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
+      am_realloc, am_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!dummy) {
     abort();
   }
