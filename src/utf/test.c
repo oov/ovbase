@@ -116,7 +116,7 @@ static void test_char16_to_utf8(void) {
 static void test_char16_to_utf8_buffer_safety(void) {
   // Test safe behavior with insufficient buffer (null-terminated string design)
   char16_t const *short_ws = u"ABCD";
-  char limited_buf[4] = {0xFF, 0xFF, 0xFF, 0xFF}; // Only 4 bytes - not enough for 4 chars + null terminator
+  char limited_buf[4] = {'\xff', '\xff', '\xff', '\xff'}; // Only 4 bytes - not enough for 4 chars + null terminator
 
   // Function should safely write only what fits including null terminator
   size_t sz;
@@ -147,7 +147,7 @@ static void test_char32_to_utf8(void) {
 static void test_char32_to_utf8_buffer_safety(void) {
   // Test safe behavior with insufficient buffer (null-terminated string design)
   char32_t const *short_ws = U"ABCD";
-  char limited_buf[4] = {0xFF, 0xFF, 0xFF, 0xFF}; // Only 4 bytes - not enough for 4 chars + null terminator
+  char limited_buf[4] = {'\xff', '\xff', '\xff', '\xff'}; // Only 4 bytes - not enough for 4 chars + null terminator
 
   // Function should safely write only what fits including null terminator
   size_t sz;
@@ -178,7 +178,7 @@ static void test_wchar_to_utf8(void) {
 static void test_wchar_to_utf8_buffer_safety(void) {
   // Test safe behavior with insufficient buffer (null-terminated string design)
   wchar_t const *short_ws = L"ABCD";
-  char limited_buf[4] = {0xFF, 0xFF, 0xFF, 0xFF}; // Only 4 bytes - not enough for 4 chars + null terminator
+  char limited_buf[4] = {'\xff', '\xff', '\xff', '\xff'}; // Only 4 bytes - not enough for 4 chars + null terminator
 
   // Function should safely write only what fits including null terminator
   size_t sz;
@@ -198,7 +198,7 @@ static void test_wchar_to_utf8_buffer_safety(void) {
 static void test_ov_sjis_to_utf8_buffer_safety(void) {
   // Test safe behavior with insufficient buffer (null-terminated string design)
   char const *short_sjis = "ABCD";                // Simple ASCII for testing
-  char limited_buf[4] = {0xFF, 0xFF, 0xFF, 0xFF}; // Only 4 bytes - not enough for 4 chars + null terminator
+  char limited_buf[4] = {'\xff', '\xff', '\xff', '\xff'}; // Only 4 bytes - not enough for 4 chars + null terminator
 
   // Function should safely write only what fits including null terminator
   size_t sz;
