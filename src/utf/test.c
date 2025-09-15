@@ -197,7 +197,7 @@ static void test_wchar_to_utf8_buffer_safety(void) {
 
 static void test_ov_sjis_to_utf8_buffer_safety(void) {
   // Test safe behavior with insufficient buffer (null-terminated string design)
-  char const *short_sjis = "ABCD";                // Simple ASCII for testing
+  char const *short_sjis = "ABCD";                        // Simple ASCII for testing
   char limited_buf[4] = {'\xff', '\xff', '\xff', '\xff'}; // Only 4 bytes - not enough for 4 chars + null terminator
 
   // Function should safely write only what fits including null terminator
