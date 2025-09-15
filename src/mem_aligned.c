@@ -1,4 +1,5 @@
 #include "mem.h"
+#include <assert.h>
 
 // New error system versions
 
@@ -19,11 +20,19 @@ bool ov_mem_aligned_alloc(void *const pp,
                           size_t const n,
                           size_t const item_size,
                           size_t const align MEM_FILEPOS_PARAMS) {
-  if (!pp || !n || !item_size || align > 256) {
+  assert(pp != NULL && "pp must not be NULL");
+  assert(n > 0 && "n must be greater than 0");
+  assert(item_size > 0 && "item_size must be greater than 0");
+  assert(align > 0 && align <= 256 && (align & (align - 1)) == 0 &&
+         "align must be a power of 2, greater than 0 and at most 256");
+#  ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#  endif
+  if (!pp || !n || !item_size || align == 0 || align > 256 || (align & (align - 1)) != 0) {
     return false;
   }
   if (*(void **)pp != NULL) {
-    return false;
+    return false; // Double allocation not allowed
   }
   *(void **)pp = mi_malloc_aligned(n * item_size, align);
   if (*(void **)pp == NULL) {
@@ -36,7 +45,14 @@ bool ov_mem_aligned_alloc(void *const pp,
 }
 
 void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS) {
-  if (!pp || *(void **)pp == NULL) {
+  assert(pp != NULL && "pp must not be NULL");
+#  ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#  endif
+  if (!pp) {
+    return;
+  }
+  if (*(void **)pp == NULL) {
     return;
   }
   mi_free(*(void **)pp);
@@ -55,11 +71,19 @@ bool ov_mem_aligned_alloc(void *const pp,
                           size_t const n,
                           size_t const item_size,
                           size_t const align MEM_FILEPOS_PARAMS) {
-  if (!pp || !n || !item_size || align > 256) {
+  assert(pp != NULL && "pp must not be NULL");
+  assert(n > 0 && "n must be greater than 0");
+  assert(item_size > 0 && "item_size must be greater than 0");
+  assert(align > 0 && align <= 256 && (align & (align - 1)) == 0 &&
+         "align must be a power of 2, greater than 0 and at most 256");
+#  ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#  endif
+  if (!pp || !n || !item_size || align == 0 || align > 256 || (align & (align - 1)) != 0) {
     return false;
   }
   if (*(void **)pp != NULL) {
-    return false;
+    return false; // Double allocation not allowed
   }
   uint8_t *p = NULL;
   if (!mem_core_(&p, n * item_size + align MEM_FILEPOS_VALUES_PASSTHRU)) {
@@ -72,7 +96,14 @@ bool ov_mem_aligned_alloc(void *const pp,
 }
 
 void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS) {
-  if (!pp || *(void **)pp == NULL) {
+  assert(pp != NULL && "pp must not be NULL");
+#  ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#  endif
+  if (!pp) {
+    return;
+  }
+  if (*(void **)pp == NULL) {
     return;
   }
   uint8_t *p = *(uint8_t **)pp;

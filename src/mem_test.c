@@ -23,13 +23,6 @@ static void test_ov_realloc_basic(void) {
   TEST_CHECK(ptr == NULL);
 }
 
-static void test_ov_realloc_error_cases(void) {
-  void *ptr = NULL;
-
-  TEST_CHECK(!OV_REALLOC(NULL, 10, sizeof(int)));
-  TEST_CHECK(!OV_REALLOC(&ptr, 10, 0));
-}
-
 static void test_ov_free_basic(void) {
   void *ptr = NULL;
 
@@ -47,7 +40,8 @@ static void test_ov_free_basic(void) {
   OV_FREE(&ptr);
 }
 
-TEST_LIST = {{"ov_realloc_basic", test_ov_realloc_basic},
-             {"ov_realloc_error_cases", test_ov_realloc_error_cases},
-             {"ov_free_basic", test_ov_free_basic},
-             {NULL, NULL}};
+TEST_LIST = {
+    {"ov_realloc_basic", test_ov_realloc_basic},
+    {"ov_free_basic", test_ov_free_basic},
+    {NULL, NULL},
+};

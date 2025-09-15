@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "output.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,6 +35,8 @@ enum {
  * @return Length of the appended string
  */
 static size_t append(char *dest, size_t dest_pos, char const *const src, size_t const src_len) {
+  // dest can be NULL for length calculation only
+  assert(src_len == 0 || src != NULL && "src must not be NULL when src_len > 0");
   if (dest) {
     memcpy(dest + dest_pos, src, src_len);
   }
@@ -53,7 +56,9 @@ static size_t append(char *dest, size_t dest_pos, char const *const src, size_t 
  * error_code_to_str(buf, ov_error_type_errno,   ENOMEM)                          -> "[03:0x0000000c]"
  * error_code_to_str(buf, ov_error_type_hresult, E_OUTOFMEMORY)                   -> "[02:0x8007000e]"
  */
-static size_t error_code_to_str(char *const dest, int const type, int const code) {
+static size_t error_code_to_str(char dest[error_code_str_size], int const type, int const code) {
+  // dest can be NULL for length calculation only
+  assert(type >= 0 && "type must be non-negative");
   if (dest) {
     static char const hex[] = "0123456789abcdef";
     unsigned const t = (unsigned)type;
@@ -90,8 +95,9 @@ static size_t error_code_to_str(char *const dest, int const type, int const code
  * filepos_to_str(buf, &filepos)  -> "utils.c:456 process_data()"
  * filepos_to_str(buf, &filepos)  -> "unkfile:0 unkfunc()"        // when file/func are NULL
  */
-static size_t filepos_to_str(char *const dest, struct ov_filepos const *const filepos) {
-  assert(filepos);
+static size_t filepos_to_str(char dest[filepos_str_size], struct ov_filepos const *const filepos) {
+  // dest can be NULL for length calculation only
+  assert(filepos != NULL && "filepos must not be NULL");
 
   static size_t const truncation_indicator_len = 3; // length of "..."
 
@@ -189,6 +195,7 @@ cleanup:
 }
 
 static bool set_generic_message(struct ov_error_stack *const target, struct ov_error *const err) {
+  assert(target != NULL && "target must not be NULL");
   (void)err;
   char const *message = NULL;
   switch (target->info.code) {
@@ -228,6 +235,7 @@ static bool set_generic_message(struct ov_error_stack *const target, struct ov_e
 }
 
 static bool set_errno_message(struct ov_error_stack *const target, struct ov_error *const err) {
+  assert(target != NULL && "target must not be NULL");
   (void)err;
   target->info.context = strerror(target->info.code);
   if (!target->info.context) {
@@ -239,6 +247,7 @@ static bool set_errno_message(struct ov_error_stack *const target, struct ov_err
 
 #ifdef _WIN32
 static bool set_hresult_message(struct ov_error_stack *const target, struct ov_error *const err) {
+  assert(target != NULL && "target must not be NULL");
   LPWSTR msg = NULL;
   char *new_msg = NULL;
   bool result = false;
@@ -300,6 +309,8 @@ cleanup:
 #endif
 
 bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_error *const err) {
+  assert(target != NULL && "target must not be NULL");
+  // err can be NULL - error information will be ignored if NULL
   if (!target || target->info.type == ov_error_type_invalid || target->info.context) {
     return true;
   }
@@ -368,6 +379,8 @@ cleanup:
  * format_stack_entry(buf, 0, &entry)  -> "  test.c:789 trace_func()\n"  // trace entry (no error code)
  */
 static size_t format_stack_entry(char *const dest, size_t const dest_pos, struct ov_error_stack const *const entry) {
+  // dest can be NULL for length calculation only
+  assert(entry != NULL && "entry must not be NULL");
   size_t written = dest_pos;
   written += append(dest, written, "  ", 2);
   {
@@ -392,7 +405,7 @@ static size_t format_stack_entry(char *const dest, size_t const dest_pos, struct
  * Formats a complete error message including main error and optional stack trace.
  *
  * @param dest Buffer to store the result, or NULL to calculate length only
- * @param src_copy Error structure containing the main error and stack trace entries
+ * @param src Error structure containing the main error and stack trace entries
  * @param include_stack_trace If true, includes stack trace entries after the main error
  * @return Total length of the formatted error message
  *
@@ -405,10 +418,11 @@ static size_t format_stack_entry(char *const dest, size_t const dest_pos, struct
  *                                              "  utils.c:456 allocate_buffer() [01:0x00000005] operation failed\n"
  *                                              "  test.c:789 trace_func()\n"
  */
-static size_t
-format_error_message(char *const dest, struct ov_error const *const src_copy, bool const include_stack_trace) {
+static size_t format_error_message(char *const dest, struct ov_error const *const src, bool const include_stack_trace) {
+  // dest can be NULL for length calculation only
+  assert(src != NULL && "src must not be NULL");
   size_t pos = 0;
-  struct ov_error_stack const *const s0 = &src_copy->stack[0];
+  struct ov_error_stack const *const s0 = &src->stack[0];
 
   // Format main message
   {
@@ -432,15 +446,15 @@ format_error_message(char *const dest, struct ov_error const *const src_copy, bo
   pos += append(dest, pos, "\n", 1);
 
   if (include_stack_trace) {
-    for (size_t i = 1; i < sizeof(src_copy->stack) / sizeof(src_copy->stack[0]); i++) {
-      if (src_copy->stack[i].info.type == ov_error_type_invalid) {
+    for (size_t i = 1; i < sizeof(src->stack) / sizeof(src->stack[0]); i++) {
+      if (src->stack[i].info.type == ov_error_type_invalid) {
         break;
       }
-      pos += format_stack_entry(dest, pos, &src_copy->stack[i]);
+      pos += format_stack_entry(dest, pos, &src->stack[i]);
     }
-    size_t const ext_count = OV_ARRAY_LENGTH(src_copy->stack_extended);
+    size_t const ext_count = OV_ARRAY_LENGTH(src->stack_extended);
     for (size_t i = 0; i < ext_count; i++) {
-      pos += format_stack_entry(dest, pos, &src_copy->stack_extended[i]);
+      pos += format_stack_entry(dest, pos, &src->stack_extended[i]);
     }
   }
 
@@ -451,6 +465,9 @@ bool ov_error_to_string(struct ov_error const *const src,
                         char **const dest,
                         bool const include_stack_trace,
                         struct ov_error *const err) {
+  assert(src != NULL && "src must not be NULL");
+  assert(dest != NULL && "dest must not be NULL");
+  // err can be NULL - error information will be ignored if NULL
   if (!src || !dest || src->stack[0].info.type == ov_error_type_invalid) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
@@ -539,9 +556,18 @@ cleanup:
   return result;
 }
 
-bool ov_error_report_and_destroy(struct ov_error *const target, char const *const message ERR_FILEPOS_PARAMS) {
-  if (!target || target->stack[0].info.type == ov_error_type_invalid) {
-    return true;
+void ov_error_report_and_destroy(struct ov_error *const target, char const *const message ERR_FILEPOS_PARAMS) {
+  assert(target != NULL && "target must not be NULL");
+  // message can be NULL - a default message will be used
+  assert(filepos != NULL && "filepos must not be NULL");
+  if (!target) {
+    return; // accept NULL target, do nothing
+  }
+  if (!filepos) {
+    return; // invalid parameters
+  }
+  if (target->stack[0].info.type == ov_error_type_invalid) {
+    return; // no error to report
   }
   {
     char temp[512];
@@ -587,5 +613,4 @@ bool ov_error_report_and_destroy(struct ov_error *const target, char const *cons
   }
 
   ov_error_destroy(target MEM_FILEPOS_VALUES_PASSTHRU);
-  return true;
 }

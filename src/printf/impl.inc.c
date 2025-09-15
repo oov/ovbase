@@ -1,5 +1,7 @@
 #include <ovprintf.h>
 
+#include <assert.h>
+
 #define NANOPRINTF_VISIBILITY_STATIC
 #define NANOPRINTF_IMPLEMENTATION
 #define NANOPRINTF_SNPRINTF_SAFE_EMPTY_STRING_ON_OVERFLOW 1
@@ -39,11 +41,21 @@ int FUNCNAME(vpprintf)(void (*putc)(int c, void *ctx),
                        CHAR_TYPE const *const reference,
                        CHAR_TYPE const *const format,
                        va_list valist) {
+  assert(putc != NULL && "putc must not be NULL");
+  assert(format != NULL && "format must not be NULL");
+  if (!putc || !format) {
+    return -1;
+  }
   return npf_vpprintf(putc, ctx, reference, format, valist);
 }
 
 int FUNCNAME(pprintf)(
     void (*putc)(int c, void *ctx), void *ctx, CHAR_TYPE const *const reference, CHAR_TYPE const *const format, ...) {
+  assert(putc != NULL && "putc must not be NULL");
+  assert(format != NULL && "format must not be NULL");
+  if (!putc || !format) {
+    return -1;
+  }
   va_list valist;
   va_start(valist, format);
   int const r = npf_vpprintf(putc, ctx, reference, format, valist);
@@ -53,6 +65,10 @@ int FUNCNAME(pprintf)(
 
 int FUNCNAME(snprintf)(
     CHAR_TYPE *const dest, size_t destlen, CHAR_TYPE const *const reference, CHAR_TYPE const *const format, ...) {
+  assert(format != NULL && "format must not be NULL");
+  if (!format) {
+    return -1;
+  }
   va_list valist;
   va_start(valist, format);
   int r = npf_vsnprintf(dest, destlen, reference, format, valist);
@@ -65,9 +81,14 @@ int FUNCNAME(vsnprintf)(CHAR_TYPE *const dest,
                         CHAR_TYPE const *const reference,
                         CHAR_TYPE const *const format,
                         va_list valist) {
+  assert(format != NULL && "format must not be NULL");
+  if (!format) {
+    return -1;
+  }
   return npf_vsnprintf(dest, destlen, reference, format, valist);
 }
 
 int FUNCNAME(printf_verify_format)(CHAR_TYPE const *const reference, CHAR_TYPE const *const format) {
+  // Both reference and format can be NULL (documented behavior)
   return npf_verify_format(reference, format);
 }

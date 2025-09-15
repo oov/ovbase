@@ -1,7 +1,14 @@
-#include "codepoint_char16.h"
+#include <ovutf.h>
+
 #include "common.h"
 
+#include <assert.h>
+
 size_t ov_char16_to_utf8_len(char16_t const *const src, size_t const src_len) {
+  assert(src != NULL || src_len == 0 && "src must not be NULL when src_len > 0");
+  if (!src || !src_len) {
+    return 0;
+  }
   size_t n = 0;
   if (!ov_char16_to_codepoint(ovutf_utf8_count, &n, src, src_len)) {
     return 0;
@@ -11,6 +18,8 @@ size_t ov_char16_to_utf8_len(char16_t const *const src, size_t const src_len) {
 
 size_t ov_char16_to_utf8(
     char16_t const *const src, size_t const src_len, char *const dest, size_t const dest_len, size_t *const read) {
+  assert(src != NULL || src_len == 0 && "src must not be NULL when src_len > 0");
+  assert(dest != NULL || dest_len == 0 && "dest must not be NULL when dest_len > 0");
   if (!src || !src_len || !dest || !dest_len) {
     return 0;
   }

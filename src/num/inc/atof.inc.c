@@ -1,6 +1,10 @@
 #include "def.h"
 
+#include <assert.h>
+
 bool FUNCNAME(atof)(CHAR_TYPE const *ptr, FLOAT_TYPE *const dest, bool const strict) {
+  assert(ptr != NULL && "ptr must not be NULL");
+  assert(dest != NULL && "dest must not be NULL");
   if (!ptr || !dest) {
     return false;
   }

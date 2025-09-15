@@ -3,10 +3,13 @@
 
 #ifdef _WIN32
 
+#  include <assert.h>
+
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
 
 static bool mo_get_preferred_ui_languages_core(NATIVE_CHAR **dest, bool const id, struct ov_error *const err) {
+  assert(dest != NULL && "dest must not be NULL");
   if (!dest) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
@@ -64,6 +67,7 @@ cleanup:
 }
 
 bool mo_get_preferred_ui_languages(NATIVE_CHAR **dest, struct ov_error *const err) {
+  assert(dest != NULL && "dest must not be NULL");
   if (!dest) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
@@ -124,6 +128,10 @@ static HRSRC find_resource(HMODULE const module,
                            wchar_t const *const name,
                            wchar_t const *const preferred_languages,
                            struct ov_error *const err) {
+  // module can be NULL (Windows API will handle appropriately)
+  assert(type != NULL && "type must not be NULL");
+  assert(name != NULL && "name must not be NULL");
+  assert(preferred_languages != NULL && "preferred_languages must not be NULL");
   if (!type || !name || !preferred_languages) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return NULL;
@@ -199,17 +207,18 @@ cleanup:
   return result;
 }
 
-bool mo_parse_from_resource_ex(struct mo **const mpp,
-                               void *const hmodule,
-                               wchar_t const *const preferred_languages,
-                               struct ov_error *const err) {
-  if (!mpp || !preferred_languages) {
+struct mo *
+mo_parse_from_resource_ex(void *const hmodule, wchar_t const *const preferred_languages, struct ov_error *const err) {
+  // hmodule can be NULL (uses current process module)
+  assert(preferred_languages != NULL && "preferred_languages must not be NULL");
+  if (!preferred_languages) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
-    return false;
+    return NULL;
   }
 
-  bool result = false;
   HMODULE hmod = (HMODULE)hmodule;
+  struct mo *result = NULL;
+
   HRSRC r = NULL;
   HGLOBAL h = NULL;
   size_t sz = 0;
@@ -244,37 +253,31 @@ bool mo_parse_from_resource_ex(struct mo **const mpp,
     goto cleanup;
   }
 
-  // Call mo_parse using new error system
-  if (!mo_parse(mpp, p, sz, err)) {
+  result = mo_parse(p, sz, err);
+  if (!result) {
     OV_ERROR_ADD_TRACE(err);
     goto cleanup;
   }
-  result = true;
 
 cleanup:
   return result;
 }
 
-bool mo_parse_from_resource(struct mo **const mpp, void *const hmodule, struct ov_error *const err) {
-  if (!mpp) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
-    return false;
-  }
-
+struct mo *mo_parse_from_resource(void *const hmodule, struct ov_error *const err) {
+  // hmodule can be NULL (uses current process module)
   NATIVE_CHAR *langs = NULL;
-  bool result = false;
+  struct mo *result = NULL;
 
   if (!mo_get_preferred_ui_languages_core(&langs, false, err)) {
     OV_ERROR_ADD_TRACE(err);
     goto cleanup;
   }
 
-  if (!mo_parse_from_resource_ex(mpp, hmodule, langs, err)) {
+  result = mo_parse_from_resource_ex(hmodule, langs, err);
+  if (!result) {
     OV_ERROR_ADD_TRACE(err);
     goto cleanup;
   }
-
-  result = true;
 
 cleanup:
   if (langs) {

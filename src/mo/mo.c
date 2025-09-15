@@ -1,5 +1,6 @@
 #include <ovmo.h>
 
+#include <assert.h>
 #include <string.h>
 
 #ifndef _WIN32
@@ -65,14 +66,15 @@ static bool read_header(char *const dest, size_t const destlen, char const *cons
   return false;
 }
 
-bool mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen, struct ov_error *const err) {
-  if (!mpp || *mpp || !ptr) {
+struct mo *mo_parse(void const *const ptr, size_t const ptrlen, struct ov_error *const err) {
+  assert(ptr != NULL && "ptr must not be NULL");
+  if (!ptr) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
-    return false;
+    return NULL;
   }
   if (ptrlen < 28) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
-    return false;
+    return NULL;
   }
 
   uint8_t const *p = (uint8_t const *)ptr;
@@ -109,11 +111,10 @@ bool mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen,
     goto cleanup;
   }
 
-  if (!OV_REALLOC(mpp, 1, sizeof(struct mo))) {
+  if (!OV_REALLOC(&mp, 1, sizeof(struct mo))) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     goto cleanup;
   }
-  mp = *mpp;
   *mp = (struct mo){0};
 
   if (!OV_REALLOC(&mp->msg, num_strings, sizeof(struct mo_msg))) {
@@ -153,13 +154,13 @@ bool mo_parse(struct mo **const mpp, void const *const ptr, size_t const ptrlen,
     }
   }
 
-  return true;
+  return mp;
 
 cleanup:
   if (mp) {
-    mo_free(mpp);
+    mo_free(&mp);
   }
-  return false;
+  return NULL;
 }
 
 void mo_free(struct mo **const mpp) {
@@ -191,16 +192,25 @@ static struct mo_msg *find(struct mo const *const mp, char const *const id) {
 }
 
 char const *mo_gettext(struct mo const *const mp, char const *const id) {
+  assert(id != NULL && "id must not be NULL");
   if (!mp) {
     return id;
+  }
+  if (!id) {
+    return "";
   }
   struct mo_msg *msg = find(mp, id);
   return msg ? msg->str : id;
 }
 
 char const *mo_pgettext(struct mo const *const mp, char const *const ctxt, char const *const id) {
+  assert(ctxt != NULL && "ctxt must not be NULL");
+  assert(id != NULL && "id must not be NULL");
   if (!mp) {
     return id;
+  }
+  if (!ctxt || !id) {
+    return id ? id : "";
   }
   char *tmp = NULL;
   struct mo_msg *msg = NULL;
@@ -240,8 +250,13 @@ static char const *find_plural_form(char const *s, size_t len, unsigned long int
 
 char const *
 mo_ngettext(struct mo const *const mp, char const *const id, char const *const id_plural, unsigned long int const n) {
+  assert(id != NULL && "id must not be NULL");
+  assert(id_plural != NULL && "id_plural must not be NULL");
   if (!mp) {
     return n != 1 ? id_plural : id;
+  }
+  if (!id || !id_plural) {
+    return n != 1 ? (id_plural ? id_plural : "") : (id ? id : "");
   }
   char const *r = NULL;
   struct mo_msg *msg = find(mp, id);
@@ -272,6 +287,7 @@ struct mo *mo_get_default(void) { return g_mp; }
 
 #ifndef _WIN32
 bool mo_get_preferred_ui_languages(NATIVE_CHAR **dest, struct ov_error *const err) {
+  assert(dest != NULL && "dest must not be NULL");
   if (!dest) {
     OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;

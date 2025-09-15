@@ -8,9 +8,9 @@
  * Creates a hashmap where keys are extracted from items using a callback function.
  * Automatically includes debug information for memory tracking.
  *
- * @param item_size Size of each item to store
- * @param cap Initial capacity (will grow as needed)
- * @param get_key_fn Function to extract key from item
+ * @param item_size Size of each item to store. Must be greater than 0.
+ * @param cap Initial capacity (will grow as needed). Can be 0 for default capacity.
+ * @param get_key_fn Function to extract key from item. Must not be NULL.
  * @return Pointer to created hashmap, or NULL on failure
  *
  * @example
@@ -30,9 +30,9 @@
  * Creates a hashmap where keys are the first N bytes of each item.
  * Automatically includes debug information for memory tracking.
  *
- * @param item_size Size of each item to store
- * @param cap Initial capacity (will grow as needed)
- * @param key_size Number of bytes at the beginning of each item to use as key
+ * @param item_size Size of each item to store. Must be greater than 0.
+ * @param cap Initial capacity (will grow as needed). Can be 0 for default capacity.
+ * @param key_size Number of bytes at the beginning of each item to use as key. Must be greater than 0.
  * @return Pointer to created hashmap, or NULL on failure
  *
  * @example
@@ -68,7 +68,7 @@
  * Destroys the hashmap and sets the pointer to NULL.
  * Automatically includes debug information for memory tracking.
  *
- * @param hmp Pointer to hashmap pointer (will be set to NULL)
+ * @param hmp Pointer to hashmap pointer (will be set to NULL). Must not be NULL.
  *
  * @example
  *   struct ov_hashmap *hm = OV_HASHMAP_CREATE_DYNAMIC(...);
@@ -81,7 +81,7 @@
  *
  * Removes all items from the hashmap but keeps the hashmap itself allocated.
  *
- * @param hmp Pointer to hashmap
+ * @param hmp Pointer to hashmap. Must not be NULL.
  *
  * @example
  *   OV_HASHMAP_CLEAR(hm);  // All items removed, hm still valid
@@ -91,8 +91,8 @@
 /**
  * @brief Get current number of items in hashmap
  *
- * @param hmp Pointer to hashmap
- * @return Number of items currently stored
+ * @param hmp Pointer to hashmap. Can be NULL.
+ * @return Number of items currently stored, or 0 if hmp is NULL
  *
  * @example
  *   size_t count = OV_HASHMAP_COUNT(hm);
@@ -102,8 +102,8 @@
 /**
  * @brief Get item from hashmap by key
  *
- * @param hmp Pointer to hashmap
- * @param key_item_ptr Pointer to key or item containing key
+ * @param hmp Pointer to hashmap. Must not be NULL.
+ * @param key_item_ptr Pointer to key or item containing key. Must not be NULL.
  * @return Pointer to found item, or NULL if not found
  *
  * @example
@@ -120,8 +120,8 @@
  * Inserts item into hashmap or updates if key already exists.
  * Automatically includes debug information for memory tracking.
  *
- * @param hmp Pointer to hashmap
- * @param item_ptr Pointer to item to insert/update
+ * @param hmp Pointer to hashmap. Must not be NULL.
+ * @param item_ptr Pointer to item to insert/update. Must not be NULL.
  * @return true on success, false on memory allocation failure
  *
  * @example
@@ -135,8 +135,8 @@
 /**
  * @brief Delete item from hashmap
  *
- * @param hmp Pointer to hashmap
- * @param key_item_ptr Pointer to key or item containing key
+ * @param hmp Pointer to hashmap. Must not be NULL.
+ * @param key_item_ptr Pointer to key or item containing key. Must not be NULL.
  * @return Pointer to deleted item (copy of original), or NULL if not found
  *
  * @example
@@ -150,9 +150,9 @@
  *
  * Use in loop to iterate through all items. Initialize iterator to 0.
  *
- * @param hmp Pointer to hashmap
- * @param size_t_ptr Pointer to iterator variable (size_t)
- * @param item_ptr_ptr Pointer to item pointer (will receive current item)
+ * @param hmp Pointer to hashmap. Must not be NULL.
+ * @param size_t_ptr Pointer to iterator variable (size_t). Must not be NULL.
+ * @param item_ptr_ptr Pointer to item pointer (will receive current item). Must not be NULL.
  * @return true if item retrieved, false when iteration complete
  *
  * @example

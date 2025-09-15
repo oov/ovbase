@@ -1,7 +1,13 @@
 #include "common.h"
+#include <assert.h>
 
 bool ov_hashmap_set(struct ov_hashmap *const hm, void const *const item MEM_FILEPOS_PARAMS) {
-  if (!hm || !item || !hm->map) {
+  assert(hm != NULL && "hm must not be NULL");
+  assert(item != NULL && "item must not be NULL");
+#ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#endif
+  if (!hm || !item) {
     return false;
   }
 

@@ -1,5 +1,7 @@
 #include "def.h"
 
+#include <assert.h>
+
 CHAR_TYPE *FUNCNAME(utoa)(UINT_TYPE v, CHAR_TYPE buf[BUFFER_SIZE]) {
   //   8bits => "255\0"(4)
   //  16bits => "65535\0"(6)
@@ -11,6 +13,7 @@ CHAR_TYPE *FUNCNAME(utoa)(UINT_TYPE v, CHAR_TYPE buf[BUFFER_SIZE]) {
                      (sizeof(UINT_TYPE) == 4 && BUFFER_SIZE >= 11) || (sizeof(UINT_TYPE) == 8 && BUFFER_SIZE >= 21) ||
                      (sizeof(UINT_TYPE) == 16 && BUFFER_SIZE >= 40) || (sizeof(UINT_TYPE) == 32 && BUFFER_SIZE >= 79),
                  "Is it long enough to store the maximum value?");
+  assert(buf != NULL && "buf must not be NULL");
   if (!buf) {
     return NULL;
   }

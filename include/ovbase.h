@@ -252,7 +252,7 @@ void ov_error_pushf(struct ov_error *const target,
                     struct ov_error_info const *const info,
                     char const *const reference ERR_FILEPOS_PARAMS,
                     ...);
-bool ov_error_report_and_destroy(struct ov_error *const target, char const *const message ERR_FILEPOS_PARAMS);
+void ov_error_report_and_destroy(struct ov_error *const target, char const *const message ERR_FILEPOS_PARAMS);
 
 /**
  * Hook function type for custom error message generation
@@ -352,8 +352,8 @@ void ov_error_set_output_hook(ov_error_output_hook_func hook_func);
  * and code only when the message field is currently NULL.
  *
  * @param target Pointer to error structure. If NULL or already has a message, no action is taken.
- * @param err Pointer to struct ov_error for error information.
- * @return true on success (including when no action needed), false on failure (check err_ptr for details)
+ * @param err Pointer to struct ov_error for error information. Can be NULL.
+ * @return true on success (including when no action needed), false on failure (check err for details)
  */
 bool ov_error_autofill_message(struct ov_error_stack *const target, struct ov_error *const err);
 
@@ -645,11 +645,43 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
                   (reference)ERR_FILEPOS_VALUES,                                                                       \
                   __VA_ARGS__))
 
+/**
+ * @brief Report error to output and destroy the error object
+ *
+ * Reports the error with a user-provided message and automatically destroys the error object
+ * to clean up memory. The error is formatted with full stack trace and sent to the configured
+ * output destination. This is the primary way to report and clean up errors.
+ *
+ * @param err_ptr Pointer to error structure to report and destroy. If NULL, the operation is silently ignored.
+ *                If the error is invalid (no error set), the operation is silently ignored.
+ * @param msg User-provided message describing the context where the error occurred.
+ *            Can be NULL, in which case a default message will be used.
+ * @return true on success, false on invalid parameters
+ *
+ * @example
+ *   struct ov_error err = {0};
+ *   if (!some_operation(&err)) {
+ *     OV_ERROR_REPORT(&err, "Failed to perform operation");
+ *     return false;
+ *   }
+ */
 #define OV_ERROR_REPORT(err_ptr, msg) (ov_error_report_and_destroy((err_ptr), (msg)ERR_FILEPOS_VALUES))
 
 // mem
 
 #ifdef LEAK_DETECTOR
+/**
+ * @brief Get the current count of allocated memory blocks
+ *
+ * Returns the number of memory blocks currently allocated and not yet freed.
+ * This function is only available when LEAK_DETECTOR is enabled at compile time.
+ * Used primarily for debugging memory leaks and monitoring memory usage.
+ *
+ * @return Number of currently allocated memory blocks
+ *
+ * @note This function is thread-safe and uses atomic operations
+ * @note Only available when compiled with LEAK_DETECTOR defined
+ */
 long ov_mem_get_allocated_count(void);
 #endif
 
@@ -666,9 +698,12 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
  * automatically adding file position information for debugging and leak detection.
  * Functions like C standard library's realloc() but with enhanced error handling.
  *
+ * Passing 0 for n or item_size will cause the function to fail.
+ * Use OV_FREE() to free memory.
+ *
  * @param pp Pointer to the pointer to memory (will be updated)
- * @param n Number of items to allocate
- * @param item_size Size of each item in bytes
+ * @param n Number of items to allocate (must be > 0)
+ * @param item_size Size of each item in bytes (must be > 0)
  * @return true on success, false on failure
  *
  * @example
@@ -708,16 +743,16 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
 /**
  * @brief Allocate aligned memory
  *
- * Allocates memory aligned to the specified boundary. The alignment must be a power of 2
- * and not exceed 256 bytes. When USE_MIMALLOC is enabled, uses mimalloc's aligned allocation.
- * Otherwise, uses a custom implementation that over-allocates and stores offset information.
+ * Allocates memory aligned to the specified boundary.
+ * The alignment must be a power of 2 and not exceed 256 bytes.
  *
- * The pointer must initially be NULL. Memory allocated with this function must be freed
- * using OV_ALIGNED_FREE.
+ * Passing 0 for n or item_size will cause the function to fail.
+ * The pointer must initially be NULL.
+ * Memory allocated with this function must be freed using OV_ALIGNED_FREE.
  *
  * @param pp Pointer to the pointer to memory (must be NULL initially, will be updated)
- * @param n Number of items to allocate
- * @param item_size Size of each item in bytes
+ * @param n Number of items to allocate (must be > 0)
+ * @param item_size Size of each item in bytes (must be > 0)
  * @param align Alignment boundary (power of 2, max 256 bytes)
  * @return true on success, false on failure
  *
@@ -739,9 +774,8 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
 /**
  * @brief Free aligned memory allocated with OV_ALIGNED_ALLOC
  *
- * Frees memory that was allocated with OV_ALIGNED_ALLOC. This function properly handles
- * both mimalloc-based aligned allocations and custom aligned allocations by restoring
- * the original pointer before freeing. The pointer is automatically set to NULL after freeing.
+ * Frees memory that was allocated with OV_ALIGNED_ALLOC.
+ * The pointer is automatically set to NULL after freeing.
  *
  * @param pp Pointer to the pointer to aligned memory (will be set to NULL)
  */

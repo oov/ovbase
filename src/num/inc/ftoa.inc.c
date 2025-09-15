@@ -1,5 +1,6 @@
 #include "def.h"
 
+#include <assert.h>
 #include <math.h>
 
 CHAR_TYPE *
@@ -11,7 +12,9 @@ FUNCNAME(ftoa)(FLOAT_TYPE const d, size_t const frac_len, CHAR_TYPE const dot, C
                      (sizeof(INT_TYPE) == 16 && BUFFER_SIZE_FLOAT >= 41 * 2) ||
                      (sizeof(INT_TYPE) == 32 && BUFFER_SIZE_FLOAT >= 79 * 2),
                  "Is it long enough to store the value?");
-  if (!buf) {
+  assert(buf != NULL && "buf must not be NULL");
+  assert(frac_len <= BUFFER_SIZE_FLOAT / 2 && "frac_len must not exceed buffer capacity");
+  if (!buf || frac_len > BUFFER_SIZE_FLOAT / 2) {
     return NULL;
   }
   INT_TYPE const iv = (INT_TYPE)d;

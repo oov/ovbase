@@ -540,7 +540,7 @@ static void test_ov_error_output_hook(void) {
 
   // Test error reporting with hook
   OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test hook output");
-  TEST_CHECK(OV_ERROR_REPORT(&err, "Hook test message"));
+  OV_ERROR_REPORT(&err, "Hook test message");
   verify_clean_state(&err);
 
   // Check that output was captured by hook
@@ -558,7 +558,7 @@ static void test_ov_error_output_hook(void) {
   ov_error_set_output_hook(test_output_hook_suppress);
 
   OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test error");
-  TEST_CHECK(OV_ERROR_REPORT(&err, "Suppressed message"));
+  OV_ERROR_REPORT(&err, "Suppressed message");
   verify_clean_state(&err);
 
   // Output should not be captured (hook suppresses it)
@@ -569,7 +569,7 @@ static void test_ov_error_output_hook(void) {
 
   // Test that hook is properly reset (this would output to stderr by default)
   OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test error");
-  TEST_CHECK(OV_ERROR_REPORT(&err, "Default output test"));
+  OV_ERROR_REPORT(&err, "Default output test");
   verify_clean_state(&err);
 
   // Clean up any remaining captured output
@@ -583,11 +583,11 @@ static void test_ov_error_reporting(void) {
 
   // Test error reporting and cleanup
   OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test error");
-  TEST_CHECK(OV_ERROR_REPORT(&err, "Test operation failed"));
+  OV_ERROR_REPORT(&err, "Test operation failed");
   verify_clean_state(&err);
 
   // Test no-op reporting when no error is set
-  TEST_CHECK(OV_ERROR_REPORT(&err, "Should not report"));
+  OV_ERROR_REPORT(&err, "Should not report");
   verify_clean_state(&err);
 }
 

@@ -1,5 +1,6 @@
 #include "output.h"
 
+#include <assert.h>
 #include <ovutf.h>
 
 #ifdef _WIN32
@@ -10,9 +11,13 @@
 #endif
 
 static ov_error_output_hook_func g_output_hook = NULL;
-void ov_error_set_output_hook(ov_error_output_hook_func hook_func) { g_output_hook = hook_func; }
+void ov_error_set_output_hook(ov_error_output_hook_func hook_func) {
+  // hook_func can be NULL to restore default stderr output
+  g_output_hook = hook_func;
+}
 
 void output(char const *const str) {
+  assert(str != NULL && "str must not be NULL");
   if (!str) {
     return;
   }

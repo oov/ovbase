@@ -1,5 +1,7 @@
 #include "mem.h"
 
+#include <assert.h>
+
 #ifdef USE_MIMALLOC
 
 #  ifdef __GNUC__
@@ -48,12 +50,15 @@ struct allocated_at {
 };
 
 static uint64_t am_hash(void const *const item, uint64_t const seed0, uint64_t const seed1, void const *const udata) {
+  assert(item != NULL && "item must not be NULL");
   (void)udata;
   (void)seed1;
   struct allocated_at const *const aa = (struct allocated_at const *)item;
   return hashmap_xxhash3(&aa->p, sizeof(void *), seed0, seed1);
 }
 static int am_compare(void const *const a, void const *const b, void const *udata) {
+  assert(a != NULL && "a must not be NULL");
+  assert(b != NULL && "b must not be NULL");
   struct allocated_at const *const aa0 = (struct allocated_at const *)a;
   struct allocated_at const *const aa1 = (struct allocated_at const *)b;
   (void)udata;
@@ -90,6 +95,8 @@ void allocate_logger_exit(void) {
 }
 
 static bool allocated_put(void const *const p MEM_FILEPOS_PARAMS) {
+  assert(p != NULL && "p must not be NULL");
+  assert(filepos != NULL && "filepos must not be NULL");
   hashmap_set(g_allocated,
               &(struct allocated_at){
                   .p = p,
@@ -99,18 +106,21 @@ static bool allocated_put(void const *const p MEM_FILEPOS_PARAMS) {
 }
 
 static bool allocated_remove(void const *const p) {
+  assert(p != NULL && "p must not be NULL");
   struct allocated_at const *const aa =
       (struct allocated_at const *)hashmap_delete(g_allocated, &(struct allocated_at){.p = p});
   return aa == NULL;
 }
 
 static bool report_leaks_iterate(void const *const item, void *const udata) {
+  assert(item != NULL && "item must not be NULL");
+  assert(udata != NULL && "udata must not be NULL");
   size_t *const n = (size_t *)udata;
   ++*n;
   struct allocated_at const *const aa = (struct allocated_at const *)item;
   {
     char buffer[512];
-    ov_snprintf(buffer,
+    OV_SNPRINTF(buffer,
                 sizeof(buffer),
                 NULL,
                 "Leak found #%zu: %s:%ld %s()\n",
@@ -164,7 +174,7 @@ void report_allocated_count(void) {
   }
   {
     char buffer[256];
-    ov_snprintf(buffer, sizeof(buffer), NULL, "Not freed memory blocks: %ld\n", n);
+    OV_SNPRINTF(buffer, sizeof(buffer), NULL, "Not freed memory blocks: %ld\n", n);
     output(buffer);
   }
 }
@@ -172,6 +182,10 @@ void report_allocated_count(void) {
 
 #if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
 void mem_log_allocated(void const *const p MEM_FILEPOS_PARAMS) {
+  assert(p != NULL && "p must not be NULL");
+#  ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#  endif
 #  ifdef ALLOCATE_LOGGER
   mtx_lock(&g_mem_mtx);
   allocated_put(p MEM_FILEPOS_VALUES_PASSTHRU);
@@ -185,6 +199,7 @@ void mem_log_allocated(void const *const p MEM_FILEPOS_PARAMS) {
 }
 
 void mem_log_free(void const *const p) {
+  assert(p != NULL && "p must not be NULL");
 #  ifdef ALLOCATE_LOGGER
   mtx_lock(&g_mem_mtx);
   allocated_remove(p);
@@ -199,6 +214,10 @@ void mem_log_free(void const *const p) {
 #endif
 
 bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
+  assert(pp != NULL && "pp must not be NULL");
+#ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#endif
   if (sz == 0) {
     if (*(void **)pp == NULL) {
       return false;
@@ -213,7 +232,7 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
       mtx_unlock(&g_mem_mtx);
       if (found_double_free) {
         char buffer[256];
-        ov_snprintf(buffer,
+        OV_SNPRINTF(buffer,
                     sizeof(buffer),
                     NULL,
                     "double free detected at %s:%ld %s()\n",
@@ -243,7 +262,7 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
       mtx_unlock(&g_mem_mtx);
       if (failed_allocate) {
         char buffer[256];
-        ov_snprintf(buffer,
+        OV_SNPRINTF(buffer,
                     sizeof(buffer),
                     NULL,
                     "failed to record allocated memory at %s:%ld %s()\n",
@@ -262,7 +281,7 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
     mtx_unlock(&g_mem_mtx);
     if (found_double_free) {
       char buffer[256];
-      ov_snprintf(buffer,
+      OV_SNPRINTF(buffer,
                   sizeof(buffer),
                   NULL,
                   "double free detected at %s:%ld %s()\n",
@@ -273,7 +292,7 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
     }
     if (failed_allocate) {
       char buffer[256];
-      ov_snprintf(buffer,
+      OV_SNPRINTF(buffer,
                   sizeof(buffer),
                   NULL,
                   "failed to record allocated memory at %s:%ld %s()\n",
@@ -289,7 +308,13 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
 }
 
 bool ov_mem_realloc(void *const pp, size_t const n, size_t const item_size MEM_FILEPOS_PARAMS) {
-  if (!pp || !item_size) {
+  assert(pp != NULL && "pp must not be NULL");
+  assert(n > 0 && "n must be greater than 0");
+  assert(item_size > 0 && "item_size must be greater than 0");
+#ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#endif
+  if (!pp || !n || !item_size) {
     return false;
   }
   if (!mem_core_(pp, n * item_size MEM_FILEPOS_VALUES_PASSTHRU)) {
@@ -299,6 +324,10 @@ bool ov_mem_realloc(void *const pp, size_t const n, size_t const item_size MEM_F
 }
 
 void ov_mem_free(void *const pp MEM_FILEPOS_PARAMS) {
+  assert(pp != NULL && "pp must not be NULL");
+#ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#endif
   if (!pp) {
     return;
   }

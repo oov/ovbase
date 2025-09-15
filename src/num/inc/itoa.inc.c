@@ -1,5 +1,7 @@
 #include "def.h"
 
+#include <assert.h>
+
 CHAR_TYPE *FUNCNAME(itoa)(INT_TYPE v, CHAR_TYPE buf[BUFFER_SIZE]) {
   //   8bits => "-128\0"(5)
   //  16bits => "-32768\0"(7)
@@ -11,6 +13,7 @@ CHAR_TYPE *FUNCNAME(itoa)(INT_TYPE v, CHAR_TYPE buf[BUFFER_SIZE]) {
                      (sizeof(INT_TYPE) == 4 && BUFFER_SIZE >= 12) || (sizeof(INT_TYPE) == 8 && BUFFER_SIZE >= 21) ||
                      (sizeof(INT_TYPE) == 16 && BUFFER_SIZE >= 41) || (sizeof(INT_TYPE) == 32 && BUFFER_SIZE >= 79),
                  "Is it long enough to store the minimum value?");
+  assert(buf != NULL && "buf must not be NULL");
   if (!buf) {
     return NULL;
   }

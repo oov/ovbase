@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <stdint.h>
 
 /**
@@ -158,6 +159,7 @@ static inline uint64_t ov_rand_xoshiro256pp_rotl64(uint64_t const x, int const k
  *   }
  */
 static inline void ov_rand_xoshiro256pp_init(struct ov_rand_xoshiro256pp *const ctx, uint64_t seed) {
+  assert(ctx != NULL && "ctx must not be NULL");
   // Use SplitMix64 to properly distribute the seed across all state elements
   for (int i = 0; i < 4; i++) {
     ctx->s[i] = ov_rand_splitmix64(seed);
@@ -182,6 +184,7 @@ static inline void ov_rand_xoshiro256pp_init(struct ov_rand_xoshiro256pp *const 
  *   double uniform = ov_rand_xoshiro256pp_next(&rng) / (double)UINT64_MAX;
  */
 static inline uint64_t ov_rand_xoshiro256pp_next(struct ov_rand_xoshiro256pp *const ctx) {
+  assert(ctx != NULL && "ctx must not be NULL");
   uint64_t const result = ov_rand_xoshiro256pp_rotl64(ctx->s[0] + ctx->s[3], 23) + ctx->s[0];
   uint64_t const t = ctx->s[1] << 17;
 
@@ -240,6 +243,7 @@ static inline uint32_t ov_rand_xoshiro128pp_rotl32(uint32_t const x, int const k
  *   }
  */
 static inline void ov_rand_xoshiro128pp_init(struct ov_rand_xoshiro128pp *const ctx, uint32_t seed) {
+  assert(ctx != NULL && "ctx must not be NULL");
   // Use SplitMix32 to properly distribute the seed across all state elements
   for (int i = 0; i < 4; i++) {
     ctx->s[i] = ov_rand_splitmix32(seed);
@@ -264,6 +268,7 @@ static inline void ov_rand_xoshiro128pp_init(struct ov_rand_xoshiro128pp *const 
  *   float uniform = ov_rand_xoshiro128pp_next(&rng) / (float)UINT32_MAX;
  */
 static inline uint32_t ov_rand_xoshiro128pp_next(struct ov_rand_xoshiro128pp *const ctx) {
+  assert(ctx != NULL && "ctx must not be NULL");
   uint32_t const result = ov_rand_xoshiro128pp_rotl32(ctx->s[0] + ctx->s[3], 7) + ctx->s[0];
   uint32_t const t = ctx->s[1] << 9;
 

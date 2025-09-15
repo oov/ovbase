@@ -41,26 +41,6 @@ static void test_ov_aligned_alloc_different_alignments(void) {
   }
 }
 
-static void test_ov_aligned_alloc_error_cases(void) {
-  void *ptr = NULL;
-
-  // Test null pointer
-  TEST_CHECK(!OV_ALIGNED_ALLOC(NULL, 10, sizeof(int), 16));
-
-  // Test zero size
-  TEST_CHECK(!OV_ALIGNED_ALLOC(&ptr, 0, sizeof(int), 16));
-
-  // Test zero item size
-  TEST_CHECK(!OV_ALIGNED_ALLOC(&ptr, 10, 0, 16));
-
-  // Test invalid alignment (> 256)
-  TEST_CHECK(!OV_ALIGNED_ALLOC(&ptr, 10, sizeof(int), 512));
-
-  // Test non-null pointer
-  ptr = (void *)0x12345678; // dummy non-null value
-  TEST_CHECK(!OV_ALIGNED_ALLOC(&ptr, 10, sizeof(int), 16));
-}
-
 static void test_ov_aligned_free_basic(void) {
   void *ptr = NULL;
 
@@ -79,13 +59,11 @@ static void test_ov_aligned_free_basic(void) {
   // Test double free (should be safe)
   OV_ALIGNED_FREE(&ptr);
   TEST_CHECK(ptr == NULL);
-
-  // Test free with null pointer
-  OV_ALIGNED_FREE(NULL);
 }
 
-TEST_LIST = {{"ov_aligned_alloc_basic", test_ov_aligned_alloc_basic},
-             {"ov_aligned_alloc_different_alignments", test_ov_aligned_alloc_different_alignments},
-             {"ov_aligned_alloc_error_cases", test_ov_aligned_alloc_error_cases},
-             {"ov_aligned_free_basic", test_ov_aligned_free_basic},
-             {NULL, NULL}};
+TEST_LIST = {
+    {"ov_aligned_alloc_basic", test_ov_aligned_alloc_basic},
+    {"ov_aligned_alloc_different_alignments", test_ov_aligned_alloc_different_alignments},
+    {"ov_aligned_free_basic", test_ov_aligned_free_basic},
+    {NULL, NULL},
+};

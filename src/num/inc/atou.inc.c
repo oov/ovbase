@@ -1,6 +1,10 @@
 #include "def.h"
 
+#include <assert.h>
+
 bool FUNCNAME(atou)(CHAR_TYPE const *const ptr, UINT_TYPE *const dest, bool const strict) {
+  assert(ptr != NULL && "ptr must not be NULL");
+  assert(dest != NULL && "dest must not be NULL");
   if (!ptr || !dest) {
     return false;
   }

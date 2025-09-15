@@ -12,11 +12,11 @@
  * allocated buffer. The buffer is automatically allocated or reallocated as needed.
  * If *dest is not NULL, its existing content will be cleared before formatting.
  *
- * @param dest Pointer to char* buffer. Will be allocated/reallocated automatically.
+ * @param dest Pointer to char* buffer. Must not be NULL. Will be allocated/reallocated automatically.
  *             Must be freed using OV_ARRAY_DESTROY() from ovarray.h
  * @param reference Reference format string for type safety (can be NULL). Should specify the
  *                  correct argument types and order to prevent crashes from format string errors
- * @param format Printf-style format string
+ * @param format Printf-style format string. Must not be NULL.
  * @param ... Variable arguments for formatting
  * @return true on success, false on failure (memory allocation error or invalid arguments)
  *
@@ -31,11 +31,11 @@ bool ov_sprintf_char(char **const dest, char const *const reference, char const 
  *
  * Same as ov_sprintf_char() but takes a va_list instead of variable arguments.
  *
- * @param dest Pointer to char* buffer. Will be allocated/reallocated automatically.
+ * @param dest Pointer to char* buffer. Must not be NULL. Will be allocated/reallocated automatically.
  *             Must be freed using OV_ARRAY_DESTROY() from ovarray.h
  * @param reference Reference format string for type safety (can be NULL). Should specify the
  *                  correct argument types and order to prevent crashes from format string errors
- * @param format Printf-style format string
+ * @param format Printf-style format string. Must not be NULL.
  * @param valist Variable arguments list
  * @return true on success, false on failure (memory allocation error or invalid arguments)
  *
@@ -51,11 +51,11 @@ bool ov_vsprintf_char(char **const dest, char const *const reference, char const
  * allocated wide character buffer. The buffer is automatically allocated or reallocated as needed.
  * If *dest is not NULL, its existing content will be cleared before formatting.
  *
- * @param dest Pointer to wchar_t* buffer. Will be allocated/reallocated automatically.
+ * @param dest Pointer to wchar_t* buffer. Must not be NULL. Will be allocated/reallocated automatically.
  *             Must be freed using OV_ARRAY_DESTROY() from ovarray.h
  * @param reference Reference wide format string for type safety (can be NULL). Should specify the
  *                  correct argument types and order to prevent crashes from format string errors
- * @param format Printf-style format wide string
+ * @param format Printf-style format wide string. Must not be NULL.
  * @param ... Variable arguments for formatting
  * @return true on success, false on failure (memory allocation error or invalid arguments)
  *
@@ -70,11 +70,11 @@ bool ov_sprintf_wchar(wchar_t **const dest, wchar_t const *const reference, wcha
  *
  * Same as ov_sprintf_wchar() but takes a va_list instead of variable arguments.
  *
- * @param dest Pointer to wchar_t* buffer. Will be allocated/reallocated automatically.
+ * @param dest Pointer to wchar_t* buffer. Must not be NULL. Will be allocated/reallocated automatically.
  *             Must be freed using OV_ARRAY_DESTROY() from ovarray.h
  * @param reference Reference wide format string for type safety (can be NULL). Should specify the
  *                  correct argument types and order to prevent crashes from format string errors
- * @param format Printf-style format wide string
+ * @param format Printf-style format wide string. Must not be NULL.
  * @param valist Variable arguments list
  * @return true on success, false on failure (memory allocation error or invalid arguments)
  *
@@ -93,11 +93,11 @@ bool ov_vsprintf_wchar(wchar_t **const dest,
  * buffer. If *dest is NULL, this function behaves like ov_sprintf_char().
  * The buffer is automatically reallocated as needed to accommodate the new content.
  *
- * @param dest Pointer to char* buffer. Will be allocated/reallocated automatically.
+ * @param dest Pointer to char* buffer. Must not be NULL. Will be allocated/reallocated automatically.
  *             Must be freed using OV_ARRAY_DESTROY() from ovarray.h
  * @param reference Reference format string for type safety (can be NULL). Should specify the
  *                  correct argument types and order to prevent crashes from format string errors
- * @param format Printf-style format string
+ * @param format Printf-style format string. Must not be NULL.
  * @param ... Variable arguments for formatting
  * @return true on success, false on failure (memory allocation error or invalid arguments)
  *
@@ -112,11 +112,11 @@ bool ov_sprintf_append_char(char **const dest, char const *const reference, char
  *
  * Same as ov_sprintf_append_char() but takes a va_list instead of variable arguments.
  *
- * @param dest Pointer to char* buffer. Will be allocated/reallocated automatically.
+ * @param dest Pointer to char* buffer. Must not be NULL. Will be allocated/reallocated automatically.
  *             Must be freed using OV_ARRAY_DESTROY() from ovarray.h
  * @param reference Reference format string for type safety (can be NULL). Should specify the
  *                  correct argument types and order to prevent crashes from format string errors
- * @param format Printf-style format string
+ * @param format Printf-style format string. Must not be NULL.
  * @param valist Variable arguments list
  * @return true on success, false on failure (memory allocation error or invalid arguments)
  *
@@ -133,11 +133,11 @@ bool ov_vsprintf_append_char(char **const dest, char const *const reference, cha
  * wide character buffer. If *dest is NULL, this function behaves like ov_sprintf_wchar().
  * The buffer is automatically reallocated as needed to accommodate the new content.
  *
- * @param dest Pointer to wchar_t* buffer. Will be allocated/reallocated automatically.
+ * @param dest Pointer to wchar_t* buffer. Must not be NULL. Will be allocated/reallocated automatically.
  *             Must be freed using OV_ARRAY_DESTROY() from ovarray.h
  * @param reference Reference wide format string for type safety (can be NULL). Should specify the
  *                  correct argument types and order to prevent crashes from format string errors
- * @param format Printf-style format wide string
+ * @param format Printf-style format wide string. Must not be NULL.
  * @param ... Variable arguments for formatting
  * @return true on success, false on failure (memory allocation error or invalid arguments)
  *
@@ -152,11 +152,11 @@ bool ov_sprintf_append_wchar(wchar_t **const dest, wchar_t const *const referenc
  *
  * Same as ov_sprintf_append_wchar() but takes a va_list instead of variable arguments.
  *
- * @param dest Pointer to wchar_t* buffer. Will be allocated/reallocated automatically.
+ * @param dest Pointer to wchar_t* buffer. Must not be NULL. Will be allocated/reallocated automatically.
  *             Must be freed using OV_ARRAY_DESTROY() from ovarray.h
  * @param reference Reference wide format string for type safety (can be NULL). Should specify the
  *                  correct argument types and order to prevent crashes from format string errors
- * @param format Printf-style format wide string
+ * @param format Printf-style format wide string. Must not be NULL.
  * @param valist Variable arguments list
  * @return true on success, false on failure (memory allocation error or invalid arguments)
  *

@@ -1,5 +1,6 @@
-#include "codepoint_char16.h"
+#include <ovutf.h>
 
+#include <assert.h>
 #include <stdbool.h>
 
 #include "common.h"
@@ -9,6 +10,11 @@ static inline bool surrogate_high(int const ch) { return 0xd800 <= ch && ch < 0x
 static inline bool surrogate_low(int const ch) { return 0xdc00 <= ch && ch < 0xe000; }
 
 size_t ov_char16_to_codepoint(ov_codepoint_fn fn, void *ctx, char16_t const *const src, size_t const src_len) {
+  assert(fn != NULL && "fn must not be NULL");
+  assert(src != NULL || src_len == 0 && "src must not be NULL when src_len > 0");
+  if (!fn || (!src && src_len > 0)) {
+    return 0;
+  }
   size_t i = 0;
   while (i < src_len) {
     int_fast32_t codepoint = 0;

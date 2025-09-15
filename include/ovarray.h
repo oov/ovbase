@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <ovbase.h>
 
 /**
@@ -35,26 +36,27 @@
 /**
  * @brief Get the current length (number of elements) of a dynamic array
  *
- * @param aptr Array pointer
- * @return Number of elements currently in the array
+ * @param aptr Array pointer (NULL is allowed, returns 0)
+ * @return Number of elements currently in the array, or 0 if aptr is NULL
  */
 #define OV_ARRAY_LENGTH(aptr) (ov_array_length((void const *)aptr))
 
 /**
  * @brief Set the length (number of elements) of a dynamic array
  *
- * @param aptr Array pointer
+ * @param aptr Array pointer (NULL is allowed, function does nothing)
  * @param newlen New length to set
  *
  * @note This does not reallocate memory. Ensure capacity is sufficient before calling.
+ * @note If aptr is NULL, this function does nothing.
  */
 #define OV_ARRAY_SET_LENGTH(aptr, newlen) (ov_array_set_length((void *)aptr, newlen))
 
 /**
  * @brief Get the current capacity (maximum elements without reallocation) of a dynamic array
  *
- * @param aptr Array pointer
- * @return Maximum number of elements the array can hold without reallocation
+ * @param aptr Array pointer (NULL is allowed, returns 0)
+ * @return Maximum number of elements the array can hold without reallocation, or 0 if aptr is NULL
  */
 #define OV_ARRAY_CAPACITY(aptr) (ov_array_capacity((void const *)aptr))
 
@@ -87,11 +89,11 @@
 /**
  * @brief Pop (remove and return) the last item from a dynamic array
  *
- * @param aptr Array pointer
+ * @param aptr Array pointer (must not be NULL)
  * @return The last element that was removed from the array
  *
  * @note Decrements the array length but does not deallocate memory
- * @warning Undefined behavior if array is empty
+ * @warning Undefined behavior if array is empty or NULL
  */
 #define OV_ARRAY_POP(aptr) (aptr[ov_array_length_decrement(aptr)])
 
@@ -248,16 +250,19 @@ NODISCARD bool ov_bitarray_alloc(ov_bitarray **const a, size_t const len MEM_FIL
 
 NODISCARD bool ov_bitarray_grow(ov_bitarray **const a, size_t const newcap MEM_FILEPOS_PARAMS);
 static inline void ov_bitarray_set(ov_bitarray *const a, size_t const index) {
+  assert(a != NULL && "a must not be NULL");
   size_t const d = index / (sizeof(ov_bitarray) * 8);
   size_t const r = index % (sizeof(ov_bitarray) * 8);
   a[d] |= ((size_t)(1) << r);
 }
 static inline void ov_bitarray_clear(ov_bitarray *const a, size_t const index) {
+  assert(a != NULL && "a must not be NULL");
   size_t const d = index / (sizeof(ov_bitarray) * 8);
   size_t const r = index % (sizeof(ov_bitarray) * 8);
   a[d] &= ~((size_t)(1) << r);
 }
 NODISCARD static inline bool ov_bitarray_get(ov_bitarray const *const a, size_t const index) {
+  assert(a != NULL && "a must not be NULL");
   size_t const d = index / (sizeof(ov_bitarray) * 8);
   size_t const r = index % (sizeof(ov_bitarray) * 8);
   return (a[d] & ((size_t)(1) << r)) != 0;

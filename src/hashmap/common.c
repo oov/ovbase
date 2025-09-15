@@ -2,6 +2,8 @@
 
 #include "../mem.h"
 
+#include <assert.h>
+
 #ifdef __GNUC__
 #  pragma GCC diagnostic push
 #  if __has_warning("-Wextra-semi-stmt")
@@ -27,6 +29,7 @@
 // <http://creativecommons.org/publicdomain/zero/1.0/>.
 //-----------------------------------------------------------------------------
 uint64_t sip_hash_1_3(const void *data, const size_t inlen, uint64_t seed0, uint64_t seed1) {
+  assert(data != NULL || inlen == 0 && "data must not be NULL when inlen > 0");
 #define U8TO64_LE(p)                                                                                                   \
   {(((uint64_t)((p)[0])) | ((uint64_t)((p)[1]) << 8) | ((uint64_t)((p)[2]) << 16) | ((uint64_t)((p)[3]) << 24) |       \
     ((uint64_t)((p)[4]) << 32) | ((uint64_t)((p)[5]) << 40) | ((uint64_t)((p)[6]) << 48) |                             \
@@ -145,8 +148,10 @@ uint64_t sip_hash_1_3(const void *data, const size_t inlen, uint64_t seed0, uint
 
 void *ov_hm_realloc(void *p, size_t const s, void *const udata) {
 #ifdef ALLOCATE_LOGGER
+  assert(udata != NULL && "udata must not be NULL");
   struct ov_hashmap const *const hm = (struct ov_hashmap const *)udata;
-  struct ov_filepos const *const filepos = hm ? hm->filepos : NULL;
+  assert(hm->filepos != NULL && "hm->filepos must not be NULL");
+  struct ov_filepos const *const filepos = hm->filepos;
 #else
   (void)udata;
 #endif
@@ -159,8 +164,10 @@ void *ov_hm_realloc(void *p, size_t const s, void *const udata) {
 
 void ov_hm_free(void *p, void *const udata) {
 #ifdef ALLOCATE_LOGGER
+  assert(udata != NULL && "udata must not be NULL");
   struct ov_hashmap const *const hm = (struct ov_hashmap const *)udata;
-  struct ov_filepos const *const filepos = hm ? hm->filepos : NULL;
+  assert(hm->filepos != NULL && "hm->filepos must not be NULL");
+  struct ov_filepos const *const filepos = hm->filepos;
 #else
   (void)udata;
 #endif

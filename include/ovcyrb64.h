@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -37,6 +38,7 @@ struct ov_cyrb64 {
  *   ov_cyrb64_init(&ctx, seed);
  */
 static inline void ov_cyrb64_init(struct ov_cyrb64 *const ctx, uint32_t const seed) {
+  assert(ctx != NULL && "ctx must not be NULL");
   ctx->h1 = 0x91eb9dc7 ^ seed;
   ctx->h2 = 0x41c6ce57 ^ seed;
 }
@@ -63,6 +65,8 @@ static inline void ov_cyrb64_init(struct ov_cyrb64 *const ctx, uint32_t const se
  *   ov_cyrb64_update(&ctx, (const uint32_t*)str, word_len);
  */
 static inline void ov_cyrb64_update(struct ov_cyrb64 *const ctx, uint32_t const *const src, size_t const len) {
+  assert(ctx != NULL && "ctx must not be NULL");
+  assert((len == 0 || src != NULL) && "src must not be NULL when len > 0");
   for (size_t i = 0; i < len; ++i) {
     ctx->h1 = (ctx->h1 ^ src[i]) * 2654435761;
     ctx->h2 = (ctx->h2 ^ src[i]) * 1597334677;
@@ -95,6 +99,7 @@ static inline void ov_cyrb64_update(struct ov_cyrb64 *const ctx, uint32_t const 
  *   uint64_t hash2 = ov_cyrb64_final(&ctx);
  */
 static inline uint64_t ov_cyrb64_final(struct ov_cyrb64 const *const ctx) {
+  assert(ctx != NULL && "ctx must not be NULL");
   uint32_t h1 = ctx->h1, h2 = ctx->h2;
   h1 = ((h1 ^ (h1 >> 16)) * 2246822507) ^ ((h2 ^ (h2 >> 13)) * 3266489909);
   h2 = ((h2 ^ (h2 >> 16)) * 2246822507) ^ ((h1 ^ (h1 >> 13)) * 3266489909);

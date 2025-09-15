@@ -1,14 +1,20 @@
-#include "codepoint_wchar.h"
-
-#include <stdbool.h>
+#include <ovutf.h>
 
 #include "common.h"
+
+#include <assert.h>
+#include <stdbool.h>
 
 static inline bool surrogate_high(int const ch) { return 0xd800 <= ch && ch < 0xdc00; }
 
 static inline bool surrogate_low(int const ch) { return 0xdc00 <= ch && ch < 0xe000; }
 
 size_t ov_wchar_to_codepoint(ov_codepoint_fn fn, void *ctx, wchar_t const *const src, size_t const src_len) {
+  assert(fn != NULL && "fn must not be NULL");
+  assert(src != NULL || src_len == 0 && "src must not be NULL when src_len > 0");
+  if (!fn || (!src && src_len > 0)) {
+    return 0;
+  }
   size_t i = 0;
   while (i < src_len) {
     int_fast32_t codepoint = 0;

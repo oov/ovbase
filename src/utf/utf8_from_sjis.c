@@ -1,7 +1,14 @@
-#include "codepoint_sjis.h"
+#include <ovutf.h>
+
 #include "common.h"
 
+#include <assert.h>
+
 size_t ov_sjis_to_utf8_len(char const *const src, size_t const src_len) {
+  assert(src != NULL || src_len == 0 && "src must not be NULL when src_len > 0");
+  if (!src || !src_len) {
+    return 0;
+  }
   size_t n = 0;
   if (!ov_sjis_to_codepoint(ovutf_utf8_count, &n, src, src_len)) {
     return 0;
@@ -11,6 +18,8 @@ size_t ov_sjis_to_utf8_len(char const *const src, size_t const src_len) {
 
 size_t ov_sjis_to_utf8(
     char const *const src, size_t const src_len, char *const dest, size_t const dest_len, size_t *const read) {
+  assert(src != NULL || src_len == 0 && "src must not be NULL when src_len > 0");
+  assert(dest != NULL || dest_len == 0 && "dest must not be NULL when dest_len > 0");
   if (!src || !src_len || !dest || !dest_len) {
     return 0;
   }
@@ -19,7 +28,7 @@ size_t ov_sjis_to_utf8(
       .end = (uint8_t *)dest + dest_len,
   };
   size_t const r = ov_sjis_to_codepoint(ovutf_utf8_write, &ctx, src, src_len);
-  *ctx.cur = L'\0';
+  *ctx.cur = '\0';
   if (!r) {
     return 0;
   }

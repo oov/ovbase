@@ -1,8 +1,9 @@
-#include "codepoint_utf8.h"
-
-#include <stdbool.h>
+#include <ovutf.h>
 
 #include "common.h"
+
+#include <assert.h>
+#include <stdbool.h>
 
 static inline size_t first_byte_to_len(int const ch) {
   if (ch <= 0x7f) {
@@ -23,7 +24,9 @@ static inline size_t first_byte_to_len(int const ch) {
 static inline bool u8later(int const ch) { return (ch & 0xc0) == 0x80; }
 
 size_t ov_utf8_to_codepoint(ov_codepoint_fn fn, void *ctx, char const *const src, size_t const src_len) {
-  if (!fn || !src || !src_len) {
+  assert(fn != NULL && "fn must not be NULL");
+  assert(src != NULL || src_len == 0 && "src must not be NULL when src_len > 0");
+  if (!fn || (!src && src_len > 0)) {
     return 0;
   }
   uint8_t const *const u8 = (uint8_t const *)src;

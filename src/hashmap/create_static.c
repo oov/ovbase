@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include <assert.h>
 #include <ovrand.h>
 #include <string.h>
 
@@ -30,7 +31,13 @@ static int compare(void const *const a, void const *const b, void const *const u
 
 struct ov_hashmap *
 ov_hashmap_create_static(size_t const item_size, size_t const cap, size_t const key_bytes MEM_FILEPOS_PARAMS) {
-  if (key_bytes == 0) {
+  assert(item_size > 0 && "item_size must be greater than 0");
+  // cap can be 0, hashmap library will use a default capacity
+  assert(key_bytes > 0 && "key_bytes must be greater than 0");
+#ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+#endif
+  if (item_size == 0 || key_bytes == 0) {
     return NULL;
   }
 

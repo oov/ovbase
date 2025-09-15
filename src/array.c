@@ -16,7 +16,9 @@ struct ov_array_header {
 static inline size_t zumax(size_t const a, size_t const b) { return a > b ? a : b; }
 
 NODISCARD bool ov_array_grow(void **const a, size_t const itemsize, size_t const newcap MEM_FILEPOS_PARAMS) {
-  assert(a != NULL);
+  assert(a != NULL && "a must not be NULL");
+  assert(itemsize > 0 && "itemsize must be greater than 0");
+  assert(newcap > 0 && "newcap must be greater than 0");
   if (!a || !itemsize || !newcap) {
     return false;
   }
@@ -45,7 +47,7 @@ cleanup:
 }
 
 void ov_array_destroy(void **const a MEM_FILEPOS_PARAMS) {
-  assert(a != NULL);
+  assert(a != NULL && "a must not be NULL");
   if (a == NULL || *a == NULL) {
     return;
   }
@@ -58,18 +60,27 @@ void ov_array_destroy(void **const a MEM_FILEPOS_PARAMS) {
   *a = NULL;
 }
 
-NODISCARD size_t ov_array_length(void const *const a) { return a ? OV_ARRAY_HEADER_CONST(a)->len : 0; }
+NODISCARD size_t ov_array_length(void const *const a) {
+  // a can be NULL, no assert here
+  return a ? OV_ARRAY_HEADER_CONST(a)->len : 0;
+}
 
 void ov_array_set_length(void *const a, size_t const newlen) {
+  // a can be NULL, no assert here
   if (!a) {
     return;
   }
   OV_ARRAY_HEADER(a)->len = newlen;
 }
 
-NODISCARD size_t ov_array_capacity(void const *const a) { return a ? OV_ARRAY_HEADER_CONST(a)->cap : 0; }
+NODISCARD size_t ov_array_capacity(void const *const a) {
+  // a can be NULL, no assert here
+  return a ? OV_ARRAY_HEADER_CONST(a)->cap : 0;
+}
 
 NODISCARD bool ov_array_prepare_for_push(void **const a, size_t const itemsize MEM_FILEPOS_PARAMS) {
+  assert(a != NULL && "a must not be NULL");
+  assert(itemsize > 0 && "itemsize must be greater than 0");
   size_t const new_len = ov_array_length(*a) + 1;
   if (!ov_array_grow(a, itemsize, new_len MEM_FILEPOS_VALUES_PASSTHRU)) {
     return false;
@@ -78,12 +89,25 @@ NODISCARD bool ov_array_prepare_for_push(void **const a, size_t const itemsize M
   return true;
 }
 
+/**
+ * @brief Internal function for OV_ARRAY_POP macro - not intended for direct use
+ *
+ * Decrements array length and returns the new length, with NULL safety.
+ *
+ * @param a Array pointer (has both assert and runtime NULL check)
+ * @return The new length after decrementing, or 0 if array was empty or NULL
+ */
 size_t ov_array_length_decrement(void *const a) {
-  return a && OV_ARRAY_HEADER_CONST(a)->len ? --(OV_ARRAY_HEADER(a)->len) : 0;
+  assert(a != NULL && "a must not be NULL");
+  if (!a) {
+    return 0;
+  }
+  return OV_ARRAY_HEADER_CONST(a)->len ? --(OV_ARRAY_HEADER(a)->len) : 0;
 }
 
 NODISCARD bool ov_bitarray_grow(ov_bitarray **const a, size_t const newcap MEM_FILEPOS_PARAMS) {
-  assert(a != NULL);
+  assert(a != NULL && "a must not be NULL");
+  assert(newcap > 0 && "newcap must be greater than 0");
   if (!a || !newcap) {
     return false;
   }
@@ -114,6 +138,8 @@ cleanup:
 }
 
 NODISCARD bool ov_bitarray_alloc(ov_bitarray **const a, size_t const len MEM_FILEPOS_PARAMS) {
+  assert(a != NULL && "a must not be NULL");
+  assert(len > 0 && "len must be greater than 0");
   if (!a) {
     return false;
   }

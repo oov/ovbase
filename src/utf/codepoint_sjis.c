@@ -1,6 +1,8 @@
-#include "codepoint_sjis.h"
+#include <ovutf.h>
 
 #include "common.h"
+
+#include <assert.h>
 
 // Based on http://encoding.spec.whatwg.org/index-jis0208.txt
 static uint16_t const jis0208[] = {
@@ -1325,6 +1327,11 @@ static inline uint16_t sjis_to_codepoint2(uint8_t const b1, uint8_t const b2) {
 }
 
 size_t ov_sjis_to_codepoint(ov_codepoint_fn fn, void *ctx, char const *const src, size_t const src_len) {
+  assert(fn != NULL && "fn must not be NULL");
+  assert(src != NULL || src_len == 0 && "src must not be NULL when src_len > 0");
+  if (!fn || (!src && src_len > 0)) {
+    return 0;
+  }
   size_t i = 0;
   while (i < src_len) {
     uint16_t codepoint;

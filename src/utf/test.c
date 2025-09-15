@@ -113,6 +113,26 @@ static void test_char16_to_utf8(void) {
   TEST_CHECK(strcmp(buf, golden) == 0);
 }
 
+static void test_char16_to_utf8_buffer_safety(void) {
+  // Test safe behavior with insufficient buffer (null-terminated string design)
+  char16_t const *short_ws = u"ABCD";
+  char limited_buf[4] = {0xFF, 0xFF, 0xFF, 0xFF}; // Only 4 bytes - not enough for 4 chars + null terminator
+
+  // Function should safely write only what fits including null terminator
+  size_t sz;
+  size_t result = ov_char16_to_utf8(short_ws, char16len(short_ws), limited_buf, 4, &sz);
+  TEST_CHECK(result == 3);                     // Should return 3 (wrote "ABC" + null terminator)
+  TEST_CHECK(sz == 3);                         // Should read 3 chars from input
+  TEST_CHECK(strcmp(limited_buf, "ABC") == 0); // Should be null-terminated "ABC"
+
+  // Verify the function behavior with exact fit (content + null terminator)
+  char exact_buf[5];
+  result = ov_char16_to_utf8(short_ws, char16len(short_ws), exact_buf, 5, &sz);
+  TEST_CHECK(result == 4);                    // Should return 4 (wrote "ABCD" + null terminator)
+  TEST_CHECK(sz == 4);                        // Should read all 4 chars from input
+  TEST_CHECK(strcmp(exact_buf, "ABCD") == 0); // Should be null-terminated "ABCD"
+}
+
 static void test_char32_to_utf8(void) {
   char32_t const *ws = U"ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
   char *golden = "ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
@@ -124,6 +144,26 @@ static void test_char32_to_utf8(void) {
   TEST_CHECK(strcmp(buf, golden) == 0);
 }
 
+static void test_char32_to_utf8_buffer_safety(void) {
+  // Test safe behavior with insufficient buffer (null-terminated string design)
+  char32_t const *short_ws = U"ABCD";
+  char limited_buf[4] = {0xFF, 0xFF, 0xFF, 0xFF}; // Only 4 bytes - not enough for 4 chars + null terminator
+
+  // Function should safely write only what fits including null terminator
+  size_t sz;
+  size_t result = ov_char32_to_utf8(short_ws, char32len(short_ws), limited_buf, 4, &sz);
+  TEST_CHECK(result == 3);                     // Should return 3 (wrote "ABC" + null terminator)
+  TEST_CHECK(sz == 3);                         // Should read 3 chars from input
+  TEST_CHECK(strcmp(limited_buf, "ABC") == 0); // Should be null-terminated "ABC"
+
+  // Verify the function behavior with exact fit (content + null terminator)
+  char exact_buf[5];
+  result = ov_char32_to_utf8(short_ws, char32len(short_ws), exact_buf, 5, &sz);
+  TEST_CHECK(result == 4);                    // Should return 4 (wrote "ABCD" + null terminator)
+  TEST_CHECK(sz == 4);                        // Should read all 4 chars from input
+  TEST_CHECK(strcmp(exact_buf, "ABCD") == 0); // Should be null-terminated "ABCD"
+}
+
 static void test_wchar_to_utf8(void) {
   wchar_t const *ws = L"ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
   char *golden = "ABCabc123ﾃｽﾄテストこんにちは🌏🌍🌎";
@@ -133,6 +173,46 @@ static void test_wchar_to_utf8(void) {
   TEST_CHECK(ov_wchar_to_utf8(ws, wcslen(ws), buf, 128, &sz) == strlen(golden));
   TEST_CHECK(sz == wcslen(ws));
   TEST_CHECK(strcmp(buf, golden) == 0);
+}
+
+static void test_wchar_to_utf8_buffer_safety(void) {
+  // Test safe behavior with insufficient buffer (null-terminated string design)
+  wchar_t const *short_ws = L"ABCD";
+  char limited_buf[4] = {0xFF, 0xFF, 0xFF, 0xFF}; // Only 4 bytes - not enough for 4 chars + null terminator
+
+  // Function should safely write only what fits including null terminator
+  size_t sz;
+  size_t result = ov_wchar_to_utf8(short_ws, wcslen(short_ws), limited_buf, 4, &sz);
+  TEST_CHECK(result == 3);                     // Should return 3 (wrote "ABC" + null terminator)
+  TEST_CHECK(sz == 3);                         // Should read 3 chars from input
+  TEST_CHECK(strcmp(limited_buf, "ABC") == 0); // Should be null-terminated "ABC"
+
+  // Verify the function behavior with exact fit (content + null terminator)
+  char exact_buf[5];
+  result = ov_wchar_to_utf8(short_ws, wcslen(short_ws), exact_buf, 5, &sz);
+  TEST_CHECK(result == 4);                    // Should return 4 (wrote "ABCD" + null terminator)
+  TEST_CHECK(sz == 4);                        // Should read all 4 chars from input
+  TEST_CHECK(strcmp(exact_buf, "ABCD") == 0); // Should be null-terminated "ABCD"
+}
+
+static void test_ov_sjis_to_utf8_buffer_safety(void) {
+  // Test safe behavior with insufficient buffer (null-terminated string design)
+  char const *short_sjis = "ABCD";                // Simple ASCII for testing
+  char limited_buf[4] = {0xFF, 0xFF, 0xFF, 0xFF}; // Only 4 bytes - not enough for 4 chars + null terminator
+
+  // Function should safely write only what fits including null terminator
+  size_t sz;
+  size_t result = ov_sjis_to_utf8(short_sjis, strlen(short_sjis), limited_buf, 4, &sz);
+  TEST_CHECK(result == 3);                     // Should return 3 (wrote "ABC" + null terminator)
+  TEST_CHECK(sz == 3);                         // Should read 3 chars from input
+  TEST_CHECK(strcmp(limited_buf, "ABC") == 0); // Should be null-terminated "ABC"
+
+  // Verify the function behavior with exact fit (content + null terminator)
+  char exact_buf[5];
+  result = ov_sjis_to_utf8(short_sjis, strlen(short_sjis), exact_buf, 5, &sz);
+  TEST_CHECK(result == 4);                    // Should return 4 (wrote "ABCD" + null terminator)
+  TEST_CHECK(sz == 4);                        // Should read all 4 chars from input
+  TEST_CHECK(strcmp(exact_buf, "ABCD") == 0); // Should be null-terminated "ABCD"
 }
 
 static void test_kick_broken_surrogate_pair(void) {
@@ -161,10 +241,14 @@ TEST_LIST = {
     {"test_ov_utf8_to_wchar", test_ov_utf8_to_wchar},
     {"test_bad_encoding", test_bad_encoding},
     {"test_char16_to_utf8", test_char16_to_utf8},
+    {"test_char16_to_utf8_buffer_safety", test_char16_to_utf8_buffer_safety},
     {"test_char32_to_utf8", test_char32_to_utf8},
+    {"test_char32_to_utf8_buffer_safety", test_char32_to_utf8_buffer_safety},
     {"test_wchar_to_utf8", test_wchar_to_utf8},
+    {"test_wchar_to_utf8_buffer_safety", test_wchar_to_utf8_buffer_safety},
     {"test_kick_broken_surrogate_pair", test_kick_broken_surrogate_pair},
     {"test_ov_sjis_to_utf8", test_ov_sjis_to_utf8},
+    {"test_ov_sjis_to_utf8_buffer_safety", test_ov_sjis_to_utf8_buffer_safety},
     {NULL, NULL},
 };
 
