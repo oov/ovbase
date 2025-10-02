@@ -181,6 +181,17 @@ void report_allocated_count(void) {
 #endif
 
 #if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
+#  ifdef ALLOCATE_LOGGER
+static void report_error(char const *const message, struct ov_filepos const *const filepos) {
+  assert(message != NULL && "message must not be NULL");
+  assert(filepos != NULL && "filepos must not be NULL");
+  char buffer[256];
+  OV_SNPRINTF(
+      buffer, sizeof(buffer), NULL, "%s at %s:%ld %s()\n", message, filepos->file, filepos->line, filepos->func);
+  output(buffer);
+}
+#  endif
+
 void mem_log_allocated(void const *const p MEM_FILEPOS_PARAMS) {
   assert(p != NULL && "p must not be NULL");
 #  ifdef ALLOCATE_LOGGER
@@ -198,17 +209,52 @@ void mem_log_allocated(void const *const p MEM_FILEPOS_PARAMS) {
 #  endif
 }
 
-void mem_log_free(void const *const p) {
+void mem_log_free(void const *const p MEM_FILEPOS_PARAMS) {
   assert(p != NULL && "p must not be NULL");
 #  ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
   mtx_lock(&g_mem_mtx);
-  allocated_remove(p);
+  bool const found_double_free = allocated_remove(p);
   mtx_unlock(&g_mem_mtx);
+  if (found_double_free) {
+    report_error("double free detected", filepos);
+  }
 #  else
   (void)p;
 #  endif
 #  ifdef LEAK_DETECTOR
   freed();
+#  endif
+}
+
+void mem_log_realloc_validate(void const *const old_p MEM_FILEPOS_PARAMS) {
+#  ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+  if (old_p != NULL) {
+    mtx_lock(&g_mem_mtx);
+    bool const found_uninitialized = allocated_remove(old_p);
+    mtx_unlock(&g_mem_mtx);
+    if (found_uninitialized) {
+      report_error("uninitialized or invalid pointer detected", filepos);
+    }
+  }
+#  else
+  (void)old_p;
+#  endif
+}
+
+void mem_log_realloc_update(void const *const new_p MEM_FILEPOS_PARAMS) {
+  assert(new_p != NULL && "new_p must not be NULL");
+#  ifdef ALLOCATE_LOGGER
+  assert(filepos != NULL && "filepos must not be NULL");
+  mtx_lock(&g_mem_mtx);
+  bool const failed_allocate = allocated_put(new_p MEM_FILEPOS_VALUES_PASSTHRU);
+  mtx_unlock(&g_mem_mtx);
+  if (failed_allocate) {
+    report_error("failed to record allocated memory", filepos);
+  }
+#  else
+  (void)new_p;
 #  endif
 }
 #endif
@@ -222,87 +268,29 @@ bool mem_core_(void *const pp, size_t const sz MEM_FILEPOS_PARAMS) {
     if (*(void **)pp == NULL) {
       return false;
     }
-#ifdef LEAK_DETECTOR
-    freed();
-#endif
-#ifdef ALLOCATE_LOGGER
-    {
-      mtx_lock(&g_mem_mtx);
-      bool const found_double_free = allocated_remove(*(void **)pp);
-      mtx_unlock(&g_mem_mtx);
-      if (found_double_free) {
-        char buffer[256];
-        OV_SNPRINTF(buffer,
-                    sizeof(buffer),
-                    NULL,
-                    "double free detected at %s:%ld %s()\n",
-                    filepos->file,
-                    filepos->line,
-                    filepos->func);
-        output(buffer);
-      }
-    }
+#if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
+    mem_log_free(*(void **)pp MEM_FILEPOS_VALUES_PASSTHRU);
 #endif
     FREE(*(void **)pp);
     *(void **)pp = NULL;
     return true;
   }
+#if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
+  if (*(void **)pp != NULL) {
+    mem_log_realloc_validate(*(void **)pp MEM_FILEPOS_VALUES_PASSTHRU);
+  }
+#endif
   void *np = REALLOC(*(void **)pp, sz);
   if (!np) {
     return false;
   }
+#if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
   if (*(void **)pp == NULL) {
-#ifdef LEAK_DETECTOR
-    allocated();
-#endif
-#ifdef ALLOCATE_LOGGER
-    {
-      mtx_lock(&g_mem_mtx);
-      bool const failed_allocate = allocated_put(np MEM_FILEPOS_VALUES_PASSTHRU);
-      mtx_unlock(&g_mem_mtx);
-      if (failed_allocate) {
-        char buffer[256];
-        OV_SNPRINTF(buffer,
-                    sizeof(buffer),
-                    NULL,
-                    "failed to record allocated memory at %s:%ld %s()\n",
-                    filepos->file,
-                    filepos->line,
-                    filepos->func);
-        output(buffer);
-      }
-    }
-#endif
+    mem_log_allocated(np MEM_FILEPOS_VALUES_PASSTHRU);
   } else {
-#ifdef ALLOCATE_LOGGER
-    mtx_lock(&g_mem_mtx);
-    bool const found_double_free = allocated_remove(*(void **)pp);
-    bool const failed_allocate = allocated_put(np MEM_FILEPOS_VALUES_PASSTHRU);
-    mtx_unlock(&g_mem_mtx);
-    if (found_double_free) {
-      char buffer[256];
-      OV_SNPRINTF(buffer,
-                  sizeof(buffer),
-                  NULL,
-                  "double free detected at %s:%ld %s()\n",
-                  filepos->file,
-                  filepos->line,
-                  filepos->func);
-      output(buffer);
-    }
-    if (failed_allocate) {
-      char buffer[256];
-      OV_SNPRINTF(buffer,
-                  sizeof(buffer),
-                  NULL,
-                  "failed to record allocated memory at %s:%ld %s()\n",
-                  filepos->file,
-                  filepos->line,
-                  filepos->func);
-      output(buffer);
-    }
-#endif
+    mem_log_realloc_update(np MEM_FILEPOS_VALUES_PASSTHRU);
   }
+#endif
   *(void **)pp = np;
   return true;
 }

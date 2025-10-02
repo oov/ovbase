@@ -57,12 +57,9 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS) {
   }
   mi_free(*(void **)pp);
 #  if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
-  mem_log_free(*(void **)pp);
+  mem_log_free(*(void **)pp MEM_FILEPOS_VALUES_PASSTHRU);
 #  endif
   *(void **)pp = NULL;
-#  ifdef ALLOCATE_LOGGER
-  (void)filepos;
-#  endif
 }
 
 #else

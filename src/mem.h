@@ -3,7 +3,9 @@
 
 #if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
 void mem_log_allocated(void const *const p MEM_FILEPOS_PARAMS);
-void mem_log_free(void const *const p);
+void mem_log_free(void const *const p MEM_FILEPOS_PARAMS);
+void mem_log_realloc_validate(void const *const old_p MEM_FILEPOS_PARAMS);
+void mem_log_realloc_update(void const *const new_p MEM_FILEPOS_PARAMS);
 #endif
 
 #ifdef ALLOCATE_LOGGER
