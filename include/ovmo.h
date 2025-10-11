@@ -4,6 +4,8 @@
 
 #define gettext(id) mo_gettext(mo_get_default(), (id))
 #define gettext_noop(id) (id)
+#define pgettext(ctxt, id) mo_pgettext(mo_get_default(), (ctxt), (id))
+#define pgettext_noop(ctxt, id) (id)
 
 struct mo;
 
