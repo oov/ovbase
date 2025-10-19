@@ -87,6 +87,16 @@ static inline void *ov_deconster_(void const *const ptr) {
 #endif // __GNUC__
 }
 
+// tribool
+
+enum {
+  ov_false = 0,
+  ov_true = 1,
+  ov_indeterminate = 2,
+};
+
+typedef unsigned char ov_tribool;
+
 // error
 
 enum ov_error_type {
