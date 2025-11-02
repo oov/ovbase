@@ -1,5 +1,7 @@
 #include <ovtest.h>
 
+#include <stdio.h>
+
 #include <ovarray.h>
 
 #include <ovsort.h>
@@ -402,8 +404,6 @@ static void benchmark_sort_case(struct benchmark_case const *config) {
            old_elapsed,
            new_elapsed);
   }
-
-  fflush(stdout);
 
   OV_ARRAY_DESTROY(&optimized);
   OV_ARRAY_DESTROY(&baseline);
