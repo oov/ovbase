@@ -61,6 +61,7 @@ configure_file(${SOURCE_INCLUDE_DIR}/ovmo.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovnum.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovprintf.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovprintf_ex.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
+configure_file(${SOURCE_INCLUDE_DIR}/ovsort.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovtest.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovthreads.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
 configure_file(${SOURCE_INCLUDE_DIR}/ovutf.h ${DESTINATION_INCLUDE_DIR} COPYONLY)
@@ -111,6 +112,7 @@ set(OVBASE_SOURCES
   num/wchar/utoa.c
   output.c
   ovbase.c
+  ovsort.c
   ovthreads.c
   printf/char.c
   printf/wchar.c
@@ -236,6 +238,8 @@ add_executable(test_ovbase_printf_ex_char printf_ex/char_test.c)
 list(APPEND tests test_ovbase_printf_ex_char)
 add_executable(test_ovbase_printf_ex_wchar printf_ex/wchar_test.c)
 list(APPEND tests test_ovbase_printf_ex_wchar)
+add_executable(test_ovbase_sort ovsort_test.c)
+list(APPEND tests test_ovbase_sort)
 add_executable(test_ovbase_utf utf/test.c)
 list(APPEND tests test_ovbase_utf)
 add_executable(test_ovbase_mem mem_test.c)
