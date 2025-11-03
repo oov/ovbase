@@ -30,7 +30,7 @@ void ov_sort(size_t const n,
   }
 
   enum {
-    max_levels = 64,
+    max_levels = sizeof(size_t) * 8,
     insertion_threshold = 16,
   };
 
