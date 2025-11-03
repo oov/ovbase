@@ -32,7 +32,7 @@ format annotation does not support '%1$s'
  * @example
  *   ov_vpprintf_char(my_putc, ctx, "%1$s%2$d", gettext("File %1$s error %2$d"), valist);
  */
-int ov_vpprintf_char(void (*putc)(int c, void *ctx),
+int ov_vpprintf_char(void (*const putc)(int c, void *ctx),
                      void *ctx,
                      char const *const reference,
                      char const *const format,
@@ -54,7 +54,7 @@ int ov_vpprintf_char(void (*putc)(int c, void *ctx),
  * @example
  *   ov_pprintf_char(my_putc, ctx, "%1$s%2$d", gettext("File %1$s error %2$d"), filename, errno);
  */
-int ov_pprintf_char(void (*putc)(int c, void *ctx),
+int ov_pprintf_char(void (*const putc)(int c, void *ctx),
                     void *ctx,
                     char const *const reference,
                     char const *const format,
@@ -117,7 +117,7 @@ int ov_vsnprintf_char(char *const dest,
  * @example
  *   ov_vpprintf_wchar(my_putc, ctx, L"%1$s%2$d", gettext_wide(L"File %1$s error %2$d"), valist);
  */
-int ov_vpprintf_wchar(void (*putc)(int c, void *ctx),
+int ov_vpprintf_wchar(void (*const putc)(int c, void *ctx),
                       void *ctx,
                       wchar_t const *const reference,
                       wchar_t const *const format,
@@ -140,7 +140,7 @@ int ov_vpprintf_wchar(void (*putc)(int c, void *ctx),
  *   ov_pprintf_wchar(my_putc, ctx, L"%1$s%2$d", gettext_wide(L"File %1$s error %2$d"), filename, errno);
  */
 int ov_pprintf_wchar(
-    void (*putc)(int c, void *ctx), void *ctx, wchar_t const *const reference, wchar_t const *const format, ...);
+    void (*const putc)(int c, void *ctx), void *ctx, wchar_t const *const reference, wchar_t const *const format, ...);
 
 /**
  * @brief Format wide string into a buffer with size limit (wchar_t version)

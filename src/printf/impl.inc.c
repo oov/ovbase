@@ -36,7 +36,7 @@
 #  define FUNCNAME(funcname) FUNCNAME_2(PREFIX, funcname, POSTFIX)
 #endif
 
-int FUNCNAME(vpprintf)(void (*putc)(int c, void *ctx),
+int FUNCNAME(vpprintf)(void (*const putc)(int c, void *ctx),
                        void *ctx,
                        CHAR_TYPE const *const reference,
                        CHAR_TYPE const *const format,
@@ -49,8 +49,11 @@ int FUNCNAME(vpprintf)(void (*putc)(int c, void *ctx),
   return npf_vpprintf(putc, ctx, reference, format, valist);
 }
 
-int FUNCNAME(pprintf)(
-    void (*putc)(int c, void *ctx), void *ctx, CHAR_TYPE const *const reference, CHAR_TYPE const *const format, ...) {
+int FUNCNAME(pprintf)(void (*const putc)(int c, void *ctx),
+                      void *ctx,
+                      CHAR_TYPE const *const reference,
+                      CHAR_TYPE const *const format,
+                      ...) {
   assert(putc != NULL && "putc must not be NULL");
   assert(format != NULL && "format must not be NULL");
   if (!putc || !format) {

@@ -321,7 +321,7 @@ typedef bool (*ov_error_autofill_hook_func)(struct ov_error_stack *target, struc
  *
  *   ov_error_set_autofill_hook(my_error_hook);
  */
-void ov_error_set_autofill_hook(ov_error_autofill_hook_func hook_func);
+void ov_error_set_autofill_hook(ov_error_autofill_hook_func const hook_func);
 
 /**
  * @brief Hook function type for custom error output
@@ -348,7 +348,7 @@ typedef void (*ov_error_output_hook_func)(char const *str);
  * @note The hook function becomes the final output destination when set.
  *       No fallback to stderr occurs regardless of hook success/failure.
  */
-void ov_error_set_output_hook(ov_error_output_hook_func hook_func);
+void ov_error_set_output_hook(ov_error_output_hook_func const hook_func);
 
 /**
  * Automatically fills error message if not already set

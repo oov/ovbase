@@ -32,7 +32,7 @@ typedef enum ov_codepoint_fn_result (*ov_codepoint_fn)(int_fast32_t codepoint, v
  * @param src_len length of src
  * @return Returns the number of bytes processed on success, or zero on failure
  */
-size_t ov_utf8_to_codepoint(ov_codepoint_fn fn, void *ctx, char const *const src, size_t const src_len);
+size_t ov_utf8_to_codepoint(ov_codepoint_fn const fn, void *ctx, char const *const src, size_t const src_len);
 
 /**
  * @brief Converts a char16_t string to a codepoint and calls a callback.
@@ -43,7 +43,7 @@ size_t ov_utf8_to_codepoint(ov_codepoint_fn fn, void *ctx, char const *const src
  * @param src_len length of src
  * @return Returns the number of characters processed on success, or zero on failure
  */
-size_t ov_char16_to_codepoint(ov_codepoint_fn fn, void *ctx, char16_t const *const src, size_t const src_len);
+size_t ov_char16_to_codepoint(ov_codepoint_fn const fn, void *ctx, char16_t const *const src, size_t const src_len);
 
 /**
  * @brief Converts a char32_t string to a codepoint and calls a callback.
@@ -54,7 +54,7 @@ size_t ov_char16_to_codepoint(ov_codepoint_fn fn, void *ctx, char16_t const *con
  * @param src_len length of src
  * @return Returns the number of characters processed on success, or zero on failure
  */
-size_t ov_char32_to_codepoint(ov_codepoint_fn fn, void *ctx, char32_t const *const src, size_t const src_len);
+size_t ov_char32_to_codepoint(ov_codepoint_fn const fn, void *ctx, char32_t const *const src, size_t const src_len);
 
 /**
  * @brief Converts a wchar_t string to a codepoint and calls a callback.
@@ -65,7 +65,7 @@ size_t ov_char32_to_codepoint(ov_codepoint_fn fn, void *ctx, char32_t const *con
  * @param src_len length of src
  * @return Returns the number of characters processed on success, or zero on failure
  */
-size_t ov_wchar_to_codepoint(ov_codepoint_fn fn, void *ctx, wchar_t const *const src, size_t const src_len);
+size_t ov_wchar_to_codepoint(ov_codepoint_fn const fn, void *ctx, wchar_t const *const src, size_t const src_len);
 
 /**
  * @brief Converts a Shift_JIS string to a codepoint.
@@ -76,7 +76,7 @@ size_t ov_wchar_to_codepoint(ov_codepoint_fn fn, void *ctx, wchar_t const *const
  * @param src_len length of src
  * @return Returns the number of bytes processed on success, or zero on failure
  */
-size_t ov_sjis_to_codepoint(ov_codepoint_fn fn, void *ctx, char const *const src, size_t const src_len);
+size_t ov_sjis_to_codepoint(ov_codepoint_fn const fn, void *ctx, char const *const src, size_t const src_len);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
