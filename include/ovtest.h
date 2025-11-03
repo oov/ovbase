@@ -38,6 +38,15 @@ static inline void test_fini_(void) {
 #define TEST_INIT test_init_()
 #define TEST_FINI test_fini_()
 
+static inline bool ovtest_should_run_benchmarks(void) {
+  char const *env = getenv("OVBASE_RUN_BENCHMARKS");
+  if (!env || env[0] == '\0') {
+    TEST_SKIP("Skipping benchmark tests. Set OVBASE_RUN_BENCHMARKS environment variable to run.");
+    return false;
+  }
+  return true;
+}
+
 #ifdef __GNUC__
 
 #  pragma GCC diagnostic push
