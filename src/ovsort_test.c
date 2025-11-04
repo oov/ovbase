@@ -115,7 +115,7 @@ static void fill_dataset(struct sort_item *items, size_t count, enum dataset_kin
   case dataset_kind_nearly_constant: {
     struct ov_rand_xoshiro256pp rng;
     dataset_rng_init(&rng, seed);
-    size_t const base = ov_rand_xoshiro256pp_next(&rng);
+    size_t const base = (size_t)ov_rand_xoshiro256pp_next(&rng);
     for (size_t i = 0; i < count; ++i) {
       size_t value = base;
       if ((ov_rand_xoshiro256pp_next(&rng) & UINT64_C(0x0F)) == 0) {
