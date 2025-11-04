@@ -7,11 +7,12 @@
 // insertion-sort fallback for small partitions to improve behaviour on nearly
 // sorted or reverse-sorted datasets.
 
-static void insertion_sort_range(size_t const begin,
-                                 size_t const end,
-                                 int (*compare)(size_t const idx0, size_t const idx1, void *const userdata),
-                                 void (*swap)(size_t const idx0, size_t const idx1, void *const userdata),
-                                 void *const userdata) {
+static inline void
+insertion_sort_range(size_t const begin,
+                     size_t const end,
+                     int (*const compare)(size_t const idx0, size_t const idx1, void *const userdata),
+                     void (*const swap)(size_t const idx0, size_t const idx1, void *const userdata),
+                     void *const userdata) {
   for (size_t i = begin + 1; i < end; ++i) {
     size_t j = i;
     while (j > begin && compare(j, j - 1, userdata) < 0) {
@@ -22,8 +23,8 @@ static void insertion_sort_range(size_t const begin,
 }
 
 void ov_sort(size_t const n,
-             int (*compare)(size_t const idx0, size_t const idx1, void *const userdata),
-             void (*swap)(size_t const idx0, size_t const idx1, void *const userdata),
+             int (*const compare)(size_t const idx0, size_t const idx1, void *const userdata),
+             void (*const swap)(size_t const idx0, size_t const idx1, void *const userdata),
              void *const userdata) {
   if (n < 2 || !compare || !swap) {
     return;
@@ -36,12 +37,12 @@ void ov_sort(size_t const n,
 
   size_t beg[max_levels];
   size_t end[max_levels];
-  ptrdiff_t level = 0;
+  size_t level = 0;
 
   beg[0] = 0;
   end[0] = n;
 
-  while (level >= 0) {
+  while (level < n) {
     size_t left = beg[level];
     size_t right = end[level];
 
@@ -121,4 +122,51 @@ void ov_sort(size_t const n,
       end[level - 1] = tmp;
     }
   }
+}
+
+struct qsort_context {
+  unsigned char *base;
+  size_t item_size;
+  int (*const compare)(void const *a, void const *b, void *userdata);
+  void *userdata;
+};
+
+static int qsort_compare(size_t idx0, size_t idx1, void *userdata) {
+  struct qsort_context const *const ctx = (struct qsort_context const *)userdata;
+  unsigned char const *const a = ctx->base + idx0 * ctx->item_size;
+  unsigned char const *const b = ctx->base + idx1 * ctx->item_size;
+  return ctx->compare(a, b, ctx->userdata);
+}
+
+static void qsort_swap(size_t idx0, size_t idx1, void *userdata) {
+  struct qsort_context const *const ctx = (struct qsort_context const *)userdata;
+  size_t const item_size = ctx->item_size;
+  unsigned char *const a = ctx->base + idx0 * item_size;
+  unsigned char *const b = ctx->base + idx1 * item_size;
+  // Compiler optimizes this loop well, often faster than memcpy.
+  unsigned char tmp;
+  for (size_t i = 0; i < item_size; ++i) {
+    tmp = a[i];
+    a[i] = b[i];
+    b[i] = tmp;
+  }
+}
+
+void ov_qsort(void *const base,
+              size_t const n,
+              size_t const item_size,
+              int (*const compare)(void const *const a, void const *const b, void *const userdata),
+              void *const userdata) {
+  if (!base || !compare || !item_size || n < 2) {
+    return;
+  }
+  ov_sort(n,
+          qsort_compare,
+          qsort_swap,
+          &(struct qsort_context){
+              .base = (unsigned char *)base,
+              .item_size = item_size,
+              .compare = compare,
+              .userdata = userdata,
+          });
 }

@@ -1,94 +1,21 @@
 #include <ovtest.h>
 
+#include <ovsort.h>
+
 #include <stdio.h>
 
 #include <ovarray.h>
-
-#include <ovsort.h>
+#include <ovrand.h>
 
 struct sort_item {
-  int value;
+  size_t value;
   size_t original_index;
 };
 
-static void old_ov_sort(size_t n,
-                        int (*compare)(size_t idx0, size_t idx1, void *userdata),
-                        void (*swap)(size_t idx0, size_t idx1, void *userdata),
-                        void *userdata) {
-  if (n < 2 || !compare || !swap) {
-    return;
-  }
-
-  enum { max_levels = 64 };
-  size_t beg[max_levels];
-  size_t end[max_levels];
-  ptrdiff_t level = 0;
-
-  beg[0] = 0;
-  end[0] = n;
-
-  while (level >= 0) {
-    size_t left = beg[level];
-    size_t right = end[level];
-
-    if (left + 1 >= right) {
-      --level;
-      continue;
-    }
-
-    right -= 1;
-    size_t pivot = left;
-
-    for (;;) {
-      while (left < right && compare(right, pivot, userdata) >= 0) {
-        --right;
-      }
-      if (left < right) {
-        swap(left, right, userdata);
-        if (pivot == left) {
-          pivot = right;
-        } else if (pivot == right) {
-          pivot = left;
-        }
-        ++left;
-      }
-
-      while (left < right && compare(left, pivot, userdata) <= 0) {
-        ++left;
-      }
-      if (left < right) {
-        swap(right, left, userdata);
-        if (pivot == right) {
-          pivot = left;
-        } else if (pivot == left) {
-          pivot = right;
-        }
-        --right;
-      } else {
-        break;
-      }
-    }
-
-    if (pivot != left) {
-      swap(pivot, left, userdata);
-      pivot = left;
-    }
-
-    beg[level + 1] = left + 1;
-    end[level + 1] = end[level];
-    end[level] = left;
-    ++level;
-
-    if (end[level] - beg[level] > end[level - 1] - beg[level - 1]) {
-      size_t tmp = beg[level];
-      beg[level] = beg[level - 1];
-      beg[level - 1] = tmp;
-      tmp = end[level];
-      end[level] = end[level - 1];
-      end[level - 1] = tmp;
-    }
-  }
-}
+void old_ov_sort(size_t const n,
+                 int (*const compare)(size_t const idx0, size_t const idx1, void *const userdata),
+                 void (*const swap)(size_t const idx0, size_t const idx1, void *const userdata),
+                 void *const userdata);
 
 static int compare_items(size_t idx0, size_t idx1, void *userdata) {
   struct sort_item *const items = (struct sort_item *)userdata;
@@ -120,12 +47,8 @@ enum dataset_kind {
   dataset_kind_random = 0,
   dataset_kind_mostly_sorted,
   dataset_kind_reverse_sorted,
+  dataset_kind_nearly_constant,
 };
-
-static bool should_run_benchmarks(void) {
-  char const *env = getenv("GCMZ_RUN_BENCHMARKS");
-  return env && env[0] != '\0';
-}
 
 static char const *dataset_kind_name(enum dataset_kind kind) {
   switch (kind) {
@@ -135,9 +58,21 @@ static char const *dataset_kind_name(enum dataset_kind kind) {
     return "mostly_sorted";
   case dataset_kind_reverse_sorted:
     return "reverse_sorted";
+  case dataset_kind_nearly_constant:
+    return "nearly_constant";
   }
 
   return "unknown";
+}
+
+static void dataset_rng_init(struct ov_rand_xoshiro256pp *rng, uint32_t seed) {
+  uint64_t state = (uint64_t)seed;
+  uint64_t mixed = ov_rand_splitmix64(state);
+  while (mixed == 0) {
+    state = ov_rand_splitmix64_next(state);
+    mixed = ov_rand_splitmix64(state);
+  }
+  ov_rand_xoshiro256pp_init(rng, mixed);
 }
 
 static void fill_dataset(struct sort_item *items, size_t count, enum dataset_kind kind, uint32_t seed) {
@@ -151,36 +86,53 @@ static void fill_dataset(struct sort_item *items, size_t count, enum dataset_kin
 
   switch (kind) {
   case dataset_kind_random: {
-    uint32_t state = seed;
+    struct ov_rand_xoshiro256pp rng;
+    dataset_rng_init(&rng, seed);
     for (size_t i = 0; i < count; ++i) {
-      state = state * UINT32_C(1664525) + UINT32_C(1013904223);
-      int const value = (int)((state >> 1) & UINT32_C(0x7fffffff)) - (int)UINT32_C(0x40000000);
-      items[i].value = value;
+      uint64_t const next = ov_rand_xoshiro256pp_next(&rng);
+      items[i].value = (size_t)next;
     }
     return;
   }
   case dataset_kind_mostly_sorted: {
     for (size_t i = 0; i < count; ++i) {
-      items[i].value = (int)i;
+      items[i].value = i;
     }
     if (count > 1) {
-      uint32_t state = seed;
+      struct ov_rand_xoshiro256pp rng;
+      dataset_rng_init(&rng, seed);
       size_t const swap_count = (count / 16) + 1;
       for (size_t i = 0; i < swap_count; ++i) {
-        state = state * UINT32_C(1664525) + UINT32_C(1013904223);
-        size_t const idx0 = (size_t)(state % count);
-        state = state * UINT32_C(1664525) + UINT32_C(1013904223);
-        size_t const idx1 = (size_t)(state % count);
-        int const tmp = items[idx0].value;
+        size_t const idx0 = (size_t)(ov_rand_xoshiro256pp_next(&rng) % count);
+        size_t const idx1 = (size_t)(ov_rand_xoshiro256pp_next(&rng) % count);
+        size_t const tmp = items[idx0].value;
         items[idx0].value = items[idx1].value;
         items[idx1].value = tmp;
       }
     }
     return;
   }
+  case dataset_kind_nearly_constant: {
+    struct ov_rand_xoshiro256pp rng;
+    dataset_rng_init(&rng, seed);
+    size_t const base = ov_rand_xoshiro256pp_next(&rng);
+    for (size_t i = 0; i < count; ++i) {
+      size_t value = base;
+      if ((ov_rand_xoshiro256pp_next(&rng) & UINT64_C(0x0F)) == 0) {
+        size_t const delta = ov_rand_xoshiro256pp_next(&rng) % 3;
+        if (delta == 0 && value > 0) {
+          value -= 1;
+        } else if (delta == 2) {
+          value += 1;
+        }
+      }
+      items[i].value = value;
+    }
+    return;
+  }
   case dataset_kind_reverse_sorted:
     for (size_t i = 0; i < count; ++i) {
-      items[i].value = (int)(count - i - 1);
+      items[i].value = count - i - 1;
     }
     return;
   }
@@ -188,7 +140,7 @@ static void fill_dataset(struct sort_item *items, size_t count, enum dataset_kin
   memset(items, 0, count * sizeof(*items));
 }
 
-static void verify_dataset(char const *name, int const *values, size_t const count) {
+static void verify_dataset(char const *name, size_t const *values, size_t const count) {
   TEST_CASE(name);
 
   struct sort_item *baseline = NULL;
@@ -214,7 +166,7 @@ static void verify_dataset(char const *name, int const *values, size_t const cou
     bool const matches =
         baseline[i].value == optimized[i].value && baseline[i].original_index == optimized[i].original_index;
     TEST_CHECK_(matches,
-                "Mismatch at index %zu: old {value=%d, original_index=%zu}, new {value=%d, original_index=%zu}",
+                "Mismatch at index %zu: old {value=%zu, original_index=%zu}, new {value=%zu, original_index=%zu}",
                 i,
                 baseline[i].value,
                 baseline[i].original_index,
@@ -227,17 +179,17 @@ static void verify_dataset(char const *name, int const *values, size_t const cou
 }
 
 static void test_ov_sort_matches_standard(void) {
-  static int const dataset_empty[] = {0};
-  static int const dataset_sorted[] = {1, 2, 3, 4, 5, 6};
-  static int const dataset_reverse[] = {6, 5, 4, 3, 2, 1};
-  static int const dataset_duplicates[] = {3, 1, 2, 3, 2, 1, 3, 0};
-  static int const dataset_random[] = {42, -5, 17, 0, 99, -42, 17, 8, 23};
-  static int const dataset_small[] = {10};
-  static int const dataset_pair[] = {5, -1};
+  static size_t const dataset_empty[] = {0};
+  static size_t const dataset_sorted[] = {1, 2, 3, 4, 5, 6};
+  static size_t const dataset_reverse[] = {6, 5, 4, 3, 2, 1};
+  static size_t const dataset_duplicates[] = {3, 1, 2, 3, 2, 1, 3, 0};
+  static size_t const dataset_random[] = {42, 5, 17, 0, 99, 42, 17, 8, 23};
+  static size_t const dataset_small[] = {10};
+  static size_t const dataset_pair[] = {5, 1};
 
   struct {
     char const *name;
-    int const *values;
+    size_t const *values;
     size_t count;
   } const cases[] = {
       {"sorted", dataset_sorted, sizeof(dataset_sorted) / sizeof(dataset_sorted[0])},
@@ -281,7 +233,7 @@ verify_generated_dataset(char const *name, size_t count, enum dataset_kind kind,
       bool const matches =
           baseline[i].value == optimized[i].value && baseline[i].original_index == optimized[i].original_index;
       TEST_CHECK_(matches,
-                  "%s: mismatch at index %zu (value old=%d new=%d original old=%zu new=%zu)",
+                  "%s: mismatch at index %zu (value old=%zu new=%zu original old=%zu new=%zu)",
                   dataset_kind_name(kind),
                   i,
                   baseline[i].value,
@@ -411,19 +363,19 @@ static void benchmark_sort_case(struct benchmark_case const *config) {
 }
 
 static void test_ov_sort_benchmark(void) {
-  if (!should_run_benchmarks()) {
-    TEST_SKIP("Skipping benchmark tests in normal test runs");
+  if (!ovtest_should_run_benchmarks()) {
     return;
   }
 
-  acutest_timer_init_();
   struct benchmark_case const cases[] = {
       {"size=128 kind=random", dataset_kind_random, 128, 1000, 100, UINT32_C(0x12345678)},
       {"size=128 kind=mostly_sorted", dataset_kind_mostly_sorted, 128, 1000, 100, UINT32_C(0x23456789)},
       {"size=128 kind=reverse_sorted", dataset_kind_reverse_sorted, 128, 1000, 100, UINT32_C(0x3456789A)},
-      {"size=1024 kind=random", dataset_kind_random, 1024, 1000, 100, UINT32_C(0x12345678)},
-      {"size=1024 kind=mostly_sorted", dataset_kind_mostly_sorted, 1024, 1000, 100, UINT32_C(0x23456789)},
-      {"size=1024 kind=reverse_sorted", dataset_kind_reverse_sorted, 1024, 1000, 100, UINT32_C(0x3456789A)},
+      {"size=128 kind=nearly_constant", dataset_kind_nearly_constant, 128, 1000, 100, UINT32_C(0x456789AB)},
+      {"size=1024 kind=random", dataset_kind_random, 1024, 100, 100, UINT32_C(0x12345678)},
+      {"size=1024 kind=mostly_sorted", dataset_kind_mostly_sorted, 1024, 100, 100, UINT32_C(0x23456789)},
+      {"size=1024 kind=reverse_sorted", dataset_kind_reverse_sorted, 1024, 100, 100, UINT32_C(0x3456789A)},
+      {"size=1024 kind=nearly_constant", dataset_kind_nearly_constant, 1024, 100, 100, UINT32_C(0x456789AB)},
       {"size=8192 kind=random", dataset_kind_random, 8192, 50, 10, UINT32_C(0x87654321)},
       {"size=8192 kind=reverse_sorted", dataset_kind_reverse_sorted, 8192, 50, 10, UINT32_C(0x98765432)},
       {"size=102400 kind=random", dataset_kind_random, 102400, 20, 10, UINT32_C(0x13579BDF)},
@@ -436,9 +388,166 @@ static void test_ov_sort_benchmark(void) {
   TEST_CASE_(NULL);
 }
 
+static int qsort_compare(void const *const a, void const *const b, void *const userdata) {
+  (void)userdata;
+  struct sort_item const *const item_a = (struct sort_item const *)a;
+  struct sort_item const *const item_b = (struct sort_item const *)b;
+  if (item_a->value < item_b->value) {
+    return -1;
+  }
+  if (item_a->value > item_b->value) {
+    return 1;
+  }
+  if (item_a->original_index < item_b->original_index) {
+    return -1;
+  }
+  if (item_a->original_index > item_b->original_index) {
+    return 1;
+  }
+  return 0;
+}
+
+static int standard_qsort_compare(void const *const a, void const *const b) {
+  struct sort_item const *const item_a = (struct sort_item const *)a;
+  struct sort_item const *const item_b = (struct sort_item const *)b;
+  if (item_a->value < item_b->value) {
+    return -1;
+  }
+  if (item_a->value > item_b->value) {
+    return 1;
+  }
+  if (item_a->original_index < item_b->original_index) {
+    return -1;
+  }
+  if (item_a->original_index > item_b->original_index) {
+    return 1;
+  }
+  return 0;
+}
+
+struct qsort_benchmark_case {
+  char const *label;
+  enum dataset_kind kind;
+  size_t count;
+  size_t iterations;
+  size_t samples;
+  uint32_t seed;
+};
+
+static void benchmark_qsort_case(struct qsort_benchmark_case const *config) {
+  if (!config || config->count == 0 || config->iterations == 0 || config->samples == 0) {
+    return;
+  }
+
+  TEST_CASE_("benchmark qsort: %s", config->label);
+
+  size_t const count = config->count;
+  size_t const iterations = config->iterations;
+  size_t const samples = config->samples;
+
+  struct sort_item *base = NULL;
+  struct sort_item *standard = NULL;
+  struct sort_item *optimized = NULL;
+
+  bool ok = OV_ARRAY_GROW(&base, count + 1);
+  ok = ok && OV_ARRAY_GROW(&standard, count + 1);
+  ok = ok && OV_ARRAY_GROW(&optimized, count + 1);
+  TEST_ASSERT(ok);
+
+  double standard_total = 0.0;
+  double optimized_total = 0.0;
+
+  for (size_t run = 0; run < samples; ++run) {
+    uint32_t const seed = config->seed + (uint32_t)run;
+    fill_dataset(base, count, config->kind, seed);
+
+    acutest_timer_get_time_(&acutest_timer_start_);
+    for (size_t i = 0; i < iterations; ++i) {
+      memcpy(standard, base, count * sizeof(*standard));
+      qsort(standard, count, sizeof(*standard), standard_qsort_compare);
+    }
+    acutest_timer_get_time_(&acutest_timer_end_);
+    standard_total += acutest_timer_diff_(acutest_timer_start_, acutest_timer_end_);
+
+    acutest_timer_get_time_(&acutest_timer_start_);
+    for (size_t i = 0; i < iterations; ++i) {
+      memcpy(optimized, base, count * sizeof(*optimized));
+      ov_qsort(optimized, count, sizeof(*optimized), qsort_compare, NULL);
+    }
+    acutest_timer_get_time_(&acutest_timer_end_);
+    optimized_total += acutest_timer_diff_(acutest_timer_start_, acutest_timer_end_);
+  }
+
+  double const standard_elapsed = standard_total / (double)samples;
+  double const optimized_elapsed = optimized_total / (double)samples;
+
+  memcpy(standard, base, count * sizeof(*standard));
+  qsort(standard, count, sizeof(*standard), standard_qsort_compare);
+  memcpy(optimized, base, count * sizeof(*optimized));
+  ov_qsort(optimized, count, sizeof(*optimized), qsort_compare, NULL);
+
+  bool const arrays_match = memcmp(standard, optimized, count * sizeof(*standard)) == 0;
+  TEST_CHECK_(
+      arrays_match, "Benchmark qsort mismatch detected for %s (size=%zu)", dataset_kind_name(config->kind), count);
+
+  if (optimized_elapsed > 0.0) {
+    double const speedup = standard_elapsed / optimized_elapsed;
+    printf("[benchmark qsort] %s kind=%s size=%zu iterations=%zu samples=%zu standard=%.6f secs optimized=%.6f secs "
+           "speedup=%.2fx\n",
+           config->label,
+           dataset_kind_name(config->kind),
+           count,
+           iterations,
+           samples,
+           standard_elapsed,
+           optimized_elapsed,
+           speedup);
+  } else {
+    printf("[benchmark qsort] %s kind=%s size=%zu iterations=%zu samples=%zu standard=%.6f secs optimized=%.6f secs\n",
+           config->label,
+           dataset_kind_name(config->kind),
+           count,
+           iterations,
+           samples,
+           standard_elapsed,
+           optimized_elapsed);
+  }
+
+  OV_ARRAY_DESTROY(&optimized);
+  OV_ARRAY_DESTROY(&standard);
+  OV_ARRAY_DESTROY(&base);
+}
+
+static void test_ov_qsort_benchmark(void) {
+  if (!ovtest_should_run_benchmarks()) {
+    return;
+  }
+
+  struct qsort_benchmark_case const cases[] = {
+      {"size=128 kind=random", dataset_kind_random, 128, 1000, 100, UINT32_C(0x12345678)},
+      {"size=128 kind=mostly_sorted", dataset_kind_mostly_sorted, 128, 1000, 100, UINT32_C(0x23456789)},
+      {"size=128 kind=reverse_sorted", dataset_kind_reverse_sorted, 128, 1000, 100, UINT32_C(0x3456789A)},
+      {"size=128 kind=nearly_constant", dataset_kind_nearly_constant, 128, 1000, 100, UINT32_C(0x456789AB)},
+      {"size=1024 kind=random", dataset_kind_random, 1024, 100, 100, UINT32_C(0x12345678)},
+      {"size=1024 kind=mostly_sorted", dataset_kind_mostly_sorted, 1024, 100, 100, UINT32_C(0x23456789)},
+      {"size=1024 kind=reverse_sorted", dataset_kind_reverse_sorted, 1024, 100, 100, UINT32_C(0x3456789A)},
+      {"size=1024 kind=nearly_constant", dataset_kind_nearly_constant, 1024, 100, 100, UINT32_C(0x456789AB)},
+      {"size=8192 kind=random", dataset_kind_random, 8192, 50, 10, UINT32_C(0x87654321)},
+      {"size=8192 kind=reverse_sorted", dataset_kind_reverse_sorted, 8192, 50, 10, UINT32_C(0x98765432)},
+      {"size=102400 kind=random", dataset_kind_random, 102400, 20, 10, UINT32_C(0x13579BDF)},
+      {"size=102400 kind=mostly_sorted", dataset_kind_mostly_sorted, 102400, 20, 10, UINT32_C(0x2468ACE0)},
+  };
+
+  for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i) {
+    benchmark_qsort_case(&cases[i]);
+  }
+  TEST_CASE_(NULL);
+}
+
 TEST_LIST = {
     {"test_ov_sort_matches_standard", test_ov_sort_matches_standard},
     {"test_ov_sort_matches_large_datasets", test_ov_sort_matches_large_datasets},
     {"test_ov_sort_benchmark", test_ov_sort_benchmark},
+    {"test_ov_qsort_benchmark", test_ov_qsort_benchmark},
     {NULL, NULL},
 };
