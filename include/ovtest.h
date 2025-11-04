@@ -38,15 +38,6 @@ static inline void test_fini_(void) {
 #define TEST_INIT test_init_()
 #define TEST_FINI test_fini_()
 
-static inline bool ovtest_should_run_benchmarks(void) {
-  char const *env = getenv("OVBASE_RUN_BENCHMARKS");
-  if (!env || env[0] == '\0') {
-    TEST_SKIP("Skipping benchmark tests. Set OVBASE_RUN_BENCHMARKS environment variable to run.");
-    return false;
-  }
-  return true;
-}
-
 #ifdef __GNUC__
 
 #  pragma GCC diagnostic push
@@ -89,3 +80,12 @@ static inline bool ovtest_should_run_benchmarks(void) {
 #ifdef __GNUC__
 #  pragma GCC diagnostic pop
 #endif // __GNUC__
+
+static inline bool ovtest_should_run_benchmarks(void) {
+  char const *env = getenv("OVTEST_RUN_BENCHMARKS");
+  if (env && env[0] == '1' && env[1] == '\0') {
+    return true;
+  }
+  TEST_SKIP("Skipping benchmark tests. Set OVTEST_RUN_BENCHMARKS=1 environment variable to run.");
+  return false;
+}
