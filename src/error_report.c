@@ -556,7 +556,9 @@ cleanup:
   return result;
 }
 
-void ov_error_report_and_destroy(struct ov_error *const target, char const *const message ERR_FILEPOS_PARAMS) {
+void ov_error_report_and_destroy(struct ov_error *const target,
+                                 enum ov_error_severity severity,
+                                 char const *const message ERR_FILEPOS_PARAMS) {
   assert(target != NULL && "target must not be NULL");
   // message can be NULL - a default message will be used
   assert(filepos != NULL && "filepos must not be NULL");
@@ -573,7 +575,20 @@ void ov_error_report_and_destroy(struct ov_error *const target, char const *cons
     char temp[512];
     char filepos_str[filepos_str_size];
     size_t pos = 0;
-    pos += append(temp, pos, "[ERROR] ", 8);
+    switch (severity) {
+    case ov_error_severity_error:
+      pos += append(temp, pos, "[ERROR] ", 8);
+      break;
+    case ov_error_severity_warn:
+      pos += append(temp, pos, "[WARN] ", 7);
+      break;
+    case ov_error_severity_info:
+      pos += append(temp, pos, "[INFO] ", 7);
+      break;
+    case ov_error_severity_verbose:
+      pos += append(temp, pos, "[VERBOSE] ", 10);
+      break;
+    }
 
     size_t message_len = message ? strlen(message) : 0;
     if (message_len < 200) {
@@ -587,7 +602,7 @@ void ov_error_report_and_destroy(struct ov_error *const target, char const *cons
     pos += append(temp, pos, filepos_str, filepos_to_str(filepos_str, filepos));
     append(temp, pos, "\0", 1);
 
-    output(temp);
+    output(severity, temp);
   }
 
   {
@@ -606,7 +621,7 @@ void ov_error_report_and_destroy(struct ov_error *const target, char const *cons
       append(fallback_msgbuf, pos, "\0", 1);
       error_string = fallback_msgbuf;
     }
-    output(error_string);
+    output(severity, error_string);
     if (error_string != fallback_msgbuf) {
       OV_ARRAY_DESTROY(&error_string);
     }

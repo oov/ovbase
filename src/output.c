@@ -1,7 +1,9 @@
 #include "output.h"
 
 #include <assert.h>
+#include <ovnum.h>
 #include <ovutf.h>
+#include <stdlib.h>
 
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
@@ -16,7 +18,7 @@ void ov_error_set_output_hook(ov_error_output_hook_func hook_func) {
   g_output_hook = hook_func;
 }
 
-void output(char const *const str) {
+void output(enum ov_error_severity severity, char const *const str) {
   assert(str != NULL && "str must not be NULL");
   if (!str) {
     return;
@@ -24,7 +26,22 @@ void output(char const *const str) {
 
   // Use custom output hook if available
   if (g_output_hook) {
-    g_output_hook(str);
+    g_output_hook(severity, str);
+    return;
+  }
+
+  static int limit = -1;
+  if (limit == -1) {
+    char const *const env = getenv("OV_ERROR_LEVEL");
+    int64_t v = 0;
+    if (env && ov_atoi_char(env, &v, false)) {
+      limit = (int)v;
+    } else {
+      limit = ov_error_severity_info;
+    }
+  }
+
+  if ((int)severity > limit) {
     return;
   }
 

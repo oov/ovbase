@@ -510,7 +510,8 @@ static void test_ov_error_autofill_hook(void) {
 // Global variable to capture output hook calls for testing
 static char *g_captured_output = NULL;
 
-static void test_output_hook_capture(char const *str) {
+static void test_output_hook_capture(enum ov_error_severity severity, char const *str) {
+  (void)severity;
   if (str) {
     size_t len = strlen(str);
     size_t existing_len = g_captured_output ? strlen(g_captured_output) : 0;
@@ -523,7 +524,8 @@ static void test_output_hook_capture(char const *str) {
   }
 }
 
-static void test_output_hook_suppress(char const *str) {
+static void test_output_hook_suppress(enum ov_error_severity severity, char const *str) {
+  (void)severity;
   (void)str; // Suppress output by not doing anything
 }
 

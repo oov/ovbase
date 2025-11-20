@@ -262,7 +262,6 @@ void ov_error_pushf(struct ov_error *const target,
                     struct ov_error_info const *const info,
                     char const *const reference ERR_FILEPOS_PARAMS,
                     ...);
-void ov_error_report_and_destroy(struct ov_error *const target, char const *const message ERR_FILEPOS_PARAMS);
 
 /**
  * Hook function type for custom error message generation
@@ -323,18 +322,26 @@ typedef bool (*ov_error_autofill_hook_func)(struct ov_error_stack *target, struc
  */
 void ov_error_set_autofill_hook(ov_error_autofill_hook_func const hook_func);
 
+enum ov_error_severity {
+  ov_error_severity_error = 0,
+  ov_error_severity_warn = 1,
+  ov_error_severity_info = 2,
+  ov_error_severity_verbose = 3,
+};
+
 /**
  * @brief Hook function type for custom error output
  *
  * This function type defines the signature for custom error output handlers,
  * completely replacing the default stderr output mechanism.
  *
+ * @param severity Error severity level
  * @param str UTF-8 encoded string to output (always null-terminated)
  *
  * @note When this hook is set, it becomes the final output destination.
  *       No fallback to stderr occurs.
  */
-typedef void (*ov_error_output_hook_func)(char const *str);
+typedef void (*ov_error_output_hook_func)(enum ov_error_severity severity, char const *str);
 
 /**
  * @brief Set custom hook function for error output
@@ -655,6 +662,10 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
                   (reference)ERR_FILEPOS_VALUES,                                                                       \
                   __VA_ARGS__))
 
+void ov_error_report_and_destroy(struct ov_error *const target,
+                                 enum ov_error_severity severity,
+                                 char const *const message ERR_FILEPOS_PARAMS);
+
 /**
  * @brief Report error to output and destroy the error object
  *
@@ -675,7 +686,56 @@ NODISCARD bool ov_error_get_code(struct ov_error const *const target, int const 
  *     return false;
  *   }
  */
-#define OV_ERROR_REPORT(err_ptr, msg) (ov_error_report_and_destroy((err_ptr), (msg)ERR_FILEPOS_VALUES))
+#define OV_ERROR_REPORT(err_ptr, msg) OV_ERROR_REPORT_ERROR((err_ptr), (msg))
+
+/**
+ * @brief Report error to output and destroy the error object
+ *
+ * Reports the error with a user-provided message and automatically destroys the error object
+ * to clean up memory. The error is formatted with full stack trace and sent to the configured
+ * output destination. This is the primary way to report and clean up errors.
+ *
+ * @param err_ptr Pointer to error structure to report and destroy.
+ * @param msg User-provided message describing the context.
+ */
+#define OV_ERROR_REPORT_ERROR(err_ptr, msg)                                                                            \
+  (ov_error_report_and_destroy((err_ptr), ov_error_severity_error, (msg)ERR_FILEPOS_VALUES))
+
+/**
+ * @brief Report warning to output and destroy the error object
+ *
+ * Similar to OV_ERROR_REPORT but reports with WARN severity.
+ * Used for non-critical issues that should be noted but don't stop execution.
+ *
+ * @param err_ptr Pointer to error structure to report and destroy.
+ * @param msg User-provided message describing the context.
+ */
+#define OV_ERROR_REPORT_WARN(err_ptr, msg)                                                                             \
+  (ov_error_report_and_destroy((err_ptr), ov_error_severity_warn, (msg)ERR_FILEPOS_VALUES))
+
+/**
+ * @brief Report info message to output and destroy the error object
+ *
+ * Similar to OV_ERROR_REPORT but reports with INFO severity.
+ * Used for general informational messages about operation progress or state.
+ *
+ * @param err_ptr Pointer to error structure to report and destroy.
+ * @param msg User-provided message describing the context.
+ */
+#define OV_ERROR_REPORT_INFO(err_ptr, msg)                                                                             \
+  (ov_error_report_and_destroy((err_ptr), ov_error_severity_info, (msg)ERR_FILEPOS_VALUES))
+
+/**
+ * @brief Report verbose message to output and destroy the error object
+ *
+ * Similar to OV_ERROR_REPORT but reports with VERBOSE severity.
+ * Used for detailed debugging information that is usually hidden.
+ *
+ * @param err_ptr Pointer to error structure to report and destroy.
+ * @param msg User-provided message describing the context.
+ */
+#define OV_ERROR_REPORT_VERBOSE(err_ptr, msg)                                                                          \
+  (ov_error_report_and_destroy((err_ptr), ov_error_severity_verbose, (msg)ERR_FILEPOS_VALUES))
 
 // mem
 

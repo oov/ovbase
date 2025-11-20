@@ -128,7 +128,7 @@ static bool report_leaks_iterate(void const *const item, void *const udata) {
                 aa->filepos.file,
                 aa->filepos.line,
                 aa->filepos.func);
-    output(buffer);
+    output(ov_error_severity_error, buffer);
   }
   return true;
 }
@@ -175,7 +175,7 @@ void report_allocated_count(void) {
   {
     char buffer[256];
     OV_SNPRINTF(buffer, sizeof(buffer), NULL, "Not freed memory blocks: %ld\n", n);
-    output(buffer);
+    output(ov_error_severity_error, buffer);
   }
 }
 #endif
@@ -188,7 +188,7 @@ static void report_error(char const *const message, struct ov_filepos const *con
   char buffer[256];
   OV_SNPRINTF(
       buffer, sizeof(buffer), NULL, "%s at %s:%ld %s()\n", message, filepos->file, filepos->line, filepos->func);
-  output(buffer);
+  output(ov_error_severity_error, buffer);
 }
 #  endif
 
