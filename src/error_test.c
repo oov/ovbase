@@ -556,6 +556,22 @@ static void test_ov_error_output_hook(void) {
     OV_ARRAY_DESTROY(&g_captured_output);
   }
 
+  // Test OV_ERROR_REPORTF
+  OV_ERROR_SET(&err, ov_error_type_generic, ov_error_generic_fail, "Test hook output");
+  OV_ERROR_REPORTF(&err, ov_error_severity_error, NULL, "Hook test message %d", 123);
+  verify_clean_state(&err);
+
+  // Check that output was captured by hook
+  if (TEST_CHECK(g_captured_output != NULL)) {
+    TEST_CHECK(strstr(g_captured_output, "[ERROR] Hook test message 123") != NULL);
+    TEST_CHECK(strstr(g_captured_output, "reported at error_test.c:") != NULL);
+  }
+
+  // Reset captured output
+  if (g_captured_output) {
+    OV_ARRAY_DESTROY(&g_captured_output);
+  }
+
   // Test suppression hook
   ov_error_set_output_hook(test_output_hook_suppress);
 

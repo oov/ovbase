@@ -666,6 +666,12 @@ void ov_error_report_and_destroy(struct ov_error *const target,
                                  enum ov_error_severity severity,
                                  char const *const message ERR_FILEPOS_PARAMS);
 
+void ov_error_reportf_and_destroy(struct ov_error *const target,
+                                  enum ov_error_severity severity,
+                                  char const *const reference,
+                                  char const *const format ERR_FILEPOS_PARAMS,
+                                  ...);
+
 /**
  * @brief Report error to output and destroy the error object
  *
@@ -736,6 +742,24 @@ void ov_error_report_and_destroy(struct ov_error *const target,
  */
 #define OV_ERROR_REPORT_VERBOSE(err_ptr, msg)                                                                          \
   (ov_error_report_and_destroy((err_ptr), ov_error_severity_verbose, (msg)ERR_FILEPOS_VALUES))
+
+/**
+ * @brief Report error to output with formatted message and destroy the error object
+ *
+ * Reports the error with a user-provided formatted message and automatically destroys the error object.
+ * Similar to OV_ERROR_REPORT but allows printf-style formatting for the message.
+ *
+ * @param err_ptr Pointer to error structure to report and destroy.
+ * @param severity Error severity level (e.g., ov_error_severity_error, ov_error_severity_warn)
+ * @param reference Reference format string for translation safety, can be NULL.
+ * @param format Printf-style format string.
+ * @param ... Format arguments.
+ *
+ * @example
+ *   OV_ERROR_REPORTF(&err, ov_error_severity_error, NULL, "Failed to process file %s", filename);
+ */
+#define OV_ERROR_REPORTF(err_ptr, severity, reference, format, ...)                                                    \
+  (ov_error_reportf_and_destroy((err_ptr), (severity), (reference), (format)ERR_FILEPOS_VALUES, __VA_ARGS__))
 
 // mem
 

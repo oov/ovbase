@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <ovarray.h>
+#include <ovprintf_ex.h>
 
 #ifdef _WIN32
 #  include <wchar.h>
@@ -628,4 +629,33 @@ void ov_error_report_and_destroy(struct ov_error *const target,
   }
 
   ov_error_destroy(target MEM_FILEPOS_VALUES_PASSTHRU);
+}
+
+void ov_error_reportf_and_destroy(struct ov_error *const target,
+                                  enum ov_error_severity severity,
+                                  char const *const reference,
+                                  char const *const format ERR_FILEPOS_PARAMS,
+                                  ...) {
+  if (!target) {
+    return;
+  }
+  if (!format) {
+    ov_error_report_and_destroy(target, severity, NULL ERR_FILEPOS_VALUES_PASSTHRU);
+    return;
+  }
+
+  va_list valist;
+  va_start(valist, filepos);
+  char *message = NULL;
+  bool const b = ov_vsprintf_char(&message, reference, format, valist);
+  va_end(valist);
+
+  if (!b) {
+    // Fallback if formatting fails
+    ov_error_report_and_destroy(target, severity, format ERR_FILEPOS_VALUES_PASSTHRU);
+    return;
+  }
+
+  ov_error_report_and_destroy(target, severity, message ERR_FILEPOS_VALUES_PASSTHRU);
+  ov_array_destroy((void **)&message MEM_FILEPOS_VALUES_PASSTHRU);
 }
