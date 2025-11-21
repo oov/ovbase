@@ -48,6 +48,7 @@ cleanup:
 
 void ov_array_destroy(void **const a MEM_FILEPOS_PARAMS) {
   assert(a != NULL && "a must not be NULL");
+  assert(*a != NULL && "array is already destroyed or not initialized");
   if (a == NULL || *a == NULL) {
     return;
   }

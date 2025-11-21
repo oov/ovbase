@@ -8,9 +8,11 @@
 #include <ovprintf_ex.h>
 
 void ov_error_destroy(struct ov_error *const target MEM_FILEPOS_PARAMS) {
+  assert(target != NULL && "target must not be NULL");
   if (!target) {
     return;
   }
+  assert(target->stack[0].info.type != ov_error_type_invalid && "error is already destroyed or not initialized");
   for (size_t i = 0; i < sizeof(target->stack) / sizeof(target->stack[0]); i++) {
     if (target->stack[i].info.context) {
       if (target->stack[i].info.flag_context_is_static) {
@@ -176,7 +178,9 @@ void ov_error_set(struct ov_error *const target, struct ov_error_info const *con
   if (!info || !filepos || info->type == ov_error_type_invalid) {
     return; // invalid parameters
   }
-  ov_error_destroy(target MEM_FILEPOS_VALUES_PASSTHRU);
+  if (target->stack[0].info.type != ov_error_type_invalid) {
+    ov_error_destroy(target MEM_FILEPOS_VALUES_PASSTHRU);
+  }
   target->stack[0] = (struct ov_error_stack){
       .filepos = *filepos,
       .info = *info,
@@ -209,7 +213,9 @@ void ov_error_setf(struct ov_error *const target,
   if (!info || !filepos || !info->context) {
     return; // invalid parameters
   }
-  ov_error_destroy(target MEM_FILEPOS_VALUES_PASSTHRU);
+  if (target->stack[0].info.type != ov_error_type_invalid) {
+    ov_error_destroy(target MEM_FILEPOS_VALUES_PASSTHRU);
+  }
 
   va_list valist;
   va_start(valist, filepos);

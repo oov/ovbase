@@ -3,6 +3,7 @@
 
 void ov_hashmap_destroy(struct ov_hashmap **const hmp MEM_FILEPOS_PARAMS) {
   assert(hmp != NULL && "hmp must not be NULL");
+  assert(*hmp != NULL && "hashmap is already destroyed or not initialized");
 #ifdef ALLOCATE_LOGGER
   assert(filepos != NULL && "filepos must not be NULL");
 #endif

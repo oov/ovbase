@@ -65,9 +65,6 @@ static void test_ov_error_null_safety(void) {
   OV_ERROR_SET_HRESULT(NULL, E_FAIL);
 #endif
 
-  // Should not crash when err is NULL for OV_ERROR_DESTROY
-  OV_ERROR_DESTROY(NULL);
-
   // Should not crash when err is NULL for OV_ERROR_ADD_TRACE (tested later in stack tests)
   OV_ERROR_ADD_TRACE(NULL);
 
