@@ -232,6 +232,7 @@ void ov_error_setf(struct ov_error *const target,
 
 void ov_error_push(struct ov_error *const target, struct ov_error_info const *const info ERR_FILEPOS_PARAMS) {
   assert(filepos != NULL && "filepos must not be NULL");
+  assert((target == NULL || target->stack[0].info.type != ov_error_type_invalid) && "target must be in error state");
   if (!target) {
     return; // accept NULL target
   }
@@ -253,6 +254,7 @@ void ov_error_pushf(struct ov_error *const target,
                     struct ov_error_info const *const info,
                     char const *const reference ERR_FILEPOS_PARAMS,
                     ...) {
+  assert(target != NULL && target->stack[0].info.type != ov_error_type_invalid && "target must be in error state");
   assert(info != NULL && "info must not be NULL");
   assert(filepos != NULL && "filepos must not be NULL");
   if (!target) {

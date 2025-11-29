@@ -168,11 +168,13 @@ static void test_ov_error_push_basic(void) {
 
   OV_ERROR_DESTROY(&err);
 
-  // Test NULL safety and non-error state
-  OV_ERROR_ADD_TRACE(NULL); // Should not crash
-  verify_clean_state(&err);
-  OV_ERROR_ADD_TRACE(&err); // Should not modify clean state
-  verify_clean_state(&err);
+  // Test NULL safety - should not crash
+  OV_ERROR_ADD_TRACE(NULL);
+
+  // Note: OV_ERROR_ADD_TRACE(&err) where err is not in error state
+  // is now protected by assert and should not be called.
+  // The following test is removed because it would trigger the assert:
+  // OV_ERROR_ADD_TRACE(&err); // Should not modify clean state
 }
 
 static void test_ov_error_push_multiple_levels(void) {
