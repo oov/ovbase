@@ -479,9 +479,8 @@ static void test_ov_error_autofill_hook(void) {
   target.info.code = ov_error_generic_fail;
   target.info.context = NULL;
 
-  TEST_CHECK(!ov_error_autofill_message(&target, &err));
-  TEST_CHECK(ov_error_is(&err, ov_error_type_generic, ov_error_generic_out_of_memory));
-  OV_ERROR_DESTROY(&err);
+  TEST_FAILED_WITH(
+      ov_error_autofill_message(&target, &err), &err, ov_error_type_generic, ov_error_generic_out_of_memory);
 
   // Reset hook
   ov_error_set_autofill_hook(NULL);

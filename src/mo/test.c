@@ -145,10 +145,7 @@ static void test_mo_win32_locale(void) {
   {
     struct ov_error err = {0};
     mp = mo_parse_from_resource_ex(NULL, L"ko-KR\0en_US\0", &err);
-    if (TEST_CHECK(mp == NULL)) {
-      TEST_CHECK(ov_error_is(&err, ov_error_type_generic, ov_error_generic_not_found));
-      OV_ERROR_DESTROY(&err);
-    } else {
+    if (!TEST_FAILED_WITH(mp != NULL, &err, ov_error_type_generic, ov_error_generic_not_found)) {
       goto cleanup;
     }
   }

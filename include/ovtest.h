@@ -153,34 +153,39 @@ static inline bool ovtest_should_run_benchmarks(void) {
 #define TEST_FAILED_WITH(result, err_ptr, error_type, error_code)                                                      \
   ovtest_failed_with_((result), (err_ptr), (error_type), (error_code), __FILE__, __LINE__, #result)
 
-static inline void ovtest_msg_err_(struct ov_error const *const err) {
-  if (!err || err->stack[0].info.type == ov_error_type_invalid) {
-    return;
-  }
+static inline void ovtest_error_to_msg_(struct ov_error const *const err) {
   char *msg = NULL;
   struct ov_error conv_err = {0};
   if (ov_error_to_string(err, &msg, true, &conv_err)) {
     TEST_MSG("Error: %s", msg);
+    goto cleanup;
+  }
+  if (ov_error_to_string(&conv_err, &msg, true, NULL)) {
+    TEST_MSG("Error: (failed to convert error to string: %s)", msg);
+    goto cleanup;
+  }
+  TEST_MSG("Error: (failed to convert error to string)");
+cleanup:
+  if (msg) {
     OV_ARRAY_DESTROY(&msg);
-  } else {
-    char *conv_msg = NULL;
-    if (ov_error_to_string(&conv_err, &conv_msg, true, NULL)) {
-      TEST_MSG("Error: (failed to convert error to string: %s)", conv_msg);
-      OV_ARRAY_DESTROY(&conv_msg);
-    } else {
-      TEST_MSG("Error: (failed to convert error to string)");
-    }
-    OV_ERROR_DESTROY(&conv_err);
   }
 }
 
 static inline int ovtest_succeeded_(
     bool const result, struct ov_error *const err, char const *const file, int const line, char const *const expr) {
+  int const ret = acutest_check_(result && err, file, line, "%s", expr);
+  if (ret) {
+    return ret;
+  }
+  if (!err) {
+    TEST_MSG("err CANNOT be NULL");
+    return ret;
+  }
   if (!result) {
-    ovtest_msg_err_(err);
+    ovtest_error_to_msg_(err);
     OV_ERROR_DESTROY(err);
   }
-  return acutest_check_(result, file, line, "%s", expr);
+  return ret;
 }
 
 static inline int ovtest_failed_with_(bool const result,
@@ -190,23 +195,27 @@ static inline int ovtest_failed_with_(bool const result,
                                       char const *const file,
                                       int const line,
                                       char const *const expr) {
-  bool const failed = !result;
-  bool const error_matches = err && ov_error_is(err, expected_type, expected_code);
-  bool const ok = failed && error_matches;
-
-  if (!ok) {
-    if (!failed) {
-      TEST_MSG("want failure, got success");
-    } else if (!error_matches) {
-      int const got_type = err ? err->stack[0].info.type : 0;
-      int const got_code = err ? err->stack[0].info.code : 0;
-      TEST_MSG("want type=%d code=%d, got type=%d code=%d", expected_type, expected_code, got_type, got_code);
-    }
-  }
-
-  if (failed) {
+  int const ret = acutest_check_(
+      !result && err && ov_error_is(err, expected_type, expected_code), file, line, "!(%s) with expected error", expr);
+  if (ret) {
     OV_ERROR_DESTROY(err);
+    return ret;
   }
-
-  return acutest_check_(ok, file, line, "!(%s) with expected error", expr);
+  if (!err) {
+    TEST_MSG("err CANNOT be NULL");
+    return ret;
+  }
+  if (result) {
+    TEST_MSG("want failure, got success");
+    return ret;
+  }
+  if (!ov_error_is(err, expected_type, expected_code)) {
+    TEST_MSG("want type=%d code=%d, got type=%d code=%d",
+             expected_type,
+             expected_code,
+             err->stack[0].info.type,
+             err->stack[0].info.code);
+  }
+  OV_ERROR_DESTROY(err);
+  return ret;
 }
