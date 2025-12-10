@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <ovarray.h>
 #include <ovbase.h>
 
 #ifdef __GNUC__
@@ -88,4 +89,124 @@ static inline bool ovtest_should_run_benchmarks(void) {
   }
   TEST_SKIP("Skipping benchmark tests. Set OVTEST_RUN_BENCHMARKS=1 environment variable to run.");
   return false;
+}
+
+/**
+ * @brief Check that an operation succeeded, output error message if failed, and clean up error
+ *
+ * Combines TEST_CHECK with automatic error message output and cleanup on failure.
+ * This is the recommended way to check operations that use struct ov_error.
+ * The error is only destroyed if the operation fails and an error is set.
+ * Returns the result so it can be used in conditionals.
+ *
+ * @param result Boolean result of the operation (true = success)
+ * @param err_ptr Pointer to struct ov_error that may contain error info
+ * @return Non-zero if condition passes, 0 if it fails
+ *
+ * @example
+ *   struct ov_error err = {0};
+ *   if (!TEST_SUCCEEDED(some_function(&err), &err)) {
+ *     // err is already destroyed on failure
+ *     return;
+ *   }
+ */
+#define TEST_SUCCEEDED(result, err_ptr) ovtest_succeeded_((result), (err_ptr), __FILE__, __LINE__, #result)
+
+/**
+ * @brief Assert that an operation succeeded, abort test if failed
+ *
+ * Similar to TEST_SUCCEEDED but aborts the current test if the operation fails.
+ * The error is only destroyed if the operation fails and an error is set.
+ * Use with caution as it may cause resource leaks (see TEST_ASSERT in acutest.h).
+ *
+ * @param result Boolean result of the operation (true = success)
+ * @param err_ptr Pointer to struct ov_error that may contain error info
+ *
+ * @example
+ *   struct ov_error err = {0};
+ *   TEST_ASSERT_SUCCEEDED(critical_init(&err), &err);
+ *   // If we reach here, initialization succeeded
+ */
+#define TEST_ASSERT_SUCCEEDED(result, err_ptr)                                                                         \
+  do {                                                                                                                 \
+    if (!ovtest_succeeded_((result), (err_ptr), __FILE__, __LINE__, #result))                                          \
+      acutest_abort_();                                                                                                \
+  } while (0)
+
+/**
+ * @brief Check that an operation failed with a specific error type and code
+ *
+ * Verifies that the operation returned false and the error matches the expected type and code.
+ * The error is always destroyed after checking.
+ * Returns non-zero if the operation failed with the expected error, 0 otherwise.
+ *
+ * @param result Boolean result of the operation (expected to be false)
+ * @param err_ptr Pointer to struct ov_error that should contain the expected error
+ * @param error_type Expected error type (e.g., ov_error_type_generic)
+ * @param error_code Expected error code (e.g., ov_error_generic_invalid_argument)
+ * @return Non-zero if operation failed with expected error, 0 otherwise
+ *
+ * @example
+ *   struct ov_error err = {0};
+ *   TEST_FAILED_WITH(some_function(NULL, &err), &err, ov_error_type_generic, ov_error_generic_invalid_argument);
+ */
+#define TEST_FAILED_WITH(result, err_ptr, error_type, error_code)                                                      \
+  ovtest_failed_with_((result), (err_ptr), (error_type), (error_code), __FILE__, __LINE__, #result)
+
+static inline void ovtest_msg_err_(struct ov_error const *const err) {
+  if (!err || err->stack[0].info.type == ov_error_type_invalid) {
+    return;
+  }
+  char *msg = NULL;
+  struct ov_error conv_err = {0};
+  if (ov_error_to_string(err, &msg, true, &conv_err)) {
+    TEST_MSG("Error: %s", msg);
+    OV_ARRAY_DESTROY(&msg);
+  } else {
+    char *conv_msg = NULL;
+    if (ov_error_to_string(&conv_err, &conv_msg, true, NULL)) {
+      TEST_MSG("Error: (failed to convert error to string: %s)", conv_msg);
+      OV_ARRAY_DESTROY(&conv_msg);
+    } else {
+      TEST_MSG("Error: (failed to convert error to string)");
+    }
+    OV_ERROR_DESTROY(&conv_err);
+  }
+}
+
+static inline int ovtest_succeeded_(
+    bool const result, struct ov_error *const err, char const *const file, int const line, char const *const expr) {
+  if (!result) {
+    ovtest_msg_err_(err);
+    OV_ERROR_DESTROY(err);
+  }
+  return acutest_check_(result, file, line, "%s", expr);
+}
+
+static inline int ovtest_failed_with_(bool const result,
+                                      struct ov_error *const err,
+                                      int const expected_type,
+                                      int const expected_code,
+                                      char const *const file,
+                                      int const line,
+                                      char const *const expr) {
+  bool const failed = !result;
+  bool const error_matches = err && ov_error_is(err, expected_type, expected_code);
+  bool const ok = failed && error_matches;
+
+  if (!ok) {
+    if (!failed) {
+      TEST_MSG("want failure, got success");
+    } else if (!error_matches) {
+      int const got_type = err ? err->stack[0].info.type : 0;
+      int const got_code = err ? err->stack[0].info.code : 0;
+      TEST_MSG("want type=%d code=%d, got type=%d code=%d", expected_type, expected_code, got_type, got_code);
+    }
+  }
+
+  if (failed) {
+    OV_ERROR_DESTROY(err);
+  }
+
+  return acutest_check_(ok, file, line, "!(%s) with expected error", expr);
 }

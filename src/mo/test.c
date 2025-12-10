@@ -20,8 +20,7 @@ static struct mo *open_mo(uint8_t *mobuf) {
   }
   struct ov_error err = {0};
   struct mo *mo = mo_parse(mobuf, mosize, &err);
-  if (!TEST_CHECK(mo != NULL)) {
-    OV_ERROR_DESTROY(&err);
+  if (!TEST_SUCCEEDED(mo != NULL, &err)) {
     return NULL;
   }
   return mo;
@@ -110,8 +109,7 @@ static void test_mo_get_preferred_ui_languages(void) {
 #endif
   {
     struct ov_error err = {0};
-    if (!TEST_CHECK(mo_get_preferred_ui_languages(&str, &err))) {
-      OV_ERROR_DESTROY(&err);
+    if (!TEST_SUCCEEDED(mo_get_preferred_ui_languages(&str, &err), &err)) {
       goto cleanup;
     }
   }
@@ -157,8 +155,7 @@ static void test_mo_win32_locale(void) {
   {
     struct ov_error err = {0};
     mp = mo_parse_from_resource_ex(NULL, L"zh-CN\0", &err);
-    if (!TEST_CHECK(mp != NULL)) {
-      OV_ERROR_DESTROY(&err);
+    if (!TEST_SUCCEEDED(mp != NULL, &err)) {
       goto cleanup;
     }
   }
@@ -167,8 +164,7 @@ static void test_mo_win32_locale(void) {
   {
     struct ov_error err = {0};
     mp = mo_parse_from_resource_ex(NULL, L"zh-TW\0", &err);
-    if (!TEST_CHECK(mp != NULL)) {
-      OV_ERROR_DESTROY(&err);
+    if (!TEST_SUCCEEDED(mp != NULL, &err)) {
       goto cleanup;
     }
   }
@@ -182,8 +178,7 @@ static void test_mo_win32(void) {
   {
     struct ov_error err = {0};
     mp = mo_parse_from_resource_ex(NULL, L"ja-JP\0", &err);
-    if (!TEST_CHECK(mp != NULL)) {
-      OV_ERROR_DESTROY(&err);
+    if (!TEST_SUCCEEDED(mp != NULL, &err)) {
       return;
     }
   }

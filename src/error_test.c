@@ -608,6 +608,36 @@ static void test_ov_error_reporting(void) {
   verify_clean_state(&err);
 }
 
+static void test_ovtest_utilities(void) {
+  struct ov_error err = {0};
+
+  // Test TEST_SUCCEEDED returns value and can be used in conditionals
+  bool success = true;
+  if (TEST_SUCCEEDED(success, &err)) {
+    // This branch should be taken
+    TEST_CHECK(true);
+  }
+
+  // Test TEST_SUCCEEDED with another success case
+  if (TEST_SUCCEEDED(success, &err)) {
+    // This branch should be taken
+    TEST_CHECK(true);
+  }
+  // err should still be in clean state after successful TEST_SUCCEEDED
+  verify_clean_state(&err);
+
+  // Test TEST_FAILED_WITH with expected error
+  OV_ERROR_SET_GENERIC(&err, ov_error_generic_invalid_argument);
+  TEST_FAILED_WITH(false, &err, ov_error_type_generic, ov_error_generic_invalid_argument);
+  // err should be destroyed after TEST_FAILED_WITH
+  verify_clean_state(&err);
+
+  // Test TEST_FAILED_WITH with errno error type
+  OV_ERROR_SET_ERRNO(&err, EINVAL);
+  TEST_FAILED_WITH(false, &err, ov_error_type_errno, EINVAL);
+  verify_clean_state(&err);
+}
+
 TEST_LIST = {
     {"ov_error_core_functionality", test_ov_error_core_functionality},
     {"ov_error_null_safety", test_ov_error_null_safety},
@@ -625,5 +655,6 @@ TEST_LIST = {
     {"ov_error_output_hook", test_ov_error_output_hook},
     {"ov_error_string_conversion", test_ov_error_string_conversion},
     {"ov_error_reporting", test_ov_error_reporting},
+    {"ovtest_utilities", test_ovtest_utilities},
     {NULL, NULL},
 };
