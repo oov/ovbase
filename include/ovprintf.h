@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifndef OV_PRINTF_ATTR
 #  if 0
@@ -213,6 +214,213 @@ int ov_printf_verify_format_char(char const *const reference, char const *const 
  *   }
  */
 int ov_printf_verify_format_wchar(wchar_t const *const reference, wchar_t const *const format);
+
+/**
+ * @brief Print formatted output converting char (UTF-8) to codepoints
+ *
+ * Formats a char string and calls putc for each Unicode codepoint.
+ *
+ * @param putc Output function called for each codepoint. Must not be NULL.
+ * @param ctx Context pointer passed to putc callback. Can be NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param valist Variable argument list containing format arguments.
+ * @return Number of UTF-8 bytes in the format output, or -1 on error.
+ */
+int ov_vpprintf_char2codepoint(void (*const putc)(int_fast32_t c, void *ctx),
+                               void *ctx,
+                               char const *const reference,
+                               char const *const format,
+                               va_list valist) OV_PRINTF_ATTR(printf, 4, 0);
+
+/**
+ * @brief Print formatted output converting char (UTF-8) to codepoints
+ *
+ * Formats a char string and calls putc for each Unicode codepoint.
+ *
+ * @param putc Output function called for each codepoint. Must not be NULL.
+ * @param ctx Context pointer passed to putc callback. Can be NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param ... Format arguments.
+ * @return Number of UTF-8 bytes in the format output, or -1 on error.
+ */
+int ov_pprintf_char2codepoint(void (*const putc)(int_fast32_t c, void *ctx),
+                              void *ctx,
+                              char const *const reference,
+                              char const *const format,
+                              ...) OV_PRINTF_ATTR(printf, 4, 5);
+
+/**
+ * @brief Print formatted output converting wchar_t to codepoints
+ *
+ * Formats a wchar_t string and calls putc for each Unicode codepoint.
+ *
+ * @param putc Output function called for each codepoint. Must not be NULL.
+ * @param ctx Context pointer passed to putc callback. Can be NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param valist Variable argument list containing format arguments.
+ * @return Number of wchar_t in the format output, or -1 on error.
+ */
+int ov_vpprintf_wchar2codepoint(void (*const putc)(int_fast32_t c, void *ctx),
+                                void *ctx,
+                                wchar_t const *const reference,
+                                wchar_t const *const format,
+                                va_list valist);
+
+/**
+ * @brief Print formatted output converting wchar_t to codepoints
+ *
+ * Formats a wchar_t string and calls putc for each Unicode codepoint.
+ *
+ * @param putc Output function called for each codepoint. Must not be NULL.
+ * @param ctx Context pointer passed to putc callback. Can be NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param ... Format arguments.
+ * @return Number of wchar_t in the format output, or -1 on error.
+ */
+int ov_pprintf_wchar2codepoint(void (*const putc)(int_fast32_t c, void *ctx),
+                               void *ctx,
+                               wchar_t const *const reference,
+                               wchar_t const *const format,
+                               ...);
+
+/**
+ * @brief Print formatted output converting char (UTF-8) to wchar_t
+ *
+ * Formats a char string and calls putc for each wchar_t character.
+ *
+ * @param putc Output function called for each wchar_t. Must not be NULL.
+ * @param ctx Context pointer passed to putc callback. Can be NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param valist Variable argument list containing format arguments.
+ * @return Number of UTF-8 bytes in the format output, or -1 on error.
+ */
+int ov_vpprintf_char2wchar(void (*const putc)(int c, void *ctx),
+                           void *ctx,
+                           char const *const reference,
+                           char const *const format,
+                           va_list valist) OV_PRINTF_ATTR(printf, 4, 0);
+
+/**
+ * @brief Print formatted output converting char (UTF-8) to wchar_t
+ *
+ * Formats a char string and calls putc for each wchar_t character.
+ *
+ * @param putc Output function called for each wchar_t. Must not be NULL.
+ * @param ctx Context pointer passed to putc callback. Can be NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param ... Format arguments.
+ * @return Number of UTF-8 bytes in the format output, or -1 on error.
+ */
+int ov_pprintf_char2wchar(void (*const putc)(int c, void *ctx),
+                          void *ctx,
+                          char const *const reference,
+                          char const *const format,
+                          ...) OV_PRINTF_ATTR(printf, 4, 5);
+
+/**
+ * @brief Format char string into wchar_t buffer
+ *
+ * Formats a char string into a wchar_t destination buffer.
+ *
+ * @param dest Destination buffer. Can be NULL (for size calculation only).
+ * @param destlen Size of destination buffer in wchar_t. Ignored if dest is NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param valist Variable argument list containing format arguments.
+ * @return Number of wchar_t that would be written (excluding null terminator), or -1 on error.
+ */
+int ov_vsnprintf_char2wchar(wchar_t *const dest,
+                            size_t destlen,
+                            char const *const reference,
+                            char const *const format,
+                            va_list valist) OV_PRINTF_ATTR(printf, 4, 0);
+
+/**
+ * @brief Format char string into wchar_t buffer
+ *
+ * Formats a char string into a wchar_t destination buffer.
+ *
+ * @param dest Destination buffer. Can be NULL (for size calculation only).
+ * @param destlen Size of destination buffer in wchar_t. Ignored if dest is NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param ... Format arguments.
+ * @return Number of wchar_t that would be written (excluding null terminator), or -1 on error.
+ */
+int ov_snprintf_char2wchar(wchar_t *const dest,
+                           size_t destlen,
+                           char const *const reference,
+                           char const *const format,
+                           ...) OV_PRINTF_ATTR(printf, 4, 5);
+
+/**
+ * @brief Print formatted output converting wchar_t to char (UTF-8)
+ *
+ * Formats a wchar_t string and calls putc for each UTF-8 byte.
+ *
+ * @param putc Output function called for each char. Must not be NULL.
+ * @param ctx Context pointer passed to putc callback. Can be NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param valist Variable argument list containing format arguments.
+ * @return Number of wchar_t in the format output, or -1 on error.
+ */
+int ov_vpprintf_wchar2char(void (*const putc)(int c, void *ctx),
+                           void *ctx,
+                           wchar_t const *const reference,
+                           wchar_t const *const format,
+                           va_list valist);
+
+/**
+ * @brief Print formatted output converting wchar_t to char (UTF-8)
+ *
+ * Formats a wchar_t string and calls putc for each UTF-8 byte.
+ *
+ * @param putc Output function called for each char. Must not be NULL.
+ * @param ctx Context pointer passed to putc callback. Can be NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param ... Format arguments.
+ * @return Number of wchar_t in the format output, or -1 on error.
+ */
+int ov_pprintf_wchar2char(
+    void (*const putc)(int c, void *ctx), void *ctx, wchar_t const *const reference, wchar_t const *const format, ...);
+
+/**
+ * @brief Format wchar_t string into char (UTF-8) buffer
+ *
+ * Formats a wchar_t string into a char destination buffer.
+ *
+ * @param dest Destination buffer. Can be NULL (for size calculation only).
+ * @param destlen Size of destination buffer in bytes. Ignored if dest is NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param valist Variable argument list containing format arguments.
+ * @return Number of bytes that would be written (excluding null terminator), or -1 on error.
+ */
+int ov_vsnprintf_wchar2char(
+    char *const dest, size_t destlen, wchar_t const *const reference, wchar_t const *const format, va_list valist);
+
+/**
+ * @brief Format wchar_t string into char (UTF-8) buffer
+ *
+ * Formats a wchar_t string into a char destination buffer.
+ *
+ * @param dest Destination buffer. Can be NULL (for size calculation only).
+ * @param destlen Size of destination buffer in bytes. Ignored if dest is NULL.
+ * @param reference Reference format string for translation safety. Can be NULL.
+ * @param format Format string for output. Must not be NULL.
+ * @param ... Format arguments.
+ * @return Number of bytes that would be written (excluding null terminator), or -1 on error.
+ */
+int ov_snprintf_wchar2char(
+    char *const dest, size_t destlen, wchar_t const *const reference, wchar_t const *const format, ...);
 
 #define OV_VPPRINTF(putc, ctx, reference, format, valist)                                                              \
   _Generic((format),                                                                                                   \
