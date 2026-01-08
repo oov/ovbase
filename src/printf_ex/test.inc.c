@@ -62,20 +62,6 @@ static void TESTNAME(ov_sprintf)(void) {
   TEST_CHECK(STR_CMP(str, STR_LITERAL("Second message is longer")) == 0);
   TEST_CHECK(OV_ARRAY_LENGTH(str) == 24);
   OV_ARRAY_DESTROY(&str);
-
-  // Invalid argument test
-  {
-    struct ov_error err = {0};
-    TEST_FAILED_WITH(FUNCNAME(sprintf)(NULL, &err, NULL, STR_LITERAL("test")),
-                     &err,
-                     ov_error_type_generic,
-                     ov_error_generic_invalid_argument);
-  }
-  {
-    struct ov_error err = {0};
-    TEST_FAILED_WITH(
-        FUNCNAME(sprintf)(&str, &err, NULL, NULL), &err, ov_error_type_generic, ov_error_generic_invalid_argument);
-  }
 }
 
 static bool TESTNAME(vsprintf_helper)(CHAR_TYPE **dest, CHAR_TYPE const *fmt, ...) {

@@ -122,6 +122,8 @@ set(OVBASE_SOURCES
   printf/wchar2char.c
   printf_ex/char.c
   printf_ex/wchar.c
+  printf_ex/char2wchar.c
+  printf_ex/wchar2char.c
   utf/codepoint_char16.c
   utf/codepoint_char32.c
   utf/codepoint_sjis.c
@@ -250,6 +252,10 @@ add_executable(test_ovbase_printf_ex_char printf_ex/char_test.c)
 list(APPEND tests test_ovbase_printf_ex_char)
 add_executable(test_ovbase_printf_ex_wchar printf_ex/wchar_test.c)
 list(APPEND tests test_ovbase_printf_ex_wchar)
+add_executable(test_ovbase_printf_ex_char2wchar printf_ex/char2wchar_test.c)
+list(APPEND tests test_ovbase_printf_ex_char2wchar)
+add_executable(test_ovbase_printf_ex_wchar2char printf_ex/wchar2char_test.c)
+list(APPEND tests test_ovbase_printf_ex_wchar2char)
 add_executable(test_ovbase_sort ovsort_old.c ovsort_test.c)
 list(APPEND tests test_ovbase_sort)
 add_executable(test_ovbase_utf utf/test.c)
