@@ -12,5 +12,6 @@ TEST_LIST = {
     {"ov_sprintf_char", test_ov_sprintf_char},
     {"ov_vsprintf_char", test_ov_vsprintf_char},
     {"ov_sprintf_append_char", test_ov_sprintf_append_char},
+    {"ov_sprintf_format_mismatch_char", test_ov_sprintf_format_mismatch_char},
     {NULL, NULL},
 };

@@ -12,5 +12,6 @@ TEST_LIST = {
     {"ov_sprintf_wchar", test_ov_sprintf_wchar},
     {"ov_vsprintf_wchar", test_ov_vsprintf_wchar},
     {"ov_sprintf_append_wchar", test_ov_sprintf_append_wchar},
+    {"ov_sprintf_format_mismatch_wchar", test_ov_sprintf_format_mismatch_wchar},
     {NULL, NULL},
 };

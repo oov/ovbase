@@ -43,31 +43,45 @@ static void TESTNAME(ov_sprintf)(void) {
   CHAR_TYPE *str = NULL;
 
   // Basic formatting test
-  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, STR_LITERAL("Hello, " PRINTF_STR_SPEC "!"), STR_LITERAL("world")));
+  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, NULL, STR_LITERAL("Hello, " PRINTF_STR_SPEC "!"), STR_LITERAL("world")));
   TEST_CHECK(STR_CMP(str, STR_LITERAL("Hello, world!")) == 0);
   TEST_CHECK(OV_ARRAY_LENGTH(str) == 13);
   OV_ARRAY_DESTROY(&str);
 
   // Number formatting test
-  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, STR_LITERAL("Number: %d"), 42));
+  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, NULL, STR_LITERAL("Number: %d"), 42));
   TEST_CHECK(STR_CMP(str, STR_LITERAL("Number: 42")) == 0);
   TEST_CHECK(OV_ARRAY_LENGTH(str) == 10);
   OV_ARRAY_DESTROY(&str);
 
   // Reuse buffer test
-  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, STR_LITERAL("First")));
+  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, NULL, STR_LITERAL("First")));
   TEST_CHECK(STR_CMP(str, STR_LITERAL("First")) == 0);
 
-  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, STR_LITERAL("Second message is longer")));
+  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, NULL, STR_LITERAL("Second message is longer")));
   TEST_CHECK(STR_CMP(str, STR_LITERAL("Second message is longer")) == 0);
   TEST_CHECK(OV_ARRAY_LENGTH(str) == 24);
   OV_ARRAY_DESTROY(&str);
+
+  // Invalid argument test
+  {
+    struct ov_error err = {0};
+    TEST_FAILED_WITH(FUNCNAME(sprintf)(NULL, &err, NULL, STR_LITERAL("test")),
+                     &err,
+                     ov_error_type_generic,
+                     ov_error_generic_invalid_argument);
+  }
+  {
+    struct ov_error err = {0};
+    TEST_FAILED_WITH(
+        FUNCNAME(sprintf)(&str, &err, NULL, NULL), &err, ov_error_type_generic, ov_error_generic_invalid_argument);
+  }
 }
 
 static bool TESTNAME(vsprintf_helper)(CHAR_TYPE **dest, CHAR_TYPE const *fmt, ...) {
   va_list valist;
   va_start(valist, fmt);
-  bool result = FUNCNAME(vsprintf)(dest, NULL, fmt, valist);
+  bool result = FUNCNAME(vsprintf)(dest, NULL, NULL, fmt, valist);
   va_end(valist);
   return result;
 }
@@ -85,25 +99,63 @@ static void TESTNAME(ov_sprintf_append)(void) {
   CHAR_TYPE *str = NULL;
 
   // Start with initial string
-  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, STR_LITERAL("Hello")));
+  TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, NULL, STR_LITERAL("Hello")));
   TEST_CHECK(STR_CMP(str, STR_LITERAL("Hello")) == 0);
   TEST_CHECK(OV_ARRAY_LENGTH(str) == 5);
 
   // Append to existing string
-  TEST_CHECK(FUNCNAME(sprintf_append)(&str, NULL, STR_LITERAL(", " PRINTF_STR_SPEC "!"), STR_LITERAL("world")));
+  TEST_CHECK(FUNCNAME(sprintf_append)(&str, NULL, NULL, STR_LITERAL(", " PRINTF_STR_SPEC "!"), STR_LITERAL("world")));
   TEST_CHECK(STR_CMP(str, STR_LITERAL("Hello, world!")) == 0);
   TEST_CHECK(OV_ARRAY_LENGTH(str) == 13);
 
   // Append more
-  TEST_CHECK(FUNCNAME(sprintf_append)(&str, NULL, STR_LITERAL(" Number: %d"), 42));
+  TEST_CHECK(FUNCNAME(sprintf_append)(&str, NULL, NULL, STR_LITERAL(" Number: %d"), 42));
   TEST_CHECK(STR_CMP(str, STR_LITERAL("Hello, world! Number: 42")) == 0);
   TEST_CHECK(OV_ARRAY_LENGTH(str) == 24);
   OV_ARRAY_DESTROY(&str);
 
   // Append to NULL string (should work like normal sprintf)
   str = NULL;
-  TEST_CHECK(FUNCNAME(sprintf_append)(&str, NULL, STR_LITERAL("First")));
+  TEST_CHECK(FUNCNAME(sprintf_append)(&str, NULL, NULL, STR_LITERAL("First")));
   TEST_CHECK(STR_CMP(str, STR_LITERAL("First")) == 0);
   TEST_CHECK(OV_ARRAY_LENGTH(str) == 5);
   OV_ARRAY_DESTROY(&str);
+}
+
+static void TESTNAME(ov_sprintf_format_mismatch)(void) {
+  CHAR_TYPE *str = NULL;
+
+  // reference and format have different argument types: %d vs %s
+  // This should fail with a proper error, NOT ov_error_generic_out_of_memory
+  {
+    struct ov_error err = {0};
+    TEST_CHECK(!FUNCNAME(sprintf)(&str, &err, STR_LITERAL("%1$d"), STR_LITERAL("%1$s"), STR_LITERAL("hello")));
+    TEST_CHECK(str == NULL);
+    // Verify it's NOT out_of_memory error
+    TEST_CHECK(!ov_error_is(&err, ov_error_type_generic, ov_error_generic_out_of_memory));
+    OV_ERROR_DESTROY(&err);
+  }
+
+  // format references more arguments than reference provides
+  {
+    struct ov_error err = {0};
+    TEST_CHECK(!FUNCNAME(sprintf)(&str, &err, STR_LITERAL("%1$d"), STR_LITERAL("%1$d %2$d"), 42, 100));
+    TEST_CHECK(str == NULL);
+    // Verify it's NOT out_of_memory error
+    TEST_CHECK(!ov_error_is(&err, ov_error_type_generic, ov_error_generic_out_of_memory));
+    OV_ERROR_DESTROY(&err);
+  }
+
+  // append version should also return format mismatch error
+  {
+    struct ov_error err = {0};
+    TEST_CHECK(FUNCNAME(sprintf)(&str, NULL, NULL, STR_LITERAL("prefix")));
+    TEST_CHECK(!FUNCNAME(sprintf_append)(&str, &err, STR_LITERAL("%1$d"), STR_LITERAL("%1$s"), STR_LITERAL("hello")));
+    // On format mismatch during append, existing content should be preserved
+    TEST_CHECK(STR_CMP(str, STR_LITERAL("prefix")) == 0);
+    // Verify it's NOT out_of_memory error
+    TEST_CHECK(!ov_error_is(&err, ov_error_type_generic, ov_error_generic_out_of_memory));
+    OV_ERROR_DESTROY(&err);
+    OV_ARRAY_DESTROY(&str);
+  }
 }

@@ -151,9 +151,8 @@ static bool pushfv(struct ov_error *const target,
   char *context = NULL;
   bool result = false;
 
-  bool const b = ov_vsprintf_char(&context, reference, info->context, valist);
-  if (!b) {
-    OV_ERROR_SET_GENERIC(err, ov_error_generic_fail);
+  if (!ov_vsprintf_char(&context, err, reference, info->context, valist)) {
+    OV_ERROR_ADD_TRACE(err);
     goto cleanup;
   }
   if (!push(

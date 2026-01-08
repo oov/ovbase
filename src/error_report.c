@@ -647,7 +647,7 @@ void ov_error_reportf_and_destroy(struct ov_error *const target,
   va_list valist;
   va_start(valist, filepos);
   char *message = NULL;
-  bool const b = ov_vsprintf_char(&message, reference, format, valist);
+  bool const b = ov_vsprintf_char(&message, NULL, reference, format, valist);
   va_end(valist);
 
   if (!b) {

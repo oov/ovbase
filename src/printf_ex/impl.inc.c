@@ -1,6 +1,7 @@
 #include <ovprintf_ex.h>
 
 #include <ovarray.h>
+#include <ovbase.h>
 #include <ovprintf.h>
 
 #include <assert.h>
@@ -48,35 +49,43 @@ static void put(int c, void *ctx) {
 }
 
 bool FUNCNAME(vsprintf)(CHAR_TYPE **const dest,
+                        struct ov_error *const err,
                         CHAR_TYPE const *const reference,
                         CHAR_TYPE const *const format,
                         va_list valist) {
   assert(dest != NULL && "dest must not be NULL");
   assert(format != NULL && "format must not be NULL");
   if (!dest || !format) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
   }
   if (*dest) {
     OV_ARRAY_SET_LENGTH(*dest, 0);
   }
-  return FUNCNAME(vsprintf_append)(dest, reference, format, valist);
+  return FUNCNAME(vsprintf_append)(dest, err, reference, format, valist);
 }
 
-bool FUNCNAME(sprintf)(CHAR_TYPE **const dest, CHAR_TYPE const *const reference, CHAR_TYPE const *const format, ...) {
+bool FUNCNAME(sprintf)(CHAR_TYPE **const dest,
+                       struct ov_error *const err,
+                       CHAR_TYPE const *const reference,
+                       CHAR_TYPE const *const format,
+                       ...) {
   va_list valist;
   va_start(valist, format);
-  bool ok = FUNCNAME(vsprintf)(dest, reference, format, valist);
+  bool const result = FUNCNAME(vsprintf)(dest, err, reference, format, valist);
   va_end(valist);
-  return ok;
+  return result;
 }
 
 bool FUNCNAME(vsprintf_append)(CHAR_TYPE **const dest,
+                               struct ov_error *const err,
                                CHAR_TYPE const *const reference,
                                CHAR_TYPE const *const format,
                                va_list valist) {
   assert(dest != NULL && "dest must not be NULL");
   assert(format != NULL && "format must not be NULL");
   if (!dest || !format) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_invalid_argument);
     return false;
   }
 
@@ -89,35 +98,52 @@ bool FUNCNAME(vsprintf_append)(CHAR_TYPE **const dest,
       .failed = false,
   };
 
+  bool success = false;
+
   int const r = OV_VPPRINTF(put, &ctx, reference, format, valist);
-  if (r == 0) {
-    ctx.failed = true;
+  if (r == 0 && *format != '\0') {
+    // OV_VPPRINTF returns 0 on format mismatch error (when format is not empty)
+    // An empty format string legitimately produces 0 characters
+    OV_ERROR_SET(err, ov_error_type_generic, ov_error_generic_fail, "format string mismatch with reference");
+    goto cleanup;
+  }
+
+  if (ctx.failed) {
+    // Memory allocation failed in put()
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     goto cleanup;
   }
 
   put(0, &ctx);
   if (ctx.failed) {
+    OV_ERROR_SET_GENERIC(err, ov_error_generic_out_of_memory);
     goto cleanup;
   }
 
   OV_ARRAY_SET_LENGTH(*dest, existing_len + (size_t)r);
+  success = true;
 
 cleanup:
-  if (ctx.failed) {
-    if (was_null) {
+  if (!success) {
+    if (was_null && *dest) {
       OV_ARRAY_DESTROY(dest);
+    } else if (!was_null && *dest) {
+      // Restore original length on failure
+      OV_ARRAY_SET_LENGTH(*dest, existing_len);
+      (*dest)[existing_len] = '\0';
     }
   }
-  return !ctx.failed;
+  return success;
 }
 
 bool FUNCNAME(sprintf_append)(CHAR_TYPE **const dest,
+                              struct ov_error *const err,
                               CHAR_TYPE const *const reference,
                               CHAR_TYPE const *const format,
                               ...) {
   va_list valist;
   va_start(valist, format);
-  bool ok = FUNCNAME(vsprintf_append)(dest, reference, format, valist);
+  bool const result = FUNCNAME(vsprintf_append)(dest, err, reference, format, valist);
   va_end(valist);
-  return ok;
+  return result;
 }
