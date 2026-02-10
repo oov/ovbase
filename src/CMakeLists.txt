@@ -45,7 +45,7 @@ INTERFACE
   -Wl,--gc-sections
   # -Wl,--print-gc-sections
   -static
-  $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--import-memory,--export-memory,--max-memory=67108864>
+  $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--import-memory,--export-memory>
 )
 
 set(SOURCE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
@@ -288,6 +288,10 @@ foreach(target ${tests})
   PRIVATE
     OVBASE_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
     OVBASE_SOURCE_DIR_WIDE=L"${CMAKE_CURRENT_SOURCE_DIR}"
+  )
+  target_link_options(${target}
+  PRIVATE
+    $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--max-memory=67108864>
   )
   target_link_libraries(${target}
   PRIVATE
