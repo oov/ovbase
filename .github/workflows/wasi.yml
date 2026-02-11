@@ -13,6 +13,5 @@ jobs:
       - uses: actions/checkout@main
         with:
           submodules: recursive
-      - name: Build
-        run: |
-          sudo docker run --net host -i -v .:/root/ovbase ubuntu:jammy /bin/bash -c 'apt update && apt install -y git python3 wget tar xz-utils bzip2 cmake ninja-build && cd /root/ovbase && bash ./wasi-build.bash'
+      - name: Build and Test
+        run: bash ./wasi-build.bash
