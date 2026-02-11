@@ -57,4 +57,7 @@ emcmake cmake \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build "${BUILD_DIR}"
 
+echo "=== Running tests ==="
+ctest --test-dir "${BUILD_DIR}" --output-on-failure
+
 echo "=== Build complete ==="

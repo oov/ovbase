@@ -188,9 +188,9 @@ target_link_options(ovbase
 PUBLIC
   $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_COMPILER_RT}>>:--rtlib=compiler-rt>
   $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${USE_NO_PTHREAD}>>:-no-pthread>
-  $<$<NOT:$<BOOL:${WIN32}>>:-pthread>
+  $<$<AND:$<NOT:$<BOOL:${WIN32}>>,$<NOT:$<BOOL:${TARGET_EMSCRIPTEN}>>>:-pthread>
   $<$<BOOL:${USE_ADDRESS_SANITIZER}>:-fsanitize=address>
-  $<$<BOOL:${TARGET_EMSCRIPTEN}>:-sUSE_PTHREADS -sSTANDALONE_WASM>
+  $<$<BOOL:${TARGET_EMSCRIPTEN}>:-sUSE_PTHREADS>
 PRIVATE
   -static
 )
@@ -271,7 +271,15 @@ if(NOT SKIP_OVTHREADS_TEST)
 endif()
 
 foreach(target ${tests})
-  if(TARGET_EMSCRIPTEN OR TARGET_WASI_SDK)
+  if(TARGET_EMSCRIPTEN)
+    add_test(
+      NAME
+        ${target}
+      COMMAND
+        ${CMAKE_CROSSCOMPILING_EMULATOR}
+          $<TARGET_FILE:${target}>
+    )
+  elseif(TARGET_WASI_SDK)
     add_test(
       NAME
         ${target}
@@ -293,6 +301,12 @@ foreach(target ${tests})
   PRIVATE
     $<$<BOOL:${TARGET_WASI_SDK}>:-Wl,--max-memory=67108864>
   )
+  if(TARGET_EMSCRIPTEN AND target STREQUAL "test_ovbase_mo")
+    target_link_options(${target}
+    PRIVATE
+      "SHELL:--embed-file ${CMAKE_CURRENT_SOURCE_DIR}/mo/test@${CMAKE_CURRENT_SOURCE_DIR}/mo/test"
+    )
+  endif()
   target_link_libraries(${target}
   PRIVATE
     m

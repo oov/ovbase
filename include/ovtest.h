@@ -78,6 +78,11 @@ static inline void test_fini_(void) {
 
 #endif // __GNUC__
 
+#ifdef __EMSCRIPTEN__
+/* Emscripten does not support fork(); force acutest to run tests in-process. */
+__attribute__((constructor)) static void ovtest_emscripten_no_exec_(void) { acutest_no_exec_ = 1; }
+#endif
+
 #ifdef __GNUC__
 #  pragma GCC diagnostic pop
 #endif // __GNUC__
