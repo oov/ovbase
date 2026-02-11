@@ -22,10 +22,16 @@
 #    endif
 #  endif // __GNUC__
 
+#  if defined(TARGET_WASI_SDK) && !defined(TARGET_EMSCRIPTEN)
   #define OVBASE_DISABLE_PTHREAD_EXIT
   #define _WASI_EMULATED_SIGNAL
   #define _TTHREAD_MTX_T_SIZE_ 6
   #define _TTHREAD_CND_T_SIZE_ 12
+#  endif
+#  if defined(TARGET_EMSCRIPTEN)
+  #define _TTHREAD_MTX_T_SIZE_ 6
+  #define _TTHREAD_CND_T_SIZE_ 12
+#  endif
   #define ACUTEST_NOSETJMP
 
 #  ifdef __GNUC__
