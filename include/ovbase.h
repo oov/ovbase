@@ -346,16 +346,29 @@ typedef void (*ov_error_output_hook_func)(enum ov_error_severity severity, char 
 /**
  * @brief Set custom hook function for error output
  *
- * Sets a custom output handler that completely replaces the default stderr output.
+ * Sets a custom output handler that replaces the current output function.
  * This allows redirecting error messages to custom destinations like log files,
  * network services, or other output mechanisms.
  *
- * @param hook_func Function to handle error output, or NULL to restore default stderr output
- *
- * @note The hook function becomes the final output destination when set.
- *       No fallback to stderr occurs regardless of hook success/failure.
+ * @param hook_func Function to handle error output, or NULL to disable output
  */
 void ov_error_set_output_hook(ov_error_output_hook_func const hook_func);
+
+/**
+ * @brief Default error output implementation using stderr
+ *
+ * Writes error messages to stderr. On Windows, handles UTF-8 encoding properly
+ * for console output using WriteConsoleW. On other platforms, uses fputs.
+ *
+ * This function requires stdio.h (non-Windows) or Windows API (Windows).
+ * Pass this to ov_init() for standard stderr output behavior.
+ * To avoid stdio.h dependency (e.g., for WASI/Emscripten), pass NULL or
+ * a custom output function to ov_init() instead.
+ *
+ * @param severity Error severity level
+ * @param str UTF-8 encoded string to output (always null-terminated)
+ */
+void ov_error_default_output(enum ov_error_severity severity, char const *str);
 
 /**
  * Automatically fills error message if not already set
@@ -881,9 +894,12 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
  * Initializes global subsystems required when using ov_rand_get_global_hint,
  * ALLOCATE_LOGGER, or LEAK_DETECTOR features. Must be called at program startup.
  *
+ * @param output_func Function for error output, or NULL to disable output.
+ *                    Pass ov_error_default_output for standard stderr output.
+ *
  * @see ov_exit() Must be called before program termination
  */
-void ov_init(void);
+void ov_init(ov_error_output_hook_func output_func);
 
 /**
  * @brief Cleanup ovbase library subsystems

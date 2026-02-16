@@ -18,7 +18,7 @@
 
 static inline void test_init_(void) {
   setlocale(LC_ALL, "");
-  ov_init();
+  ov_init(ov_error_default_output);
 #ifdef TEST_MY_INIT
   TEST_MY_INIT;
 #endif

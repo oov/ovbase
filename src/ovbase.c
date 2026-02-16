@@ -33,7 +33,8 @@ uint64_t ov_rand_get_global_hint(void) {
   return ov_rand_splitmix64(atomic_fetch_add(&g_global_hint, 0x9e3779b97f4a7c15));
 }
 
-void ov_init(void) {
+void ov_init(ov_error_output_hook_func const output_func) {
+  ov_error_set_output_hook(output_func);
   global_hint_init();
 #ifdef ALLOCATE_LOGGER
   allocate_logger_init();

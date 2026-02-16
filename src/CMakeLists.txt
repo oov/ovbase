@@ -111,6 +111,7 @@ set(OVBASE_SOURCES
   num/wchar/itoa.c
   num/wchar/utoa.c
   output.c
+  output_default.c
   ovbase.c
   ovsort.c
   ovthreads.c

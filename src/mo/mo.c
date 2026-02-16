@@ -5,7 +5,6 @@
 
 #ifndef _WIN32
 #  include <locale.h>
-#  include <stdio.h>
 #endif
 
 #include <ovarray.h>
