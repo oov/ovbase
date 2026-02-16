@@ -1,6 +1,10 @@
 #pragma once
 #include <ovbase.h>
 
+void mem_set_allocator(void *(*custom_realloc)(void *, size_t, void *),
+                       void (*custom_free)(void *, void *),
+                       void *userdata);
+
 #if defined(ALLOCATE_LOGGER) || defined(LEAK_DETECTOR)
 void mem_log_allocated(void const *const p MEM_FILEPOS_PARAMS);
 void mem_log_free(void const *const p MEM_FILEPOS_PARAMS);

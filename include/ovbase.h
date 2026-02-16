@@ -263,112 +263,12 @@ void ov_error_pushf(struct ov_error *const target,
                     char const *const reference ERR_FILEPOS_PARAMS,
                     ...);
 
-/**
- * Hook function type for custom error message generation
- *
- * This callback allows customization of error messages for any error type/code combination.
- * The hook is called before the standard message generation to provide custom handling.
- *
- * @param target Target error stack entry to modify with custom message
- * @param err Pointer to struct ov_error for error information if message generation fails
- * @return true on success (including when no custom message available), false on failure
- *
- * @example
- * static bool my_hook(struct ov_error_stack *target, struct ov_error *err) {
- *   if (target->info.type == ov_error_type_generic && target->info.code == ov_error_generic_fail) {
- *     static char const custom_msg[] = "Custom failure message";
- *     target->info.context = custom_msg;
- *     target->info.flag_context_is_static = -1;
- *     return true;
- *   }
- *   // No custom message - let default handling continue
- *   return true;
- * }
- */
-typedef bool (*ov_error_autofill_hook_func)(struct ov_error_stack *target, struct ov_error *err);
-
-/**
- * Set custom hook function for error message autofilling
- *
- * Registers a custom hook function that will be called before standard error message
- * generation. The hook can provide custom messages for any error type/code combination,
- * allowing complete override or extension of the default error messaging system.
- *
- * @param hook_func Hook function pointer, or NULL to disable custom hook
- *
- * @example
- *   static bool my_error_hook(int type, int code, char const **message_out, struct ov_error *err) {
- *     if (type == MY_CUSTOM_ERROR_TYPE) {
- *       // For dynamic messages, use OV_ARRAY_GROW
- *       char *msg = NULL;
- *       if (!get_custom_error_message(code, &msg, err)) {
- *         return false;
- *       }
- *       *message_out = msg;
- *       return true;
- *     }
- *     // Override existing generic error with custom message
- *     if (type == ov_error_type_generic && code == ov_error_generic_not_found) {
- *       OV_ERROR_DEFINE(not_found_msg, ov_error_type_generic, ov_error_generic_not_found,
- *                       "Resource not found - check configuration");
- *       *message_out = not_found_msg.context;
- *       return true;
- *     }
- *     *message_out = NULL; // Use default handling
- *     return true;
- *   }
- *
- *   ov_error_set_autofill_hook(my_error_hook);
- */
-void ov_error_set_autofill_hook(ov_error_autofill_hook_func const hook_func);
-
 enum ov_error_severity {
   ov_error_severity_error = 0,
   ov_error_severity_warn = 1,
   ov_error_severity_info = 2,
   ov_error_severity_verbose = 3,
 };
-
-/**
- * @brief Hook function type for custom error output
- *
- * This function type defines the signature for custom error output handlers,
- * completely replacing the default stderr output mechanism.
- *
- * @param severity Error severity level
- * @param str UTF-8 encoded string to output (always null-terminated)
- *
- * @note When this hook is set, it becomes the final output destination.
- *       No fallback to stderr occurs.
- */
-typedef void (*ov_error_output_hook_func)(enum ov_error_severity severity, char const *str);
-
-/**
- * @brief Set custom hook function for error output
- *
- * Sets a custom output handler that replaces the current output function.
- * This allows redirecting error messages to custom destinations like log files,
- * network services, or other output mechanisms.
- *
- * @param hook_func Function to handle error output, or NULL to disable output
- */
-void ov_error_set_output_hook(ov_error_output_hook_func const hook_func);
-
-/**
- * @brief Default error output implementation using stderr
- *
- * Writes error messages to stderr. On Windows, handles UTF-8 encoding properly
- * for console output using WriteConsoleW. On other platforms, uses fputs.
- *
- * This function requires stdio.h (non-Windows) or Windows API (Windows).
- * Pass this to ov_init() for standard stderr output behavior.
- * To avoid stdio.h dependency (e.g., for WASI/Emscripten), pass NULL or
- * a custom output function to ov_init() instead.
- *
- * @param severity Error severity level
- * @param str UTF-8 encoded string to output (always null-terminated)
- */
-void ov_error_default_output(enum ov_error_severity severity, char const *str);
 
 /**
  * Automatically fills error message if not already set
@@ -889,17 +789,87 @@ void ov_mem_aligned_free(void *const pp MEM_FILEPOS_PARAMS);
 #define OV_ALIGNED_FREE(pp) ov_mem_aligned_free((pp)MEM_FILEPOS_VALUES)
 
 /**
+ * Hook function type for custom error message generation
+ *
+ * This callback allows customization of error messages for any error type/code combination.
+ * The hook is called before the standard message generation to provide custom handling.
+ *
+ * @param target Target error stack entry to modify with custom message
+ * @param err Pointer to struct ov_error for error information if message generation fails
+ * @return true on success (including when no custom message available), false on failure
+ *
+ * @example
+ * static bool my_hook(struct ov_error_stack *target, struct ov_error *err) {
+ *   if (target->info.type == ov_error_type_generic && target->info.code == ov_error_generic_fail) {
+ *     static char const custom_msg[] = "Custom failure message";
+ *     target->info.context = custom_msg;
+ *     target->info.flag_context_is_static = -1;
+ *     return true;
+ *   }
+ *   // No custom message - let default handling continue
+ *   return true;
+ * }
+ */
+typedef bool (*ov_error_autofill_hook_func)(struct ov_error_stack *target, struct ov_error *err);
+
+/**
+ * @brief Hook function type for custom error output
+ *
+ * This function type defines the signature for custom error output handlers,
+ * completely replacing the default stderr output mechanism.
+ *
+ * @param severity Error severity level
+ * @param str UTF-8 encoded string to output (always null-terminated)
+ *
+ * @note When this hook is set, it becomes the final output destination.
+ *       No fallback to stderr occurs.
+ */
+typedef void (*ov_error_output_hook_func)(enum ov_error_severity severity, char const *str);
+
+/**
+ * @brief Options for ov_init()
+ *
+ * All-zero initialization means: no output, default allocator.
+ * Use ov_init_get_default_options() to get a fully-configured default.
+ */
+struct ov_init_options {
+  /** Error output function. NULL to disable output. */
+  ov_error_output_hook_func output_func;
+  /** Custom autofill hook for error messages. NULL to use default behavior only. */
+  ov_error_autofill_hook_func autofill_hook;
+  /** Custom memory allocator. Both must be set, or both NULL for default. */
+  void *(*mem_realloc)(void *ptr, size_t size, void *userdata);
+  void (*mem_free)(void *ptr, void *userdata);
+  /** Userdata passed to mem_realloc and mem_free. */
+  void *mem_userdata;
+};
+
+/**
  * @brief Initialize ovbase library subsystems
  *
  * Initializes global subsystems required when using ov_rand_get_global_hint,
  * ALLOCATE_LOGGER, or LEAK_DETECTOR features. Must be called at program startup.
  *
- * @param output_func Function for error output, or NULL to disable output.
- *                    Pass ov_error_default_output for standard stderr output.
+ * @param options Init options. Must provide mem_realloc and mem_free.
+ *               Use ov_init_get_default_options() for standard desktop behavior.
+ * @return true on success, false if options is NULL or allocator is missing
  *
  * @see ov_exit() Must be called before program termination
  */
-void ov_init(ov_error_output_hook_func output_func);
+NODISCARD bool ov_init(struct ov_init_options const *options);
+
+/**
+ * @brief Get default init options with standard stderr output
+ *
+ * Returns a struct ov_init_options pre-filled with default implementations.
+ * The caller can modify fields before passing to ov_init().
+ *
+ * Referencing this function links in stdio.h / stdlib.h dependencies.
+ * For minimal builds, provide custom allocator and output directly.
+ *
+ * @return Default init options
+ */
+struct ov_init_options ov_init_get_default_options(void);
 
 /**
  * @brief Cleanup ovbase library subsystems

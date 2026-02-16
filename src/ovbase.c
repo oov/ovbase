@@ -3,7 +3,8 @@
 #include <ovrand.h>
 #include <ovthreads.h> // struct timespec, timespec_get, TIME_UTC
 
-#include <stdlib.h>
+#include "output.h"
+
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
@@ -33,12 +34,18 @@ uint64_t ov_rand_get_global_hint(void) {
   return ov_rand_splitmix64(atomic_fetch_add(&g_global_hint, 0x9e3779b97f4a7c15));
 }
 
-void ov_init(ov_error_output_hook_func const output_func) {
-  ov_error_set_output_hook(output_func);
+bool ov_init(struct ov_init_options const *const options) {
+  if (!options || !options->mem_realloc || !options->mem_free) {
+    return false;
+  }
+  ov_error_set_output_hook(options->output_func);
+  ov_error_set_autofill_hook(options->autofill_hook);
+  mem_set_allocator(options->mem_realloc, options->mem_free, options->mem_userdata);
   global_hint_init();
 #ifdef ALLOCATE_LOGGER
   allocate_logger_init();
 #endif
+  return true;
 }
 
 void ov_exit(void) {

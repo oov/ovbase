@@ -2,6 +2,8 @@
 
 #include <ovarray.h>
 
+#include "output.h"
+
 // Helper functions to reduce code duplication
 static void
 verify_error_state(struct ov_error *err, int expected_type, int expected_code, const char *expected_context) {
@@ -580,7 +582,7 @@ static void test_ov_error_output_hook(void) {
   // Output should not be captured (hook suppresses it)
   TEST_CHECK(g_captured_output == NULL);
 
-  // Reset hook to default
+  // Reset hook (disable output)
   ov_error_set_output_hook(NULL);
 
   // Test that hook is properly reset (this would output to stderr by default)

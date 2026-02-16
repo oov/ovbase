@@ -30,7 +30,7 @@ int timespec_get(struct timespec *ts, int base);
 #  ifdef OVBASE_DISABLE_PTHREAD_EXIT
 #    define pthread_exit(x)                                                                                            \
       (void)(x);                                                                                                       \
-      abort()
+      __builtin_trap()
 #  endif
 #  include <ovbase_3rd/tinycthread.h>
 #  undef DISABLE_TLS

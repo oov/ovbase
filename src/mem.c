@@ -2,30 +2,23 @@
 
 #include <assert.h>
 
-#ifdef USE_MIMALLOC
+static void *(*g_realloc)(void *, size_t, void *) = NULL;
+static void (*g_free)(void *, void *) = NULL;
+static void *g_mem_userdata = NULL;
 
-#  ifdef __GNUC__
-#    pragma GCC diagnostic push
-#    if __has_warning("-Wreserved-identifier")
-#      pragma GCC diagnostic ignored "-Wreserved-identifier"
-#    endif
-#  endif // __GNUC__
-#  include <mimalloc.h>
-#  ifdef __GNUC__
-#    pragma GCC diagnostic pop
-#  endif // __GNUC__
+#define REALLOC(ptr, size) (g_realloc((ptr), (size), g_mem_userdata))
+#define FREE(ptr) (g_free((ptr), g_mem_userdata))
 
-#  define REALLOC(ptr, size) (mi_realloc(ptr, size))
-#  define FREE(ptr) (mi_free(ptr))
+void mem_set_allocator(void *(*custom_realloc)(void *, size_t, void *),
+                       void (*custom_free)(void *, void *),
+                       void *userdata) {
+  if (custom_realloc && custom_free) {
+    g_realloc = custom_realloc;
+    g_free = custom_free;
+    g_mem_userdata = userdata;
+  }
+}
 
-#else
-
-#  define REALLOC(ptr, size) (realloc(ptr, size))
-#  define FREE(ptr) (free(ptr))
-
-#endif
-
-#include <stdlib.h> // realloc, free
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
@@ -84,7 +77,7 @@ void allocate_logger_init(void) {
   g_allocated = hashmap_new_with_allocator(
       am_realloc, am_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!g_allocated) {
-    abort();
+    __builtin_trap();
   }
 }
 
@@ -142,7 +135,7 @@ size_t report_leaks(void) {
   struct hashmap *dummy = hashmap_new_with_allocator(
       am_realloc, am_free, sizeof(struct allocated_at), 8, s0, s1, am_hash, am_compare, NULL, NULL);
   if (!dummy) {
-    abort();
+    __builtin_trap();
   }
 
   mtx_lock(&g_mem_mtx);

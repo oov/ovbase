@@ -3,6 +3,43 @@
 #include <assert.h>
 #include <string.h>
 
+#ifdef USE_MIMALLOC
+
+#  ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    if __has_warning("-Wreserved-identifier")
+#      pragma GCC diagnostic ignored "-Wreserved-identifier"
+#    endif
+#  endif // __GNUC__
+#  include <mimalloc.h>
+#  ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#  endif // __GNUC__
+
+static void *ov_default_realloc(void *ptr, size_t size, void *userdata) {
+  (void)userdata;
+  return mi_realloc(ptr, size);
+}
+static void ov_default_free(void *ptr, void *userdata) {
+  (void)userdata;
+  mi_free(ptr);
+}
+
+#else
+
+#  include <stdlib.h> // realloc, free
+
+static void *ov_default_realloc(void *ptr, size_t size, void *userdata) {
+  (void)userdata;
+  return realloc(ptr, size);
+}
+static void ov_default_free(void *ptr, void *userdata) {
+  (void)userdata;
+  free(ptr);
+}
+
+#endif
+
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
 #  include <ovutf.h>
@@ -11,7 +48,7 @@
 #  include <stdio.h>
 #endif
 
-void ov_error_default_output(enum ov_error_severity severity, char const *const str) {
+static void ov_default_output(enum ov_error_severity severity, char const *const str) {
   (void)severity;
   assert(str != NULL && "str must not be NULL");
   if (!str) {
@@ -86,4 +123,13 @@ void ov_error_default_output(enum ov_error_severity severity, char const *const 
 
 cleanup:
   return;
+}
+
+struct ov_init_options ov_init_get_default_options(void) {
+  return (struct ov_init_options){
+      .output_func = ov_default_output,
+      .mem_realloc = ov_default_realloc,
+      .mem_free = ov_default_free,
+      .mem_userdata = NULL,
+  };
 }

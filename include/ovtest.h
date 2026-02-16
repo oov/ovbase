@@ -18,7 +18,12 @@
 
 static inline void test_init_(void) {
   setlocale(LC_ALL, "");
-  ov_init(ov_error_default_output);
+  {
+    struct ov_init_options opts = ov_init_get_default_options();
+    if (!ov_init(&opts)) {
+      abort();
+    }
+  }
 #ifdef TEST_MY_INIT
   TEST_MY_INIT;
 #endif
