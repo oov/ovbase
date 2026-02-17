@@ -281,7 +281,7 @@ void ov_error_pushf(struct ov_error *const target,
 
 static size_t
 find_entry(struct ov_error_stack const *const entries, size_t const length, int const type, int const code) {
-  assert(entries != NULL && "entries must not be NULL");
+  assert((entries != NULL || length == 0) && "entries must not be NULL when length > 0");
   for (size_t i = 0; i < length; i++) {
     if (entries[i].info.type == ov_error_type_invalid) {
       break; // Stop when we hit invalid entry
@@ -312,7 +312,7 @@ bool ov_error_is(struct ov_error const *const target, int const type, int const 
 }
 
 static size_t find_entry_by_type(struct ov_error_stack const *const entries, size_t const length, int const type) {
-  assert(entries != NULL && "entries must not be NULL");
+  assert((entries != NULL || length == 0) && "entries must not be NULL when length > 0");
   for (size_t i = 0; i < length; i++) {
     if (entries[i].info.type == ov_error_type_invalid) {
       break; // Stop when we hit invalid entry
