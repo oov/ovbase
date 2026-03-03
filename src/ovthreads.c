@@ -34,6 +34,20 @@ int timespec_get(struct timespec *ts, int base) {
 
 #  define DISABLE_TLS
 #  define DISABLE_CALL_ONCE
+
+// Replace malloc/free in tinycthread with ovbase memory management
+#  include "mem.h"
+static void *tinycthread_malloc_(size_t const sz) {
+  void *p = NULL;
+  if (!mem_core_(&p, sz MEM_FILEPOS_VALUES)) {
+    return NULL;
+  }
+  return p;
+}
+static void tinycthread_free_(void *p) { mem_core_(&p, 0 MEM_FILEPOS_VALUES); }
+#  define malloc tinycthread_malloc_
+#  define free tinycthread_free_
+
 #  ifdef __GNUC__
 #    pragma GCC diagnostic push
 #    if __has_warning("-Wreserved-identifier")
@@ -47,6 +61,9 @@ int timespec_get(struct timespec *ts, int base) {
 #  else
 #    include "../3rd/tinycthread/source/tinycthread.c"
 #  endif // __GNUC__
+
+#  undef free
+#  undef malloc
 #  undef DISABLE_TLS
 #  undef DISABLE_CALL_ONCE
 
