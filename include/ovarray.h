@@ -131,7 +131,7 @@ NODISCARD size_t ov_array_capacity(void const *const a);
 NODISCARD bool ov_array_prepare_for_push(void **const a, size_t const itemsize MEM_FILEPOS_PARAMS);
 size_t ov_array_length_decrement(void *const a);
 
-typedef size_t ov_bitarray;
+typedef uint8_t ov_bitarray;
 
 // not growable
 
@@ -251,22 +251,14 @@ NODISCARD bool ov_bitarray_alloc(ov_bitarray **const a, size_t const len MEM_FIL
 NODISCARD bool ov_bitarray_grow(ov_bitarray **const a, size_t const newcap MEM_FILEPOS_PARAMS);
 static inline void ov_bitarray_set(ov_bitarray *const a, size_t const index) {
   assert(a != NULL && "a must not be NULL");
-  size_t const d = index / (sizeof(ov_bitarray) * 8);
-  size_t const r = index % (sizeof(ov_bitarray) * 8);
-  a[d] |= ((size_t)(1) << r);
+  a[index / 8] |= (uint8_t)(1u << (index % 8));
 }
 static inline void ov_bitarray_clear(ov_bitarray *const a, size_t const index) {
   assert(a != NULL && "a must not be NULL");
-  size_t const d = index / (sizeof(ov_bitarray) * 8);
-  size_t const r = index % (sizeof(ov_bitarray) * 8);
-  a[d] &= ~((size_t)(1) << r);
+  a[index / 8] &= (uint8_t)~(1u << (index % 8));
 }
 NODISCARD static inline bool ov_bitarray_get(ov_bitarray const *const a, size_t const index) {
   assert(a != NULL && "a must not be NULL");
-  size_t const d = index / (sizeof(ov_bitarray) * 8);
-  size_t const r = index % (sizeof(ov_bitarray) * 8);
-  return (a[d] & ((size_t)(1) << r)) != 0;
+  return (a[index / 8] & (uint8_t)(1u << (index % 8))) != 0;
 }
-NODISCARD static inline size_t ov_bitarray_length_to_bytes(size_t const bits) {
-  return ((bits + (sizeof(ov_bitarray) * 8) - 1) / (sizeof(ov_bitarray) * 8)) * sizeof(ov_bitarray);
-}
+NODISCARD static inline size_t ov_bitarray_length_to_bytes(size_t const bits) { return (bits + 7) / 8; }
