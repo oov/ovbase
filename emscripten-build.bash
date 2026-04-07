@@ -86,7 +86,6 @@ emcmake cmake \
   -DFORMAT_SOURCES=OFF \
   -DUSE_LTO=OFF \
   -DLDNAME="" \
-  -DSKIP_OVTHREADS_TEST=ON \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build "${BUILD_DIR}"
 

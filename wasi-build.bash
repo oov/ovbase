@@ -97,7 +97,6 @@ CC="${WASISDK}/bin/clang-20 --target=wasm32-wasi-threads --sysroot=${WASISDK}/sh
     -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" \
     -DTARGET_WASI_SDK=ON \
     -DFORMAT_SOURCES=OFF \
-    -DSKIP_OVTHREADS_TEST=OFF \
     -DUSE_LTO=OFF \
     -DLDNAME="" \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
