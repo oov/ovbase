@@ -112,6 +112,12 @@ static void test_cnd_timedwait(void) {
 enum { STRESS_NUM_THREADS = 20 };
 enum { BROADCAST_IDLE_NUM_THREADS = 20 };
 
+struct timed_mutex_cnd_pair {
+  mtx_t mtx;
+  cnd_t cnd;
+  int ready;
+};
+
 struct broadcast_idle_tp {
   mtx_t mtx;
   cnd_t cnd;
@@ -139,6 +145,50 @@ static int process_cpu_ms(uint64_t *const cpu_ms) {
   }
   *cpu_ms = filetime_to_ms(&kernel) + filetime_to_ms(&user);
   return 1;
+}
+
+static int timed_mutex_cnd_worker(void *const p) {
+  struct timed_mutex_cnd_pair *const pair = (struct timed_mutex_cnd_pair *)p;
+  mtx_lock(&pair->mtx);
+  pair->ready = 1;
+  cnd_signal(&pair->cnd);
+  mtx_unlock(&pair->mtx);
+  return 0;
+}
+
+static void test_cnd_wait_with_timed_mutex(void) {
+  struct timed_mutex_cnd_pair pair = {0};
+  thrd_t worker = {0};
+  int cnd_created = 0;
+  int worker_created = 0;
+
+  if (!TEST_CHECK(mtx_init(&pair.mtx, mtx_timed) == thrd_success)) {
+    return;
+  }
+  if (!TEST_CHECK(cnd_init(&pair.cnd) == thrd_success)) {
+    goto cleanup;
+  }
+  cnd_created = 1;
+
+  mtx_lock(&pair.mtx);
+  if (!TEST_CHECK(thrd_create(&worker, timed_mutex_cnd_worker, &pair) == thrd_success)) {
+    mtx_unlock(&pair.mtx);
+    goto cleanup;
+  }
+  worker_created = 1;
+  while (!pair.ready) {
+    cnd_wait(&pair.cnd, &pair.mtx);
+  }
+  mtx_unlock(&pair.mtx);
+
+cleanup:
+  if (worker_created) {
+    thrd_join(worker, NULL);
+  }
+  if (cnd_created) {
+    cnd_destroy(&pair.cnd);
+  }
+  mtx_destroy(&pair.mtx);
 }
 
 static int broadcast_idle_worker(void *const p) {
@@ -416,6 +466,9 @@ shutdown:
 }
 
 #else
+static void test_cnd_wait_with_timed_mutex(void) {
+  TEST_SKIP("Windows-only test (tinycthread timed mutex condvar fallback)");
+}
 static void test_cnd_broadcast_idle_cpu(void) {
   TEST_SKIP("Windows-only test (tinycthread condvar broadcast idle spin)");
 }
@@ -425,6 +478,7 @@ static void test_cnd_signal_stress(void) { TEST_SKIP("Windows-only test (tinycth
 TEST_LIST = {
     {"test_mtx_timedwait", test_mtx_timedwait},
     {"test_cnd_timedwait", test_cnd_timedwait},
+    {"test_cnd_wait_with_timed_mutex", test_cnd_wait_with_timed_mutex},
     {"test_cnd_broadcast_idle_cpu", test_cnd_broadcast_idle_cpu},
     {"test_cnd_signal_stress", test_cnd_signal_stress},
     {NULL, NULL},

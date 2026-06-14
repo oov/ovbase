@@ -175,7 +175,7 @@ PRIVATE
 )
 target_compile_definitions(ovbase
 PRIVATE
-  $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0501>
+  $<$<BOOL:${WIN32}>:_WIN32_WINNT=0x0600>
   $<$<BOOL:${UNIX}>:_POSIX_C_SOURCE=199309L>
   $<$<CONFIG:Release>:NDEBUG>
 )
