@@ -110,6 +110,136 @@ static void test_cnd_timedwait(void) {
 #  include <windows.h>
 
 enum { STRESS_NUM_THREADS = 20 };
+enum { BROADCAST_IDLE_NUM_THREADS = 20 };
+
+struct broadcast_idle_tp {
+  mtx_t mtx;
+  cnd_t cnd;
+  cnd_t cnd2;
+  size_t task_id;
+  size_t ready;
+  size_t completed;
+  int active;
+};
+
+static uint64_t filetime_to_ms(FILETIME const *const ft) {
+  ULARGE_INTEGER v;
+  v.LowPart = ft->dwLowDateTime;
+  v.HighPart = ft->dwHighDateTime;
+  return v.QuadPart / 10000;
+}
+
+static int process_cpu_ms(uint64_t *const cpu_ms) {
+  FILETIME creation = {0};
+  FILETIME exit = {0};
+  FILETIME kernel = {0};
+  FILETIME user = {0};
+  if (!GetProcessTimes(GetCurrentProcess(), &creation, &exit, &kernel, &user)) {
+    return 0;
+  }
+  *cpu_ms = filetime_to_ms(&kernel) + filetime_to_ms(&user);
+  return 1;
+}
+
+static int broadcast_idle_worker(void *const p) {
+  struct broadcast_idle_tp *const tp = (struct broadcast_idle_tp *)p;
+  size_t local_task_id = 0;
+
+  mtx_lock(&tp->mtx);
+  ++tp->ready;
+  cnd_signal(&tp->cnd2);
+  for (;;) {
+    while (tp->active && tp->task_id == local_task_id) {
+      cnd_wait(&tp->cnd, &tp->mtx);
+    }
+    if (!tp->active) {
+      break;
+    }
+    local_task_id = tp->task_id;
+    ++tp->completed;
+    cnd_signal(&tp->cnd2);
+  }
+  mtx_unlock(&tp->mtx);
+  return 0;
+}
+
+static void test_cnd_broadcast_idle_cpu(void) {
+  enum { idle_wall_ms = 500, max_idle_cpu_ms = 250 };
+
+  struct broadcast_idle_tp tp = {0};
+  thrd_t workers[BROADCAST_IDLE_NUM_THREADS] = {0};
+  size_t workers_created = 0;
+  int cnd_created = 0;
+  int cnd2_created = 0;
+  uint64_t cpu_before = 0;
+  uint64_t cpu_after = 0;
+  uint64_t idle_cpu_ms = 0;
+  struct timespec idle = {0, idle_wall_ms * 1000000L};
+
+  if (!TEST_CHECK(mtx_init(&tp.mtx, mtx_plain) == thrd_success)) {
+    return;
+  }
+  if (!TEST_CHECK(cnd_init(&tp.cnd) == thrd_success)) {
+    goto cleanup;
+  }
+  cnd_created = 1;
+  if (!TEST_CHECK(cnd_init(&tp.cnd2) == thrd_success)) {
+    goto cleanup;
+  }
+  cnd2_created = 1;
+  tp.active = 1;
+
+  for (size_t i = 0; i < BROADCAST_IDLE_NUM_THREADS; ++i) {
+    if (!TEST_CHECK(thrd_create(&workers[i], broadcast_idle_worker, &tp) == thrd_success)) {
+      TEST_MSG("failed to create worker thread %zu", i);
+      goto cleanup;
+    }
+    ++workers_created;
+  }
+
+  mtx_lock(&tp.mtx);
+  while (tp.ready < BROADCAST_IDLE_NUM_THREADS) {
+    cnd_wait(&tp.cnd2, &tp.mtx);
+  }
+
+  ++tp.task_id;
+  cnd_broadcast(&tp.cnd);
+  while (tp.completed < BROADCAST_IDLE_NUM_THREADS) {
+    cnd_wait(&tp.cnd2, &tp.mtx);
+  }
+  mtx_unlock(&tp.mtx);
+
+  if (!TEST_CHECK(process_cpu_ms(&cpu_before))) {
+    goto cleanup;
+  }
+  thrd_sleep(&idle, NULL);
+  if (!TEST_CHECK(process_cpu_ms(&cpu_after))) {
+    goto cleanup;
+  }
+  idle_cpu_ms = cpu_after - cpu_before;
+  TEST_CHECK(idle_cpu_ms < max_idle_cpu_ms);
+  TEST_MSG(
+      "want idle CPU under %d ms per %d ms wall time, got %" PRIu64 " ms", max_idle_cpu_ms, idle_wall_ms, idle_cpu_ms);
+
+cleanup:
+  if (cnd_created) {
+    mtx_lock(&tp.mtx);
+    tp.active = 0;
+    ++tp.task_id;
+    cnd_broadcast(&tp.cnd);
+    mtx_unlock(&tp.mtx);
+  }
+  for (size_t i = 0; i < workers_created; ++i) {
+    thrd_join(workers[i], NULL);
+  }
+  if (cnd2_created) {
+    cnd_destroy(&tp.cnd2);
+  }
+  if (cnd_created) {
+    cnd_destroy(&tp.cnd);
+  }
+  mtx_destroy(&tp.mtx);
+}
 
 struct stress_tp {
   mtx_t mtx;
@@ -286,12 +416,16 @@ shutdown:
 }
 
 #else
+static void test_cnd_broadcast_idle_cpu(void) {
+  TEST_SKIP("Windows-only test (tinycthread condvar broadcast idle spin)");
+}
 static void test_cnd_signal_stress(void) { TEST_SKIP("Windows-only test (tinycthread condvar signal-loss race)"); }
 #endif
 
 TEST_LIST = {
     {"test_mtx_timedwait", test_mtx_timedwait},
     {"test_cnd_timedwait", test_cnd_timedwait},
+    {"test_cnd_broadcast_idle_cpu", test_cnd_broadcast_idle_cpu},
     {"test_cnd_signal_stress", test_cnd_signal_stress},
     {NULL, NULL},
 };
