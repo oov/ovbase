@@ -166,10 +166,8 @@ typedef error (*error_message_mapper)(int const type, int const code, struct NAT
 NODISCARD error error_generic_message_mapper(int const type, int const code, struct NATIVE_STR *const dest);
 NODISCARD error error_errno_message_mapper(int const type, int const code, struct NATIVE_STR *const dest);
 #  ifdef _WIN32
-NODISCARD error error_win32_message_mapper(int const type,
-                                           int const code,
-                                           uint16_t langid,
-                                           struct NATIVE_STR *const dest);
+NODISCARD
+error error_win32_message_mapper(int const type, int const code, uint16_t langid, struct NATIVE_STR *const dest);
 #  endif
 typedef void (*error_message_reporter)(error const err,
                                        struct NATIVE_STR const *const msg,

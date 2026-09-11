@@ -163,10 +163,8 @@ NODISCARD error error_errno_message_mapper(int const type, int const code, NATIV
 
 #ifdef _WIN32
 #  ifndef OV_NOSTR
-NODISCARD error error_win32_message_mapper(int const type,
-                                           int const code,
-                                           uint16_t langid,
-                                           struct NATIVE_STR *const dest) {
+NODISCARD
+error error_win32_message_mapper(int const type, int const code, uint16_t langid, struct NATIVE_STR *const dest) {
   if (!dest) {
     return errg(err_invalid_arugment);
   }
