@@ -86,7 +86,7 @@ bool ov_bitarray_grow(ov_bitarray **const a, size_t const newcap MEM_FILEPOS_PAR
   if (curcap == 0) {
     h->len = 0;
   }
-  *a = (void *)(h + 1);
+  *a = (ov_bitarray *)(h + 1);
   memset(*a + curcap, 0, (realnewcap - curcap));
   return true;
 }

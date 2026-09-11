@@ -19,6 +19,9 @@
 #  if __has_warning("-Wimplicit-fallthrough")
 #    pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #  endif
+#  if __has_warning("-Wimplicit-void-ptr-cast")
+#    pragma GCC diagnostic ignored "-Wimplicit-void-ptr-cast"
+#  endif
 #  include "../3rd/hashmap.c/hashmap.c"
 #  pragma GCC diagnostic pop
 #else
@@ -27,7 +30,7 @@
 
 void *hm_realloc(void *p, size_t const s, void *const udata) {
 #ifdef ALLOCATE_LOGGER
-  struct hmap_udata const *const ud = udata;
+  struct hmap_udata const *const ud = (struct hmap_udata const *)udata;
   struct ov_filepos const *const filepos = ud->filepos;
 #else
   (void)udata;
@@ -41,7 +44,7 @@ void *hm_realloc(void *p, size_t const s, void *const udata) {
 
 void hm_free(void *p, void *const udata) {
 #ifdef ALLOCATE_LOGGER
-  struct hmap_udata const *const ud = udata;
+  struct hmap_udata const *const ud = (struct hmap_udata const *)udata;
   struct ov_filepos const *const filepos = ud->filepos;
 #else
   (void)udata;

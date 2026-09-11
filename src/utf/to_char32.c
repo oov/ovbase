@@ -2,7 +2,7 @@
 
 static enum ov_codepoint_fn_result count_char32(int_fast32_t codepoint, void *ctx) {
   (void)codepoint;
-  size_t *n = ctx;
+  size_t *n = (size_t *)ctx;
   ++*n;
   return ov_codepoint_fn_result_continue;
 }
@@ -21,7 +21,7 @@ struct char32_context {
 };
 
 static enum ov_codepoint_fn_result write_char32(int_fast32_t codepoint, void *ctx) {
-  struct char32_context *c = ctx;
+  struct char32_context *c = (struct char32_context *)ctx;
   if (c->end - c->cur <= 1) {
     return ov_codepoint_fn_result_abort;
   }

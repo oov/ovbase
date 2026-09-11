@@ -11,7 +11,22 @@
 #define NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS 0
 #define NANOPRINTF_USE_FMT_SPEC_OPT_STAR 0
 #define NANOPRINTF_USE_ORDER_FORMAT_EXTENSION_SPECIFIERS 1
+#ifdef __GNUC__
+#  ifndef __has_warning
+#    define __has_warning(x) 0
+#  endif
+#  pragma GCC diagnostic push
+#  if __has_warning("-Wimplicit-int-enum-cast")
+#    pragma GCC diagnostic ignored "-Wimplicit-int-enum-cast"
+#  endif
+#  if __has_warning("-Wimplicit-void-ptr-cast")
+#    pragma GCC diagnostic ignored "-Wimplicit-void-ptr-cast"
+#  endif
+#endif // __GNUC__
 #include "../../3rd/nanoprintf/nanoprintf.h"
+#ifdef __GNUC__
+#  pragma GCC diagnostic pop
+#endif // __GNUC__
 
 #ifndef FUNCNAME
 #  define FUNCNAME_3(prefix, funcname, postfix) prefix##funcname##postfix

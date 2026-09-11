@@ -80,7 +80,7 @@ NODISCARD error mem_aligned_free_(void *const pp MEM_FILEPOS_PARAMS) {
   if (*(void **)pp == NULL) {
     return errg(err_invalid_arugment);
   }
-  uint8_t *p = *(void **)pp;
+  uint8_t *p = (uint8_t *)*(void **)pp;
   size_t offset = (size_t)(*(p - 1));
   p -= offset + 1;
   mem_core_(&p, 0 MEM_FILEPOS_VALUES_PASSTHRU);

@@ -7,27 +7,30 @@ static NODISCARD error mo_get_preferred_ui_languages_core(struct wstr *dest, boo
 #  else
 static NODISCARD error mo_get_preferred_ui_languages_core(NATIVE_CHAR **dest, bool const id) {
 #  endif
-  error err = eok();
-  HMODULE h = LoadLibraryW(L"kernel32.dll");
-  if (h == NULL) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
-    goto cleanup;
-  }
   typedef BOOL(WINAPI * GETHREADPERFERREDUILANGUAGESPROC)(
       DWORD dwFlags, PULONG pulNumLanguages, PZZWSTR pwszLanguagesBuffer, PULONG pcchLanguagesBuffer);
-  GETHREADPERFERREDUILANGUAGESPROC fn =
-      (GETHREADPERFERREDUILANGUAGESPROC)(void *)GetProcAddress(h, "GetThreadPreferredUILanguages");
-  if (fn == NULL) {
-    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
-    goto cleanup;
-  }
   enum {
     mui_language_id = 0x04,
     mui_language_name = 0x08,
     mui_merge_user_fallback = 0x20,
   };
-  DWORD const flag = id ? mui_language_id : mui_language_name;
+  error err = eok();
+  HMODULE h = NULL;
+  GETHREADPERFERREDUILANGUAGESPROC fn = NULL;
+  DWORD flag = 0;
   ULONG n = 0, len = 0;
+
+  h = LoadLibraryW(L"kernel32.dll");
+  if (h == NULL) {
+    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
+    goto cleanup;
+  }
+  fn = (GETHREADPERFERREDUILANGUAGESPROC)(void *)GetProcAddress(h, "GetThreadPreferredUILanguages");
+  if (fn == NULL) {
+    err = errhr(HRESULT_FROM_WIN32(GetLastError()));
+    goto cleanup;
+  }
+  flag = id ? mui_language_id : mui_language_name;
   if (!fn(flag, &n, NULL, &len)) {
     err = errhr(HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
@@ -103,7 +106,7 @@ static BOOL CALLBACK enumlang(HMODULE hModule, LPCWSTR lpType, LPCWSTR lpName, W
   (void)hModule;
   (void)lpType;
   (void)lpName;
-  struct enumlang_context *const ctx = (void *)lParam;
+  struct enumlang_context *const ctx = (struct enumlang_context *)(void *)lParam;
   if (*ctx->num == ctx->max) {
     return FALSE;
   }
@@ -136,25 +139,31 @@ static NODISCARD error find_resource(HMODULE const module,
   if (type == NULL || name == NULL || preferred_languages == NULL || dest == NULL) {
     return errg(err_invalid_arugment);
   }
+  typedef LCID(WINAPI * LocaleNameToLCIDProc)(LPCWSTR lpName, DWORD dwFlags);
+  enum {
+    buf_size = 256,
+  };
   error err = eok();
-  HMODULE h = LoadLibraryW(L"kernel32.dll");
+  HMODULE h = NULL;
+  LocaleNameToLCIDProc toLCID = NULL;
+  WORD preferred[buf_size] = {0};
+  size_t num_preferred = 0;
+  WORD resources[buf_size] = {0};
+  size_t num_resources = 0;
+  WORD found = 0;
+  HRSRC r = NULL;
+
+  h = LoadLibraryW(L"kernel32.dll");
   if (h == NULL) {
     err = errhr(HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
   }
-  typedef LCID(WINAPI * LocaleNameToLCIDProc)(LPCWSTR lpName, DWORD dwFlags);
-  LocaleNameToLCIDProc toLCID = (LocaleNameToLCIDProc)(void *)GetProcAddress(h, "LocaleNameToLCID");
+  toLCID = (LocaleNameToLCIDProc)(void *)GetProcAddress(h, "LocaleNameToLCID");
   if (toLCID == NULL) {
     err = errhr(HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
   }
 
-  enum {
-    buf_size = 256,
-  };
-
-  WORD preferred[buf_size] = {0};
-  size_t num_preferred = 0;
   for (wchar_t const *l = preferred_languages; *l != L'\0'; l += wcslen(l) + 1) {
     WORD const lang = LANGIDFROMLCID(toLCID(l, 0));
     if (lang == 0) {
@@ -167,8 +176,6 @@ static NODISCARD error find_resource(HMODULE const module,
     preferred[num_preferred++] = lang;
   }
 
-  WORD resources[buf_size] = {0};
-  size_t num_resources = 0;
   if (!EnumResourceLanguagesW(
           module,
           type,
@@ -182,12 +189,12 @@ static NODISCARD error find_resource(HMODULE const module,
     err = errg(err_fail);
     goto cleanup;
   }
-  WORD const found = choose(preferred, num_preferred, resources, num_resources);
+  found = choose(preferred, num_preferred, resources, num_resources);
   if (!found) {
     err = errg(err_not_found);
     goto cleanup;
   }
-  HRSRC r = FindResourceExW(module, type, name, found);
+  r = FindResourceExW(module, type, name, found);
   if (!r) {
     err = errhr(HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
@@ -205,17 +212,20 @@ NODISCARD error mo_parse_from_resource_ex(struct mo **const mpp,
                                           HMODULE const hmod,
                                           wchar_t const *const preferred_languages) {
   HRSRC r = NULL;
+  HGLOBAL h = NULL;
+  size_t sz = 0;
+  void const *p = NULL;
   error err = find_resource(hmod, MAKEINTRESOURCEW(10), L"MO", preferred_languages, &r);
   if (efailed(err)) {
     err = ethru(err);
     goto cleanup;
   }
-  HGLOBAL const h = LoadResource(hmod, r);
+  h = LoadResource(hmod, r);
   if (!h) {
     err = errhr(HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
   }
-  size_t const sz = (size_t)(SizeofResource(hmod, r));
+  sz = (size_t)(SizeofResource(hmod, r));
   if (!sz) {
     err = errhr(HRESULT_FROM_WIN32(GetLastError()));
     goto cleanup;
@@ -224,7 +234,7 @@ NODISCARD error mo_parse_from_resource_ex(struct mo **const mpp,
     err = errg(err_fail);
     goto cleanup;
   }
-  void const *const p = LockResource(h);
+  p = LockResource(h);
   if (!p) {
     return errg(err_unexpected);
   }

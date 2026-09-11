@@ -5,7 +5,7 @@ error hmap_clear(struct hmap *const hm) {
     return errg(err_invalid_arugment);
   }
   if (hm->ptr) {
-    hashmap_clear(hm->ptr, true);
+    hashmap_clear((struct hashmap *)hm->ptr, true);
   }
   return eok();
 }

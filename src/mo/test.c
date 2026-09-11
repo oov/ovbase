@@ -103,6 +103,8 @@ static void test_mo_get_preferred_ui_languages(void) {
 #  endif
 #endif
 
+  size_t n = 0;
+  size_t pos = 0;
 #ifndef _WIN32
   char const *const old_locale = setlocale(LC_MESSAGES, NULL);
   if (!TEST_CHECK(setlocale(LC_ALL, "") != NULL)) {
@@ -117,8 +119,6 @@ static void test_mo_get_preferred_ui_languages(void) {
     goto cleanup;
   }
 #endif
-  size_t n = 0;
-  size_t pos = 0;
 #ifndef OV_NOSTR
   while (str.ptr[pos] != NSTR('\0')) {
 #else

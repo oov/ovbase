@@ -9,9 +9,9 @@ error hmap_free(struct hmap *const hm MEM_FILEPOS_PARAMS) {
     struct hmap_udata ud = {
         .filepos = filepos,
     };
-    hashmap_set_udata(hm->ptr, &ud);
+    hashmap_set_udata((struct hashmap *)hm->ptr, &ud);
 #endif
-    hashmap_free(hm->ptr);
+    hashmap_free((struct hashmap *)hm->ptr);
     hm->ptr = NULL;
   }
   hm->get_key = NULL;

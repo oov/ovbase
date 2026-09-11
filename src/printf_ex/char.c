@@ -10,7 +10,7 @@ struct put_char_context {
 };
 
 static void put_char(int c, void *ctx) {
-  struct put_char_context *pcctx = ctx;
+  struct put_char_context *pcctx = (struct put_char_context *)ctx;
   if (efailed(pcctx->err)) {
     return;
   }

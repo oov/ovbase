@@ -528,6 +528,10 @@ NODISCARD static inline error str_to_wstr_(struct str const *const src, struct w
     fn
 
 #  if defined(USE_STR) && defined(USE_WSTR)
+#    define OV_GENERIC_STR_ARGS(struct_str_ptr, ...)                                                                   \
+      _Generic((struct_str_ptr),                                                                                       \
+          OV_GENERIC_CASE(struct wstr *, ((wchar_t const *const *)(void const *[]){__VA_ARGS__, NULL})),               \
+          OV_GENERIC_CASE(struct str *, ((char const *const *)(void const *[]){__VA_ARGS__, NULL})))
 #    define sfree(struct_str_ptr)                                                                                      \
       _Generic((struct_str_ptr),                                                                                       \
           OV_GENERIC_CASE(struct wstr *, wstr_free_),                                                                  \
@@ -542,8 +546,8 @@ NODISCARD static inline error str_to_wstr_(struct str const *const src, struct w
 #    define scpym(struct_str_ptr, ...)                                                                                 \
       _Generic((struct_str_ptr),                                                                                       \
           OV_GENERIC_CASE(struct wstr *, wstr_cpy_m_),                                                                 \
-          OV_GENERIC_CASE(struct str *, str_cpy_m_))((struct_str_ptr),                                                 \
-                                                     (void *)(void const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
+          OV_GENERIC_CASE(struct str *, str_cpy_m_))(                                                                  \
+          (struct_str_ptr), OV_GENERIC_STR_ARGS((struct_str_ptr), __VA_ARGS__) MEM_FILEPOS_VALUES)
 #    define sncpy(struct_str_ptr, char_ptr, size_t)                                                                    \
       _Generic((struct_str_ptr),                                                                                       \
           OV_GENERIC_CASE(struct wstr *, wstr_ncpy_),                                                                  \
@@ -554,8 +558,8 @@ NODISCARD static inline error str_to_wstr_(struct str const *const src, struct w
 #    define scatm(struct_str_ptr, ...)                                                                                 \
       _Generic((struct_str_ptr),                                                                                       \
           OV_GENERIC_CASE(struct wstr *, wstr_cat_m_),                                                                 \
-          OV_GENERIC_CASE(struct str *, str_cat_m_))((struct_str_ptr),                                                 \
-                                                     (void *)(void const *[]){__VA_ARGS__, NULL} MEM_FILEPOS_VALUES)
+          OV_GENERIC_CASE(struct str *, str_cat_m_))(                                                                  \
+          (struct_str_ptr), OV_GENERIC_STR_ARGS((struct_str_ptr), __VA_ARGS__) MEM_FILEPOS_VALUES)
 #    define sncat(struct_str_ptr, char_ptr, size_t)                                                                    \
       _Generic((struct_str_ptr),                                                                                       \
           OV_GENERIC_CASE(struct wstr *, wstr_ncat_),                                                                  \

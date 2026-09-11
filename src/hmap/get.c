@@ -11,7 +11,7 @@ error hmap_get(struct hmap *const hm, void const *const key_item, void **const i
   struct hmap_udata ud = {
       .hm = hm,
   };
-  hashmap_set_udata(hm->ptr, &ud);
-  *item = ov_deconster_(hashmap_get(hm->ptr, key_item));
+  hashmap_set_udata((struct hashmap *)hm->ptr, &ud);
+  *item = ov_deconster_(hashmap_get((struct hashmap *)hm->ptr, key_item));
   return eok();
 }

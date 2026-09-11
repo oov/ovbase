@@ -3,7 +3,7 @@
 #include <string.h>
 
 static uint64_t hm_hash_dynamic(void const *const item, uint64_t const seed0, uint64_t const seed1, void *const udata) {
-  struct hmap_udata const *const ud = udata;
+  struct hmap_udata const *const ud = (struct hmap_udata const *)udata;
   void const *p = NULL;
   size_t len = 0;
   ud->hm->get_key(item, &p, &len);
@@ -11,7 +11,7 @@ static uint64_t hm_hash_dynamic(void const *const item, uint64_t const seed0, ui
 }
 
 static int hm_compare_dynamic(void const *const a, void const *const b, void *const udata) {
-  struct hmap_udata const *const ud = udata;
+  struct hmap_udata const *const ud = (struct hmap_udata const *)udata;
   void const *p0 = NULL, *p1 = NULL;
   size_t len0 = 0, len1 = 0;
   ud->hm->get_key(a, &p0, &len0);

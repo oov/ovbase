@@ -27,12 +27,12 @@ struct mo {
 };
 
 static uint32_t read_le(void const *const p) {
-  uint8_t const *const bytes = p;
+  uint8_t const *const bytes = (uint8_t const *)p;
   return ((uint32_t)bytes[0]) | ((uint32_t)bytes[1] << 8) | ((uint32_t)bytes[2] << 16) | ((uint32_t)bytes[3] << 24);
 }
 
 static uint32_t read_be(void const *const p) {
-  uint8_t const *const bytes = p;
+  uint8_t const *const bytes = (uint8_t const *)p;
   return ((uint32_t)bytes[3]) | ((uint32_t)bytes[2] << 8) | ((uint32_t)bytes[1] << 16) | ((uint32_t)bytes[0] << 24);
 }
 
@@ -71,7 +71,7 @@ NODISCARD error mo_parse(struct mo **const mpp, void const *const ptr, size_t co
     return errg(err_fail);
   }
 
-  uint8_t const *p = ptr;
+  uint8_t const *p = (uint8_t const *)ptr;
   uint32_t (*read)(void const *const) = NULL;
 
   {
@@ -219,7 +219,7 @@ static char const *find_plural_form(char const *s, size_t len, unsigned long int
     if (i == n) {
       return s;
     }
-    char const *sep = memchr(s, '\x00', len);
+    char const *sep = (char const *)memchr(s, '\x00', len);
     if (!sep) {
       sep = s + len - 1;
     }

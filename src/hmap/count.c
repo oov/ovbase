@@ -8,6 +8,6 @@ error hmap_count(struct hmap const *const hm, size_t *const dest) {
     *dest = 0;
     return eok();
   }
-  *dest = hashmap_count(hm->ptr);
+  *dest = hashmap_count((struct hashmap *)hm->ptr);
   return eok();
 }

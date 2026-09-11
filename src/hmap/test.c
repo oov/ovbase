@@ -9,27 +9,27 @@ struct test_item_dynamic {
 };
 
 static void test_hmap_dynamic_get_key(void const *const item, void const **const key, size_t *const key_bytes) {
-  struct test_item_dynamic const *const it = item;
+  struct test_item_dynamic const *const it = (struct test_item_dynamic const *)item;
   *key = it->key;
   *key_bytes = it->key ? wcslen(it->key) * sizeof(wchar_t) : 0;
 }
 
 static void test_hmap_dynamic(void) {
   struct hmap tmp = {0};
+  size_t count = 0;
+  struct test_item_dynamic *got = NULL;
   if (!TEST_SUCCEEDED_F(hmfree(&tmp))) {
     goto cleanup;
   }
   if (!TEST_SUCCEEDED_F(hmnewd(&tmp, sizeof(struct test_item_dynamic), 0, test_hmap_dynamic_get_key))) {
     goto cleanup;
   }
-  size_t count = 0;
   if (!TEST_SUCCEEDED_F(hmcount(&tmp, &count))) {
     goto cleanup;
   }
   if (!TEST_CHECK(count == 0)) {
     goto cleanup;
   }
-  struct test_item_dynamic *got = NULL;
   if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_dynamic){.key = (wchar_t *)L"test1"}, &got))) {
     goto cleanup;
   }
@@ -91,20 +91,20 @@ static void test_hmap_static(void) {
     int reserved;
   };
   struct hmap tmp = {0};
+  size_t count = 0;
+  struct test_item_static *got = NULL;
   if (!TEST_SUCCEEDED_F(hmfree(&tmp))) {
     goto cleanup;
   }
   if (!TEST_SUCCEEDED_F(hmnews(&tmp, sizeof(struct test_item_static), 0, sizeof(int64_t)))) {
     goto cleanup;
   }
-  size_t count = 0;
   if (!TEST_SUCCEEDED_F(hmcount(&tmp, &count))) {
     goto cleanup;
   }
   if (!TEST_CHECK(count == 0)) {
     goto cleanup;
   }
-  struct test_item_static *got = NULL;
   if (!TEST_SUCCEEDED_F(hmget(&tmp, &(struct test_item_static){.key = 123}, &got))) {
     goto cleanup;
   }

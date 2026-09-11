@@ -4,7 +4,7 @@ error hmap_scan(struct hmap *const hm, bool (*iter)(void const *const item, void
   if (!hm || !hm->ptr) {
     return errg(err_invalid_arugment);
   }
-  if (!hashmap_scan(hm->ptr, iter, udata)) {
+  if (!hashmap_scan((struct hashmap *)hm->ptr, iter, udata)) {
     return errg(err_abort);
   }
   return eok();

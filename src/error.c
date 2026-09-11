@@ -46,7 +46,7 @@ static void write_stderr(NATIVE_CHAR const *const str) {
     DWORD const plen = (DWORD)WideCharToMultiByte(CP_UTF8, 0, str, (int)len, NULL, 0, NULL, NULL);
     if (plen) {
       void *const p = malloc(plen);
-      if (WideCharToMultiByte(CP_UTF8, 0, str, (int)len, p, (int)plen, NULL, NULL)) {
+      if (WideCharToMultiByte(CP_UTF8, 0, str, (int)len, (LPSTR)p, (int)plen, NULL, NULL)) {
         WriteFile(h, p, plen, NULL, NULL);
       }
       free(p);

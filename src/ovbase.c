@@ -86,12 +86,12 @@ struct allocated_at {
 
 static uint64_t am_hash(void const *const item, uint64_t const seed0, uint64_t const seed1, void *const udata) {
   (void)udata;
-  struct allocated_at const *const aa = item;
+  struct allocated_at const *const aa = (struct allocated_at const *)item;
   return hashmap_sip(&aa->p, sizeof(void *), seed0, seed1);
 }
 static int am_compare(void const *const a, void const *const b, void *udata) {
-  struct allocated_at const *const aa0 = a;
-  struct allocated_at const *const aa1 = b;
+  struct allocated_at const *const aa0 = (struct allocated_at const *)a;
+  struct allocated_at const *const aa1 = (struct allocated_at const *)b;
   (void)udata;
   return (int)((char const *)aa1->p - (char const *)aa0->p);
 }
@@ -125,14 +125,15 @@ static bool allocated_put(void const *const p MEM_FILEPOS_PARAMS) {
 }
 
 static bool allocated_remove(void const *const p) {
-  struct allocated_at const *const aa = hashmap_delete(g_allocated, &(struct allocated_at){.p = p});
+  struct allocated_at const *const aa =
+      (struct allocated_at const *)hashmap_delete(g_allocated, &(struct allocated_at){.p = p});
   return aa == NULL;
 }
 
 static bool report_leaks_iterate(void const *const item, void *const udata) {
-  size_t *const n = udata;
+  size_t *const n = (size_t *)udata;
   ++*n;
-  struct allocated_at const *const aa = item;
+  struct allocated_at const *const aa = (struct allocated_at const *)item;
   ereport(emsg_i18nf(err_type_generic,
                      err_unexpected,
                      NULL,
