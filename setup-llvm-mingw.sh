@@ -217,6 +217,8 @@ case "$(uname -s)" in
 esac
 
 CUR_DIR="${PWD}"
+# directory where this script lives (resolved before any cd)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE:-$0}")" && pwd)"
 DEST_DIR=""
 
 while [ $# -gt 0 ]; do
@@ -237,7 +239,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "${DEST_DIR}" ]; then
-  cd "$(dirname "${BASH_SOURCE:-$0}")"
+  cd "${SCRIPT_DIR}"
   mkdir -p build/tools
   cd build/tools
 else
@@ -255,7 +257,8 @@ llvm_mingw_dir=$(download_llvm_mingw "${LLVM_MINGW_URL}" "${LLVM_MINGW_VERSION}"
 gettext_dir=$(download_gettext "${GETTEXT_URL}" "${GETTEXT_VERSION}")
 export PATH="$OLD_PATH"
 
-envname="env-${platform}.sh"
+# the environment script is always generated next to this script
+envname="${SCRIPT_DIR}/env-${platform}.sh"
 echo "export PATH=\"${busybox_dir}:\$PATH\"" > "${envname}"
 echo "export PATH=\"${cmake_dir}/bin:\$PATH\"" >> "${envname}"
 echo "export PATH=\"${ninja_dir}:\$PATH\"" >> "${envname}"
